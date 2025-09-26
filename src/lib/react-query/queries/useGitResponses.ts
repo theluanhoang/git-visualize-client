@@ -9,6 +9,10 @@ export const useGitResponses = () => {
     queryFn: async () => {
       return [];
     },
-    initialData: [],
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: 1000 * 60 * 60 * 24,
+    staleTime: Infinity,
   });
 };

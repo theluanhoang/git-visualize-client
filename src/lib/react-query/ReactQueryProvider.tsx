@@ -4,11 +4,10 @@ import { ReactNode } from "react";
 import {
   QueryClientProvider,
   QueryClient,
-  HydrationBoundary,
-  dehydrate,
 } from "@tanstack/react-query";
 import { getQueryClient } from "./queryClient";
-import { PersistedQueryClientProvider } from "./PersistedQueryClientProvider";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import { createIDBPersister } from "./persisters";
 
 let client: QueryClient | null = null;
 
@@ -17,15 +16,18 @@ export function ReactQueryProvider({ children }: { children: ReactNode }) {
     client = getQueryClient();
   }
 
-  const dehydratedState = dehydrate(client);
+  const persister = createIDBPersister();
 
   return (
-    <QueryClientProvider client={client}>
-      <HydrationBoundary state={dehydratedState}>
-        {/* <PersistedQueryClientProvider> */}
-          {children}
-        {/* </PersistedQueryClientProvider> */}
-      </HydrationBoundary>
-    </QueryClientProvider>
+    <PersistQueryClientProvider
+      client={client}
+      persistOptions={{
+        persister,
+        maxAge: 1000 * 60 * 60 * 24,
+        buster: "git-responses-v1",
+      }}
+    >
+      {children}
+    </PersistQueryClientProvider>
   );
 }

@@ -148,6 +148,13 @@ function CommitGraphSvg({
         return nodes;
     }
 
+      // Calculate total graph dimensions
+    const minX = Math.min(...commitNodes.map(n => n.x)) - 200;
+    const maxX = Math.max(...commitNodes.map(n => n.x)) + 200;
+    const maxY = Math.max(...commitNodes.map(n => n.y)) + 200;
+    const graphWidth = Math.max(width, maxX - minX);
+    const graphHeight = Math.max(height, maxY);
+    
     if (isLoading) {
         return (
             <div className="w-full h-full flex items-center justify-center">
@@ -186,10 +193,39 @@ function CommitGraphSvg({
             <defs>
                 {/* Gradient for commit circles */}
                 <radialGradient id="commitGradient" cx="50%" cy="30%">
-                    <stop offset="0%" stopColor="#ffffff" stopOpacity="0.3" />
-                    <stop offset="100%" stopColor="#000000" stopOpacity="0.1" />
+                    <stop offset="0%" stopColor="#ffffff" stopOpacity="0.3"/>
+                    <stop offset="100%" stopColor="#000000" stopOpacity="0.1"/>
                 </radialGradient>
+                
+                {/* Arrow marker */}
+                <marker
+                    id="arrowhead"
+                    markerWidth="10"
+                    markerHeight="7"
+                    refX="9"
+                    refY="3.5"
+                    orient="auto"
+                >
+                    <polygon
+                    points="0 0, 10 3.5, 0 7"
+                    fill="#6b7280"
+                    />
+                </marker>
+
+                {/* Shadow filter */}
+                <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feDropShadow dx="2" dy="2" stdDeviation="2" floodColor="#000000" floodOpacity="0.3"/>
+                </filter>
             </defs>
+            {/* Background grid */}
+            <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
+                <defs>
+                    <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
+                    <path d="M 50 0 L 0 0 0 50" fill="none" stroke="#e5e7eb" strokeWidth="0.5"/>
+                    </pattern>
+                </defs>
+                <rect x={minX} y={0} width={graphWidth} height={graphHeight} fill="url(#grid)" />
+            </g>
             <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`} >
                 {/* Draw connection */}
                 {commitNodes.map((commitNode) => {
@@ -213,7 +249,7 @@ function CommitGraphSvg({
                 })}
 
                 {
-                    commitNodes.map((commitNode, idx) => {
+                    commitNodes.map((commitNode) => {
                         const currentHead = head?.type === 'branch' ? head.commitId : head?.ref;
                         const currentBranch = head?.ref;
                         const isHead = commitNode.commit.id === currentHead;
