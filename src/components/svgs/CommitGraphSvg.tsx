@@ -19,7 +19,6 @@ interface CommitGraphSvgProps extends React.SVGProps<SVGSVGElement> {
 }
 
 const R = 30;
-const D = 160;
 
 function CommitGraphSvg({
     width,
@@ -32,43 +31,172 @@ function CommitGraphSvg({
     const [commitNodes, setCommitNodes] = useState<CommitNode[]>([]);
     const { data: responses = [], isLoading, isFetching, isError, error } = useGitResponses();
     const branchCommits = useRef<{ [branchName: string]: ICommit[] }>({});
-    console.log("responses:::", responses);
-    console.log(commitNodes);
-        useEffect(() => {
-        if (isLoading || isFetching) return; 
-        console.log("HERE");
-        
+    useEffect(() => {
+        if (isLoading || isFetching) return;
+
         if (responses.length === 0) return;
 
         const latestRepositoryState = responses[responses.length - 1].repositoryState;
         branchCommits.current = {};
         const commitNodes = calculateTreeLayout();
-        console.log("Commit Nodes:::", commitNodes);
-        
+
         setCommitNodes(commitNodes);
 
         setHead(latestRepositoryState?.head ?? null);
     }, [responses, isLoading, isFetching]);
 
-    
-    
+
+
     const calculateTreeLayout = () => {
         const lastCommits = responses[responses.length - 1].repositoryState?.commits ?? [];
-        console.log("lastCommits:::", lastCommits);
-        
+        // Maps for quick lookup
+        const idToCommit: Record<string, ICommit> = {};
+        lastCommits.forEach(c => { idToCommit[c.id] = c; });
+
+        // Sort commits chronologically (oldest first) for deterministic ordering
         const sortedCommits = [...lastCommits].sort((a, b) => {
             const dateA = new Date(a.committer.date).getTime();
             const dateB = new Date(b.committer.date).getTime();
             return dateA - dateB;
         });
 
-        const nodes: CommitNode[] = [];
-        const levelHeight = 140;
-        const branchSpacing = 300; // Increased spacing for better symmetry
-        const startX = width / 2 - R; // Center position
-        const startY = height / 2;
+        // Build parent -> children map using primary parent (first parent)
+        const childrenMap: Record<string, string[]> = {};
+        sortedCommits.forEach(commit => {
+            const primaryParent = commit.parents[0];
+            if (primaryParent) {
+                if (!childrenMap[primaryParent]) childrenMap[primaryParent] = [];
+                childrenMap[primaryParent].push(commit.id);
+            }
+        });
 
-        // Group commits by branch
+        // Find root commits (no parent or parent not in set)
+        const commitIdSet = new Set(sortedCommits.map(c => c.id));
+        const roots: string[] = sortedCommits
+            .filter(c => c.parents.length === 0 || !commitIdSet.has(c.parents[0]))
+            .map(c => c.id);
+
+        // Compute levels by BFS from roots using primary parent
+        const levelById: Record<string, number> = {};
+        const queue: string[] = [];
+        roots.forEach(id => { levelById[id] = 0; queue.push(id); });
+
+        while (queue.length) {
+            const current = queue.shift() as string;
+            const currentLevel = levelById[current];
+            const children = childrenMap[current] ?? [];
+            // Sort children by date for stability
+            children.sort((a, b) => {
+                const da = new Date(idToCommit[a].committer.date).getTime();
+                const db = new Date(idToCommit[b].committer.date).getTime();
+                return da - db;
+            });
+            for (const childId of children) {
+                if (levelById[childId] === undefined) {
+                    levelById[childId] = currentLevel + 1;
+                    queue.push(childId);
+                }
+            }
+        }
+
+        // Constants for layout
+        const levelHeight = 4*R + 20;
+        const branchSpacing = 300; // horizontal spacing between siblings
+        const startX = width / 2 - R; // center X
+        const startY = height / 2;    // base Y
+
+        // Compute X positions per node
+        const xById: Record<string, number> = {};
+
+        // Helper to generate alternating offsets: [0, -1, +1, -2, +2, ...] * spacing
+        const alternatingOffsets = (count: number): number[] => {
+            const offsets: number[] = [];
+            for (let i = 0; i < count; i++) {
+                if (i === 0) {
+                    offsets.push(0);
+                } else {
+                    const step = Math.ceil(i / 2);
+                    const sign = i % 2 === 0 ? 1 : -1; // even index -> +, odd -> - (after the first)
+                    offsets.push(sign * step);
+                }
+            }
+            return offsets.map(m => m * branchSpacing);
+        };
+
+        // Levels present in the graph
+        const maxLevel = Object.values(levelById).reduce((m, v) => Math.max(m, v), 0);
+
+        // Place roots around center using alternating offsets
+        const rootOffsets = alternatingOffsets(roots.length);
+        roots.forEach((rootId, idx) => {
+            xById[rootId] = startX + rootOffsets[idx];
+        });
+
+        // For each subsequent level, position children around their parent
+        for (let lvl = 1; lvl <= maxLevel; lvl++) {
+            // Collect nodes at this level
+            const nodesAtLevel = sortedCommits
+                .filter(c => levelById[c.id] === lvl)
+                .map(c => c.id);
+
+            // Group by parent (primary parent)
+            const nodesByParent: Record<string, string[]> = {};
+            for (const id of nodesAtLevel) {
+                const parentId = idToCommit[id].parents[0];
+                if (!parentId) continue;
+                if (!nodesByParent[parentId]) nodesByParent[parentId] = [];
+                nodesByParent[parentId].push(id);
+            }
+
+            // Position each sibling group around its parent.x with alternating offsets
+            for (const parentId of Object.keys(nodesByParent)) {
+                const siblings = nodesByParent[parentId];
+                // stable sort by commit time
+                siblings.sort((a, b) => {
+                    const da = new Date(idToCommit[a].committer.date).getTime();
+                    const db = new Date(idToCommit[b].committer.date).getTime();
+                    return da - db;
+                });
+                const parentX = xById[parentId] ?? startX;
+                const offsets = alternatingOffsets(siblings.length);
+                siblings.forEach((childId, idx) => {
+                    xById[childId] = parentX + offsets[idx];
+                });
+            }
+
+            // Handle any nodes without a known parent placement (fallback to center distribution)
+            const unplaced = nodesAtLevel.filter(id => xById[id] === undefined);
+            if (unplaced.length > 0) {
+                const offs = alternatingOffsets(unplaced.length);
+                unplaced.forEach((id, idx) => {
+                    xById[id] = startX + offs[idx];
+                });
+            }
+        }
+
+        // Collision avoidance: ensure minimum horizontal gap at each level
+        const minGap = R * 2 + 24; // circle diameter + margin
+        for (let lvl = 0; lvl <= maxLevel; lvl++) {
+            const idsAtLevel = sortedCommits
+                .filter(c => (levelById[c.id] ?? 0) === lvl)
+                .map(c => c.id)
+                .filter(id => xById[id] !== undefined);
+            idsAtLevel.sort((a, b) => (xById[a] as number) - (xById[b] as number));
+            for (let i = 1; i < idsAtLevel.length; i++) {
+                const prevId = idsAtLevel[i - 1];
+                const currId = idsAtLevel[i];
+                const prevX = xById[prevId] as number;
+                const currX = xById[currId] as number;
+                const gap = currX - prevX;
+                if (gap < minGap) {
+                    const shift = minGap - gap;
+                    xById[currId] = currX + shift;
+                }
+            }
+        }
+
+        // Group commits by branch for later highlighting
+        branchCommits.current = {};
         sortedCommits.forEach(commit => {
             if (!branchCommits.current[commit.branch]) {
                 branchCommits.current[commit.branch] = [];
@@ -76,85 +204,30 @@ function CommitGraphSvg({
             branchCommits.current[commit.branch].push(commit);
         });
 
-        // Sort branches by creation order (main first, then others)
-        const branchNames = Object.keys(branchCommits.current);
-        const mainBranch = branchNames.find(name => name === 'main') || branchNames[0];
-        const otherBranches = branchNames.filter(name => name !== mainBranch);
-        const orderedBranches = [mainBranch, ...otherBranches];
-
-        // Calculate positions for each branch
-        const branchPositions: { [branchName: string]: number } = {};
-
-        // Main branch goes in the center
-        branchPositions[mainBranch] = startX;
-
-        // Other branches are distributed symmetrically around main
-        otherBranches.forEach((branchName, index) => {
-            const totalBranches = otherBranches.length;
-            if (totalBranches === 1) {
-                // Single branch: place to the right
-                branchPositions[branchName] = startX + branchSpacing;
-            } else if (totalBranches === 2) {
-                // Two branches: place left and right
-                branchPositions[branchName] = startX + (index === 0 ? -branchSpacing : branchSpacing);
-            } else {
-                // Multiple branches: distribute symmetrically
-                const isEven = totalBranches % 2 === 0;
-                const half = Math.floor(totalBranches / 2);
-                const offset = isEven
-                    ? (index - half + 0.5) * branchSpacing
-                    : (index - half) * branchSpacing;
-                branchPositions[branchName] = startX + offset;
-            }
-        });
-
-        // Process commits in chronological order
-        sortedCommits.forEach((commit, index) => {
-            let x = branchPositions[commit.branch];
-            let y = startY + (index * levelHeight);
-            let level = index;
-            let branch = commit.branch;
-
-            // If this commit has parents, position it relative to its parent
-            if (commit.parents.length > 0) {
-                const parentCommit = sortedCommits.find(c => c.id === commit.parents[0]);
-                if (parentCommit) {
-                    const parentNode = nodes.find(n => n.commit.id === parentCommit.id);
-                    if (parentNode) {
-                        // If switching branches, use the branch position
-                        if (parentNode.branch !== commit.branch) {
-                            x = branchPositions[commit.branch];
-                            level = parentNode.level + 1;
-                            y = startY + (level * levelHeight);
-                        } else {
-                            // Continue on same branch
-                            x = parentNode.x;
-                            level = parentNode.level + 1;
-                            y = startY + (level * levelHeight);
-                        }
-                    }
-                }
-            }
-
-            nodes.push({
-                commit,
+        // Build final nodes
+        const nodes: CommitNode[] = sortedCommits.map(c => {
+            const level = levelById[c.id] ?? 0;
+            const x = xById[c.id] ?? startX;
+            const y = startY + level * levelHeight;
+            return {
+                commit: c,
                 x,
                 y,
                 level,
-                branch: commit.branch
-            });
+                branch: c.branch,
+            };
         });
 
         return nodes;
     }
 
-      // Calculate total graph dimensions
+    // Calculate total graph dimensions
     const minX = Math.min(...commitNodes.map(n => n.x)) - 200;
     const maxX = Math.max(...commitNodes.map(n => n.x)) + 200;
     const maxY = Math.max(...commitNodes.map(n => n.y)) + 200;
     const graphWidth = Math.max(width, maxX - minX);
     const graphHeight = Math.max(height, maxY);
-    
+
     if (isLoading) {
         return (
             <div className="w-full h-full flex items-center justify-center">
@@ -193,10 +266,10 @@ function CommitGraphSvg({
             <defs>
                 {/* Gradient for commit circles */}
                 <radialGradient id="commitGradient" cx="50%" cy="30%">
-                    <stop offset="0%" stopColor="#ffffff" stopOpacity="0.3"/>
-                    <stop offset="100%" stopColor="#000000" stopOpacity="0.1"/>
+                    <stop offset="0%" stopColor="#ffffff" stopOpacity="0.3" />
+                    <stop offset="100%" stopColor="#000000" stopOpacity="0.1" />
                 </radialGradient>
-                
+
                 {/* Arrow marker */}
                 <marker
                     id="arrowhead"
@@ -207,21 +280,21 @@ function CommitGraphSvg({
                     orient="auto"
                 >
                     <polygon
-                    points="0 0, 10 3.5, 0 7"
-                    fill="#6b7280"
+                        points="0 0, 10 3.5, 0 7"
+                        fill="#6b7280"
                     />
                 </marker>
 
                 {/* Shadow filter */}
                 <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-                    <feDropShadow dx="2" dy="2" stdDeviation="2" floodColor="#000000" floodOpacity="0.3"/>
+                    <feDropShadow dx="2" dy="2" stdDeviation="2" floodColor="#000000" floodOpacity="0.3" />
                 </filter>
             </defs>
             {/* Background grid */}
             <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
                 <defs>
                     <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
-                    <path d="M 50 0 L 0 0 0 50" fill="none" stroke="#e5e7eb" strokeWidth="0.5"/>
+                        <path d="M 50 0 L 0 0 0 50" fill="none" stroke="#e5e7eb" strokeWidth="0.5" />
                     </pattern>
                 </defs>
                 <rect x={minX} y={0} width={graphWidth} height={graphHeight} fill="url(#grid)" />
