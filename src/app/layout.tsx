@@ -4,6 +4,7 @@ import "./globals.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryProvider } from "@/lib/react-query/ReactQueryProvider";
 import { PersistedQueryClientProvider } from "@/lib/react-query/PersistedQueryClientProvider";
+import { ThemeProvider } from "next-themes";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,9 +33,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ReactQueryProvider>
+        <ThemeProvider attribute="data-theme" defaultTheme="system" enableSystem>
+
+          <ReactQueryProvider>
             {children}
-        </ReactQueryProvider>
+          </ReactQueryProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
