@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
 import { ReactQueryProvider } from "@/lib/react-query/ReactQueryProvider";
-import { PersistedQueryClientProvider } from "@/lib/react-query/PersistedQueryClientProvider";
 import { ThemeProvider } from "next-themes";
+import Header from "@/components/Header";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,6 +36,7 @@ export default function RootLayout({
         <ThemeProvider attribute="data-theme" defaultTheme="system" enableSystem>
 
           <ReactQueryProvider>
+            <Header />
             {children}
           </ReactQueryProvider>
         </ThemeProvider>

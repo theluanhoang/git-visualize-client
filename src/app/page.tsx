@@ -1,26 +1,20 @@
 'use client';
 
-import CommitGraph from "@/components/CommitGraph";
-import Header from "@/components/Header";
-import Terminal from "@/components/terminal/Terminal";
-import TerminalWrapper from "@/components/terminal/TerminalWrapper";
-import { TerminalIcon } from "lucide-react";
+import BottomCTA from "@/components/home/BottomCTA";
+import Features from "@/components/home/Features";
+import Hero from "@/components/home/Hero";
+import SystemOverview from "@/components/home/SystemOverview";
+
 
 export default function Home() {
   return (
     <div className="">
-      <Header />
-      <main className="mt-10 container mx-auto">
-        <div className="flex flex-col gap-4">
-          {/* Interactive Commit Graph */}
-          <CommitGraph />
-          {/* Terminal Component */}
-          <TerminalWrapper />
-        </div>
+      <Hero />
+      <main className="container mx-auto mt-10 px-4">
+        <SystemOverview />
+        <Features />
+        <BottomCTA /> 
       </main>
-      <footer className="">
-
-      </footer>
     </div>
   );
 }
