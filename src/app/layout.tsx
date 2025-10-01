@@ -5,6 +5,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { ReactQueryProvider } from "@/lib/react-query/ReactQueryProvider";
 import { ThemeProvider } from "next-themes";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,7 +38,8 @@ export default function RootLayout({
 
           <ReactQueryProvider>
             <Header />
-            {children}
+              {children}
+            <Footer />
           </ReactQueryProvider>
         </ThemeProvider>
       </body>
