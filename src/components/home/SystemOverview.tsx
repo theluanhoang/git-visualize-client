@@ -2,6 +2,7 @@
 
 import OverviewCard from "@/components/home/OverviewCard";
 import { motion } from "framer-motion";
+import SectionTitle from "./SectionTitle";
 
 export default function SystemOverview() {
   return (
@@ -12,9 +13,7 @@ export default function SystemOverview() {
       transition={{ duration: 0.6 }}
       viewport={{ once: true }}
     >
-      <h2 id="system-title" className="text-xl font-semibold text-gray-900 text-center">Hệ thống học Git toàn diện</h2>
-      <p className="text-gray-700 text-center mt-2">Kết hợp lý thuyết, thực hành và trực quan hóa để học Git hiệu quả nhất</p>
-      
+      <SectionTitle title="Hệ thống học Git toàn diện" description="Kết hợp lý thuyết, thực hành và trực quan hóa để học Git hiệu quả nhất" />
       <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
         <OverviewCard
           icon="📚"

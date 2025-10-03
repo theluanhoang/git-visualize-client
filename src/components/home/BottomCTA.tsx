@@ -6,14 +6,14 @@ import { motion } from "framer-motion";
 export default function BottomCTA() {
   return (
     <motion.section 
-      className="mt-16 bg-white rounded-lg border border-gray-200 shadow-sm p-8 text-center"
+      className="mt-16 bg-[color-mix(in_srgb,var(--surface),#000_4%)] rounded-lg border border-gray-200 shadow-sm p-8 text-center"
       initial={{ opacity: 0, scale: 0.95 }}
       whileInView={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.6 }}
       viewport={{ once: true }}
     >
-      <h2 className="text-xl font-semibold text-gray-900">Sẵn sàng trở thành Git Master?</h2>
-      <p className="text-gray-700 mt-2">Bắt đầu hành trình học Git ngay hôm nay và nâng cao kỹ năng lập trình của bạn.</p>
+      <h2 className="text-xl font-semibold text-[var(--foreground)]">Sẵn sàng trở thành Git Master?</h2>
+      <p className="text-[var(--foreground)] mt-2">Bắt đầu hành trình học Git ngay hôm nay và nâng cao kỹ năng lập trình của bạn.</p>
       <motion.div 
         className="mt-6 flex items-center justify-center gap-3"
         initial={{ opacity: 0, y: 20 }}

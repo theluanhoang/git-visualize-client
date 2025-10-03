@@ -17,28 +17,24 @@ type OverviewCardProps = {
 export default function OverviewCard({ icon, title, subtitle, description, bullets, ctaHref, ctaLabel, delay = 0 }: OverviewCardProps) {
   return (
     <motion.div
-      className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 hover:shadow-lg transition-all duration-300 group"
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay }}
-      viewport={{ once: true }}
-      whileHover={{ y: -5 }}
+      whileHover={{ scale: 1.03 }}
+      className="bg-[color-mix(in_srgb,var(--surface),#000_4%)] rounded-lg border border-gray-200 shadow-sm p-6 hover:shadow-lg transition-all duration-300 group"
     >
       <div className="flex items-center gap-3 mb-4">
         <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-[var(--primary-50)] to-[var(--primary-100)] flex items-center justify-center group-hover:scale-110 transition-transform">
           <span className="text-[var(--primary-600)] text-xl">{icon}</span>
         </div>
         <div>
-          <h3 className="font-semibold text-gray-900">{title}</h3>
-          <p className="text-sm text-gray-600">{subtitle}</p>
+          <h3 className="font-semibold text-[var(--foreground)]">{title}</h3>
+          <p className="text-sm text-[var(--foreground)]">{subtitle}</p>
         </div>
       </div>
-      <p className="text-sm text-gray-700 mb-4">{description}</p>
+      <p className="text-sm text-[var(--foreground)] mb-4">{description}</p>
       <div className="space-y-2 text-xs text-gray-600">
         {bullets.map((b) => (
           <div key={b} className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-[var(--primary)]"></div>
-            <span>{b}</span>
+            <span className="text-[var(--foreground)]">{b}</span>
           </div>
         ))}
       </div>

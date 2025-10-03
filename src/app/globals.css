@@ -22,6 +22,8 @@
   --scrollbar-track: #f3f4f6; /* gray-100 */
   --scrollbar-thumb: #e5e7eb; /* gray-200 */
   --scrollbar-thumb-hover: #d1d5db; /* gray-300 */
+
+  /* OverviewCard */
 }
 
 @theme inline {
