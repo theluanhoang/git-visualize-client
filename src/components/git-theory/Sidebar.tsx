@@ -1,14 +1,23 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { LessonMeta } from "@/types/git-theory";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { getSlugFromPath } from "@/lib/git-theory/get-slug-from-path";
 
 type Props = {
     items: LessonMeta[];
-    activeSlug: string;
-    onSelect: (slug: string) => void;
 };
 
-export default function Sidebar({ items, activeSlug, onSelect }: Props) {
+export default function Sidebar({ items }: Props) {
     const [query, setQuery] = React.useState<string>("");
+    const pathname = usePathname();
+
+    const [activeSlug, setActiveSlug] = useState<string>(getSlugFromPath(pathname));
+
+    useEffect(() => {
+        setActiveSlug(getSlugFromPath(pathname));
+    }, [pathname]);
+    
     const filtered = React.useMemo(() => {
         const q = query.trim().toLowerCase();
         if (!q) return items;
@@ -35,15 +44,15 @@ export default function Sidebar({ items, activeSlug, onSelect }: Props) {
                             const isActive = item.slug === activeSlug;
                             return (
                                 <li key={item.slug}>
-                                    <button
-                                        onClick={() => onSelect(item.slug)}
-                                        className={`text-left w-full px-2 py-1.5 rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] ${isActive ? "bg-[var(--primary-50)] text-[var(--primary-700)]" : "hover:bg-gray-50 text-gray-800"
+                                    <Link
+                                        href={`/git-theory/${item.slug}`}
+                                        className={`block text-left w-full px-2 py-1.5 rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] ${isActive ? "bg-[var(--primary-50)] text-[var(--primary-700)]" : "hover:bg-gray-50 text-gray-800"
                                             }`}
                                         aria-current={isActive ? "page" : undefined}
                                     >
                                         <span className="font-medium">{item.title}</span>
                                         <p className="text-xs text-gray-600">{item.description}</p>
-                                    </button>
+                                    </Link>
                                 </li>
                             );
                         })}
