@@ -1,26 +1,43 @@
-import { List, ListOrdered, ListTodo } from 'lucide-react'
-import { Editor } from '@tiptap/react'
-import React, { memo, useCallback } from 'react'
-import { Button } from '@/components/ui/button'
+import { List, ListOrdered, ListTodo } from 'lucide-react';
+import { Editor, useEditorState } from '@tiptap/react';
+import React, { memo, useCallback } from 'react';
+import { Button } from '@/components/ui/button';
 
 const ListButtons = memo(({ editor }: { editor: Editor | null }) => {
-    if (!editor) return null
+    if (!editor) return null;
 
     const toggleBulletList = useCallback(() => {
-        editor.chain().focus().toggleBulletList().run()
-    }, [editor])
+        editor.chain().focus().toggleBulletList().run();
+    }, [editor]);
 
     const toggleOrderedList = useCallback(() => {
-        editor.chain().focus().toggleOrderedList().run()
-    }, [editor])
+        editor.chain().focus().toggleOrderedList().run();
+    }, [editor]);
 
     const toggleTaskList = useCallback(() => {
-        editor.chain().focus().toggleTaskList().run()
-    }, [editor])
+        editor.chain().focus().toggleTaskList().run();
+    }, [editor]);
 
-    const isBulletListActive = editor.isActive('bulletList')
-    const isOrderedListActive = editor.isActive('orderedList')
-    const isTaskListActive = editor.isActive('taskList')
+    // Sử dụng useEditorState để tránh re-render không cần thiết
+    const editorState = useEditorState({
+        editor,
+        selector: (ctx) => {
+            if (!ctx.editor) return {
+                isBulletList: false,
+                isOrderedList: false,
+                isTaskList: false
+            };
+            return {
+                isBulletList: ctx.editor.isActive('bulletList'),
+                isOrderedList: ctx.editor.isActive('orderedList'),
+                isTaskList: ctx.editor.isActive('taskList'),
+            };
+        },
+    });
+
+    const isBulletListActive = editorState?.isBulletList || false;
+    const isOrderedListActive = editorState?.isOrderedList || false;
+    const isTaskListActive = editorState?.isTaskList || false;
 
     return (
         <div className="flex gap-1 items-center">
@@ -34,7 +51,6 @@ const ListButtons = memo(({ editor }: { editor: Editor | null }) => {
             >
                 <List className="h-4 w-4" />
             </Button>
-
             <Button
                 type="button"
                 size="sm"
@@ -45,7 +61,6 @@ const ListButtons = memo(({ editor }: { editor: Editor | null }) => {
             >
                 <ListOrdered className="h-4 w-4" />
             </Button>
-
             <Button
                 type="button"
                 size="sm"
@@ -57,9 +72,9 @@ const ListButtons = memo(({ editor }: { editor: Editor | null }) => {
                 <ListTodo className="h-4 w-4" />
             </Button>
         </div>
-    )
-})
+    );
+});
 
-ListButtons.displayName = 'ListButtons'
+ListButtons.displayName = 'ListButtons';
 
-export default ListButtons
+export default ListButtons;

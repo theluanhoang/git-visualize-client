@@ -3,9 +3,11 @@
 
 @custom-variant dark (&:is(.dark *));
 @import "tailwindcss";
+
 :root {
   /* Git-inspired palette */
-  --primary: oklch(0.205 0 0); /* Git orange */
+  --primary: oklch(0.205 0 0);
+  /* Git orange */
   --primary-foreground: oklch(0.985 0 0);
   --primary-50: #fff3ef;
   --primary-600: #F05033;
@@ -15,14 +17,20 @@
   /* Semantic surfaces */
   --surface: #ffffff;
   --surface-elevated: #ffffff;
-  --border: oklch(0.922 0 0); /* gray-200 */
-  --muted: oklch(0.97 0 0); /* gray-500 */
-  --muted-2: #374151; /* gray-700 */
+  --border: oklch(0.922 0 0);
+  /* gray-200 */
+  --muted: oklch(0.97 0 0);
+  /* gray-500 */
+  --muted-2: #374151;
+  /* gray-700 */
 
   /* Scrollbar */
-  --scrollbar-track: #f3f4f6; /* gray-100 */
-  --scrollbar-thumb: #e5e7eb; /* gray-200 */
-  --scrollbar-thumb-hover: #d1d5db; /* gray-300 */
+  --scrollbar-track: #f3f4f6;
+  /* gray-100 */
+  --scrollbar-thumb: #e5e7eb;
+  /* gray-200 */
+  --scrollbar-thumb-hover: #d1d5db;
+  /* gray-300 */
 
   /* OverviewCard */
 
@@ -123,24 +131,35 @@
 
 /* Dark mode overrides */
 html[data-theme="dark"] {
-  --background: #0b0e14; /* near black with slight blue */
-  --foreground: #e5e7eb; /* gray-200 */
-  --surface: #111827; /* gray-900 */
-  --surface-elevated: #0f172a; /* slate-900 */
-  --border: #374151; /* gray-700 */
-  --muted: #9ca3af; /* gray-400 */
-  --muted-2: #d1d5db; /* gray-300 */
+  --background: #0b0e14;
+  /* near black with slight blue */
+  --foreground: #e5e7eb;
+  /* gray-200 */
+  --surface: #111827;
+  /* gray-900 */
+  --surface-elevated: #0f172a;
+  /* slate-900 */
+  --border: #374151;
+  /* gray-700 */
+  --muted: #9ca3af;
+  /* gray-400 */
+  --muted-2: #d1d5db;
+  /* gray-300 */
   --primary: #F05033;
   --primary-foreground: #ffffff;
-  --primary-50: #3b1d18; /* subtle dark tint */
+  --primary-50: #3b1d18;
+  /* subtle dark tint */
   --primary-600: #F05033;
   --primary-700: #ff6a4f;
   --ring: rgba(240, 80, 51, 0.45);
 
   /* Scrollbar (dark) */
-  --scrollbar-track: #0f172a; /* slate-900 */
-  --scrollbar-thumb: #1f2937; /* gray-800 */
-  --scrollbar-thumb-hover: #374151; /* gray-700 */
+  --scrollbar-track: #0f172a;
+  /* slate-900 */
+  --scrollbar-thumb: #1f2937;
+  /* gray-800 */
+  --scrollbar-thumb-hover: #374151;
+  /* gray-700 */
 
 
   /* SHADCN UI */
@@ -176,11 +195,13 @@ html[data-theme="dark"] {
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
 }
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
 /* Scrollbar styling (WebKit browsers) */
 *::-webkit-scrollbar {
   width: 12px;
@@ -245,6 +266,7 @@ body {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -909,13 +931,13 @@ ul[data-type="taskList"] li {
   gap: 0.5rem;
 }
 
-ul[data-type="taskList"] li > label {
+ul[data-type="taskList"] li>label {
   flex: 0 0 auto;
   margin-right: 0.5rem;
   user-select: none;
 }
 
-ul[data-type="taskList"] li > div {
+ul[data-type="taskList"] li>div {
   flex: 1 1 auto;
 }
 
@@ -933,21 +955,70 @@ ul[data-type="taskList"] input[type="checkbox"] {
   align-items: flex-start;
 }
 
-.ProseMirror ul[data-type="taskList"] li > label {
+.ProseMirror ul[data-type="taskList"] li>label {
   margin-right: 0.5rem;
   user-select: none;
 }
 
-.ProseMirror ul[data-type="taskList"] li > div {
+.ProseMirror ul[data-type="taskList"] li>div {
   flex: 1;
 }
+
 /* LINK */
 .ProseMirror a {
-    color: #2563eb;
-    text-decoration: underline;
-    cursor: pointer;
+  color: #2563eb;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 .ProseMirror a:hover {
-    color: #1e40af;
+  color: #1e40af;
+}
+
+ul[data-type="taskList"] {
+  list-style: none;
+  padding: 0;
+  margin: 1em 0;
+}
+
+ul[data-type="taskList"]>li {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  margin: 0.25rem 0;
+}
+
+ul[data-type="taskList"]>li>label {
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+  cursor: pointer;
+  user-select: none;
+  pointer-events: auto;
+}
+
+ul[data-type="taskList"]>li>label>input[type="checkbox"] {
+  cursor: pointer;
+  margin: 0;
+  pointer-events: auto;
+}
+
+ul[data-type="taskList"]>li>span {
+  flex: 1;
+  min-width: 0;
+}
+
+ul[data-type="taskList"]>li[data-checked="true"]>* {
+  text-decoration: line-through;
+  color: #4a4c4e;
+  opacity: 0.7;
+}
+
+ul[data-type="taskList"] ul[data-type="taskList"] {
+  margin-left: 1.5rem;
+  margin-top: 0.25rem;
+}
+
+ul[data-type="taskList"] * {
+  transition: none !important;
+  animation: none !important;
 }

@@ -6,7 +6,6 @@ import TextAlign from '@tiptap/extension-text-align'
 import FontFamily from '@tiptap/extension-font-family'
 import { TextStyle } from '@tiptap/extension-text-style'
 import Highlight from '@tiptap/extension-highlight'
-import Link from '@tiptap/extension-link' // ← Import Link
 import React, { useMemo } from 'react'
 import Menubar from './Menubar';
 import { CustomHighlight } from './extensions/custom-highlight';
@@ -15,7 +14,7 @@ import Subscript from '@tiptap/extension-subscript'
 import Superscript from '@tiptap/extension-superscript'
 import { CustomColor } from './extensions/custom-color';
 import TaskList from '@tiptap/extension-task-list'
-import TaskItem from '@tiptap/extension-task-item'
+import TaskItem from '@tiptap/extension-task-item' // ✅ THÊM TaskItem gốc
 import CharacterCount from '@tiptap/extension-character-count'
 import { CustomLink } from './extensions/custom-link';
 
@@ -63,27 +62,14 @@ function RichTextEditor() {
         CustomColor.configure({
             types: ['textStyle'],
         }),
-        TaskList.configure({
-            HTMLAttributes: {
-                class: 'task-list',
-            },
-        }),
+        CustomLink,
+        TaskList,
         TaskItem.configure({
             nested: true,
             HTMLAttributes: {
                 class: 'task-item',
             },
         }),
-        Link.configure({
-            openOnClick: false,
-            HTMLAttributes: {
-                class: 'text-blue-600 underline hover:text-blue-800 cursor-pointer',
-                target: '_blank',
-                rel: 'noopener noreferrer',
-            },
-            validate: href => /^https?:\/\//.test(href),
-        }),
-        CustomLink
     ], [])
 
     const editor = useEditor({
