@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { GitFork, Menu, X } from 'lucide-react'
 import React from 'react'
-import ThemeToggle from '@/components/ThemeToggle'
+import ThemeToggle from '@/components/common/ThemeToggle'
 
 function Header() {
     const [open, setOpen] = React.useState(false)
@@ -47,6 +47,12 @@ function Header() {
                             className="px-3 py-2 rounded-md text-sm font-medium text-[var(--foreground)]/85 hover:text-[var(--primary-600)] hover:bg-[var(--primary-50)] transition-colors"
                         >
                             Practice
+                        </Link>
+                        <Link 
+                            href="/editor" 
+                            className="px-3 py-2 rounded-md text-sm font-medium text-[var(--foreground)]/85 hover:text-[var(--primary-600)] hover:bg-[var(--primary-50)] transition-colors"
+                        >
+                            Editor
                         </Link>
                         <ThemeToggle />
                     </nav>

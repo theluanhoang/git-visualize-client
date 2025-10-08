@@ -1,6 +1,6 @@
 'use client';
 
-import Sidebar from '@/components/git-theory/Sidebar'
+import Sidebar from '@/components/common/git-theory/Sidebar'
 import { getLessonBySlug, getLessonMetas, lessons } from '@/lib/git-theory/lessons';
 import Link from 'next/link';
 import React, { ReactNode } from 'react'

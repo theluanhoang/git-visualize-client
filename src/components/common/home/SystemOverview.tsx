@@ -1,6 +1,6 @@
 'use client';
 
-import OverviewCard from "@/components/home/OverviewCard";
+import OverviewCard from "@/components/common/home/OverviewCard";
 import { motion } from "framer-motion";
 import SectionTitle from "./SectionTitle";
 

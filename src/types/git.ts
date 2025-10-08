@@ -73,4 +73,12 @@ export interface IRepositoryState {
   branches: IBranch[];
   tags: ITag[];
   head: IHead;
+
+  // NEW 
+    workingDirectory: IFileName[];
+  stagingArea: IFileName[];
+  stagedDeletions: IFileName[];
+  repositoryFiles: IFileName[];
 }
+
+export type IFileName = string;

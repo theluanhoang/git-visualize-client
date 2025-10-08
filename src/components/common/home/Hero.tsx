@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { slides } from "@/services/mock-data";
 
-const Carousel = dynamic(() => import("@/components/Carousel"), { ssr: false });
+const Carousel = dynamic(() => import("@/components/common/Carousel"), { ssr: false });
 
 export default function Hero() {
   return (

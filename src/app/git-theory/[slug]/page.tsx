@@ -1,8 +1,8 @@
 'use client';
 import React from 'react';
 import { getLessonBySlug, getLessonMetas, lessons } from '@/lib/git-theory/lessons';
-import LessonContent from '@/components/git-theory/LessonContent';
-import LessonNavigation from '@/components/git-theory/LessonNavigation';
+import LessonContent from '@/components/common/git-theory/LessonContent';
+import LessonNavigation from '@/components/common/git-theory/LessonNavigation';
 import { getSlugFromPath } from '@/lib/git-theory/get-slug-from-path';
 import { usePathname, useRouter } from 'next/navigation';
 
