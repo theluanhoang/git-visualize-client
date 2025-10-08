@@ -17,7 +17,7 @@ import { CustomColor } from './extensions/custom-color';
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
 import CharacterCount from '@tiptap/extension-character-count'
-import CustomLinkHandler from './extensions/custom-link-handler';
+import { CustomLink } from './extensions/custom-link';
 
 function RichTextEditor() {
     const extensions = useMemo(() => [
@@ -78,10 +78,12 @@ function RichTextEditor() {
             openOnClick: false,
             HTMLAttributes: {
                 class: 'text-blue-600 underline hover:text-blue-800 cursor-pointer',
+                target: '_blank',
+                rel: 'noopener noreferrer',
             },
             validate: href => /^https?:\/\//.test(href),
         }),
-        // CustomLinkHandler
+        CustomLink
     ], [])
 
     const editor = useEditor({

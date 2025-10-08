@@ -1,12 +1,7 @@
 import { Button } from "@/components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ReactNode, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 interface EditLinkPopupProps {
   editor: any;
@@ -14,91 +9,98 @@ interface EditLinkPopupProps {
   onClose: () => void;
   initialText: string;
   initialUrl: string;
-  from: number;
-  to: number;
-  onApply?: (displayText: string, url: string) => void;
-  children: ReactNode;
+  position: { top: number; left: number } | null;
 }
 
-export function EditLinkPopup({ editor, isOpen, onClose, initialText, initialUrl, from, to, onApply, children }: EditLinkPopupProps) {
+function EditLinkPopup({ editor, isOpen, onClose, initialText, initialUrl, position }: EditLinkPopupProps) {
   const [displayText, setDisplayText] = useState(initialText);
   const [url, setUrl] = useState(initialUrl);
 
   useEffect(() => {
-    if (isOpen) {
-      setDisplayText(initialText);
-      setUrl(initialUrl);
-    }
-  }, [isOpen, initialText, initialUrl]);
+    setDisplayText(initialText);
+    setUrl(initialUrl);
+  }, [initialText, initialUrl, isOpen]);
 
   const handleEdit = () => {
     if (displayText.trim() && url.trim()) {
+      const finalUrl = url.trim().startsWith("http://") || url.trim().startsWith("https://")
+        ? url.trim()
+        : `https://${url.trim()}`;
+      
       if (editor) {
-        if (onApply) {
-          onApply(displayText.trim(), url.trim());
-        } else {
-          editor.commands.editLink(displayText.trim(), url.trim());
-        }
+        const { from, to } = editor.state.selection;
+        editor
+          .chain()
+          .focus()
+          .deleteRange({ from, to })
+          .insertContent({
+            type: "text",
+            text: displayText.trim(),
+            marks: [{ type: "link", attrs: { href: finalUrl } }],
+          })
+          .run();
       }
+
       onClose();
     }
   };
 
   const handleRemove = () => {
     if (editor) {
-      editor.commands.removeLink();
-      onClose();
+      editor.chain().focus().unsetLink().run();
     }
+    onClose();
   };
 
+  if (!isOpen || !position) return null;
+
   return (
-    <Popover open={isOpen} onOpenChange={(open) => {
-      console.log("EditLinkPopup state changed to:", open);
-      if (!open) onClose();
-    }}>
-      <PopoverTrigger asChild>{children}</PopoverTrigger>
-      <PopoverContent
-        className="w-[300px] p-4"
-        style={{ display: isOpen ? "block" : "none", zIndex: 1000 }}
-        align="start"
-        side="bottom"
-        sideOffset={5}
-      >
-        <div className="space-y-4">
-          <h4 className="font-medium leading-none">Edit Link</h4>
-          <div className="space-y-2">
-            <div className="space-y-1">
-              <Label htmlFor="display-text">Display Text *</Label>
-              <Input
-                id="display-text"
-                value={displayText}
-                onChange={(e) => setDisplayText(e.target.value)}
-                placeholder="Edit display text"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="url">URL *</Label>
-              <Input
-                id="url"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder="https://example.com"
-              />
-            </div>
+    <div
+      className="fixed bg-white border border-gray-200 rounded-lg shadow-xl w-[300px] p-4"
+      style={{
+        top: `${position.top}px`,
+        left: `${position.left}px`,
+        zIndex: 9999,
+      }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="space-y-4">
+        <h4 className="font-medium leading-none">Edit Link</h4>
+        <div className="space-y-2">
+          <div className="space-y-1">
+            <Label htmlFor="edit-display-text">Display Text *</Label>
+            <Input
+              id="edit-display-text"
+              value={displayText}
+              onChange={(e) => setDisplayText(e.target.value)}
+              placeholder="Enter display text"
+            />
           </div>
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button onClick={handleEdit} disabled={!displayText.trim() || !url.trim()}>
-              Edit
-            </Button>
-            <Button variant="destructive" onClick={handleRemove}>
-              Remove
-            </Button>
+          <div className="space-y-1">
+            <Label htmlFor="edit-url">URL *</Label>
+            <Input
+              id="edit-url"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://example.com"
+            />
           </div>
         </div>
-      </PopoverContent>
-    </Popover>
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button variant="destructive" onClick={handleRemove}>
+            Remove
+          </Button>
+          <Button onClick={handleEdit} disabled={!displayText.trim() || !url.trim()}>
+            Edit
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }
+
+
+export default EditLinkPopup;

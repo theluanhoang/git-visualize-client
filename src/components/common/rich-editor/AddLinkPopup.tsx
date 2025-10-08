@@ -23,11 +23,9 @@ export function AddLinkPopup({ editor, isOpen, onClose, children }: AddLinkPopup
     if (isOpen && editor) {
       const { from, to, empty } = editor.state.selection;
       if (!empty && from !== to) {
-        // Nếu có text được chọn, set displayText từ text được chọn
         const selectedText = editor.state.doc.textBetween(from, to, " ") || "";
         setDisplayText(selectedText);
       } else {
-        // Nếu không có selection, giữ displayText trống để người dùng nhập
         setDisplayText("");
         const currentUrl = editor.getAttributes("link").href || "";
         setUrl(currentUrl);
@@ -74,13 +72,11 @@ export function AddLinkPopup({ editor, isOpen, onClose, children }: AddLinkPopup
 
   return (
     <Popover open={isOpen} onOpenChange={(open) => {
-      console.log("Popover state changed to:", open);
       if (!open) onClose();
     }}>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
       <PopoverContent
         className="w-[300px] p-4"
-        style={{ display: isOpen ? "block" : "none", zIndex: 1000 }}
         align="start"
         side="bottom"
         sideOffset={5}
