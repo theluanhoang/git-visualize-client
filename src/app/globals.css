@@ -276,11 +276,11 @@ body {
 /* Tiptap Editor Base Styles */
 .ProseMirror {
   min-height: 156px;
+  background: var(--surface);
+  color: var(--foreground);
 }
 
-.ProseMirror:focus {
-  outline: none;
-}
+.ProseMirror:focus { outline: none; }
 
 /* Heading Styles - với font size tương ứng */
 .ProseMirror h1 {
@@ -1238,6 +1238,19 @@ pre code[data-line-numbers] .line::before {
   }
 }
 
+/* Modal surface subtle border adjustment for dark mode */
+.modal-surface {
+  border-color: color-mix(in oklab, var(--foreground) 10%, transparent);
+}
+
+/* Ensure inner content container matches modal surface border in dark */
+.modal-surface .ProseMirror,
+.modal-surface .prose,
+.modal-surface .tiptap {
+  background: var(--surface);
+  color: var(--foreground);
+}
+
 /* Thêm vào globals.css */
 /* Code Block Styles */
 .code-block-wrapper {
@@ -1292,9 +1305,9 @@ pre code[data-line-numbers] .line::before {
 .tiptap td > code,
 .tiptap th > code,
 .tiptap span > code:not([data-node-view-content]) {
-  background-color: #f8fafc;
-  border: 1px solid #e5e7eb;
-  color: #0f172a;
+  background-color: color-mix(in oklab, var(--foreground) 6%, transparent);
+  border: 1px solid color-mix(in oklab, var(--foreground) 12%, transparent);
+  color: var(--foreground);
   border-radius: 6px;
   padding: 0.125rem 0.375rem;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;

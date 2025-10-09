@@ -81,7 +81,7 @@ function RichTextEditor() {
 
     const editor = useEditor({
         extensions,
-        content: '<p>Hello World! 🌎️</p>',
+        content: '',
         editorProps: {
             attributes: {
                 class: 'min-h-[156px] border rounded-md bg-slate-50 px-3 py-2 focus:outline-none',
@@ -91,15 +91,6 @@ function RichTextEditor() {
         shouldRerenderOnTransaction: false,
     });
 
-    useEffect(() => {
-        if (editor) {
-            console.log('✅ Editor ready');
-            console.log('📦 Extensions:', editor.extensionManager.extensions.map(e => e.name));
-            console.log('🎯 Has codeBlock?', editor.extensionManager.extensions.some(e => e.name === 'codeBlock'));
-        }
-    }, [editor]);
-
-    const [savedHtml, setSavedHtml] = useState('');
     const [savedJson, setSavedJson] = useState<any | null>(null);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
@@ -107,18 +98,17 @@ function RichTextEditor() {
         if (!editor) return '';
         const htmlContent = editor.getHTML();
         const jsonContent = editor.getJSON();
-        setSavedHtml(htmlContent);
         setSavedJson(jsonContent);
         setIsPreviewOpen(true);
         return htmlContent;
     };
     return (
-        <div className="mx-auto bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+        <div className="mx-auto rounded-lg shadow-sm border overflow-hidden bg-[var(--surface)] border-[var(--border)] text-[var(--foreground)]">
             <Menubar editor={editor} />
             <EditorContent editor={editor} className="tiptap p-4 focus:outline-none" />
             <Button
                 onClick={openPreview}
-                className="w-full bg-[var(--primary)] text-white py-2 rounded-b-lg hover:bg-[var(--primary-700)] transition-colors duration-200"
+                className="w-full py-2 rounded-b-lg transition-colors duration-200 bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-[var(--primary-700)]"
             >
                 Preview
             </Button>
@@ -134,12 +124,12 @@ function RichTextEditor() {
                         onClick={() => setIsPreviewOpen(false)}
                     />
                     <div className="absolute inset-0 flex items-center justify-center p-4">
-                        <div className="w-full max-w-4xl max-h-[80vh] bg-white rounded-xl shadow-xl border overflow-hidden">
-                            <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50">
-                                <h3 className="text-sm font-semibold text-gray-800">Preview</h3>
+                        <div className="w-full max-w-4xl max-h-[80vh] rounded-xl shadow-xl border overflow-hidden bg-[var(--surface)] border-[var(--border)] text-[var(--foreground)] modal-surface">
+                            <div className="flex items-center justify-between px-4 py-3 border-b bg-[color:var(--muted)] border-[var(--border)]">
+                                <h3 className="text-sm font-semibold">Preview</h3>
                                 <Button
                                     onClick={() => setIsPreviewOpen(false)}
-                                    className="bg-gray-900 text-white px-3 py-1.5 rounded-md hover:bg-gray-800"
+                                    className="px-3 py-1.5 rounded-md bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-[var(--primary-700)]"
                                 >
                                     Close
                                 </Button>
@@ -148,7 +138,7 @@ function RichTextEditor() {
                                 {savedJson ? (
                                     <LessonViewer content={savedJson} />
                                 ) : (
-                                    <div className="p-6 text-gray-500">No content</div>
+                                    <div className="p-6 opacity-70">No content</div>
                                 )}
                             </div>
                         </div>

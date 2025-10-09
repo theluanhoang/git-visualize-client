@@ -35,7 +35,7 @@ const Menubar = memo(({ editor }: { editor: Editor | null }) => {
     });
 
     return (
-        <div className="flex items-center justify-center border-b border-gray-100 p-2 bg-gray-50">
+        <div className="flex items-center justify-center border-b p-2 bg-[color:var(--muted)] border-[var(--border)] text-[color:var(--foreground)]">
             <div className="flex items-center gap-1">
                 <FontSelection editor={editor} />
                 <TextSelection editor={editor} />
@@ -46,7 +46,7 @@ const Menubar = memo(({ editor }: { editor: Editor | null }) => {
                     variant="ghost"
                     title="Bold"
                     onClick={() => editor.chain().focus().toggleBold().run()}
-                    className={`${editorState?.isBold ? 'bg-black text-white' : ''}`}
+                    className={`${editorState?.isBold ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-[var(--foreground)] hover:bg-[color:var(--secondary)]'}`}
                 >
                     <Bold />
                 </Button>
@@ -54,7 +54,7 @@ const Menubar = memo(({ editor }: { editor: Editor | null }) => {
                     variant="ghost"
                     title="Italic"
                     onClick={() => editor.chain().focus().toggleItalic().run()}
-                    className={`${editorState?.isItalic ? 'bg-black text-white' : ''}`}
+                    className={`${editorState?.isItalic ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-[var(--foreground)] hover:bg-[color:var(--secondary)]'}`}
                 >
                     <Italic />
                 </Button>
@@ -62,7 +62,7 @@ const Menubar = memo(({ editor }: { editor: Editor | null }) => {
                     variant="ghost"
                     title="Strike"
                     onClick={() => editor.chain().focus().toggleStrike().run()}
-                    className={`${editorState?.isStrike ? 'bg-black text-white' : ''}`}
+                    className={`${editorState?.isStrike ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-[var(--foreground)] hover:bg-[color:var(--secondary)]'}`}
                 >
                     <Strikethrough />
                 </Button>
@@ -79,7 +79,7 @@ const Menubar = memo(({ editor }: { editor: Editor | null }) => {
                     variant="ghost"
                     title="Inline code"
                     onClick={() => editor.chain().focus().toggleCode().run()}
-                    className={`${editorState?.isInlineCode ? 'bg-black text-white' : ''}`}
+                    className={`${editorState?.isInlineCode ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-[var(--foreground)] hover:bg-[color:var(--secondary)]'}`}
                 >
                     <Code />
                 </Button>
@@ -87,7 +87,7 @@ const Menubar = memo(({ editor }: { editor: Editor | null }) => {
                     variant="ghost"
                     title="Code block"
                     onClick={() => editor.commands.toggleCodeBlock()}
-                    className={`${editorState?.isCodeBlock ? 'bg-black text-white' : ''}`}
+                    className={`${editorState?.isCodeBlock ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-[var(--foreground)] hover:bg-[color:var(--secondary)]'}`}
                 >
                     <CodeXml />
                 </Button>

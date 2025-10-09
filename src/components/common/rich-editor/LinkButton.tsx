@@ -101,7 +101,7 @@ export default function LinkButton({ editor }: LinkButtonProps) {
           }}
           className={editorState?.isLink ? "is-active text-blue-500" : "text-gray-500"}
         >
-          <Link2 className="h-4 w-4" />
+          <Link2 className="h-5 w-5 text-[color:var(--foreground)]" />
         </Button>
       </AddLinkPopup>
 

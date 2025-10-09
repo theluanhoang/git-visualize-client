@@ -44,10 +44,8 @@ function TextColorPicker({ editor }: { editor: Editor }) {
 
     const handleColorSelect = (color: string) => {
         if (color === '') {
-            // Unset color
             editor.chain().focus().setMark('textStyle', { color: null }).run();
         } else {
-            // Set color using setMark
             editor.chain().focus().setMark('textStyle', { color }).run();
         }
         setIsOpen(false);
@@ -64,7 +62,10 @@ function TextColorPicker({ editor }: { editor: Editor }) {
                 }`}
                 title="Text Color"
             >
-                <Palette className="w-5 h-5" style={{ color: currentColor || '#000000' }} />
+                <Palette
+                    className="w-5 h-5 text-[color:var(--foreground)]"
+                    style={{ color: currentColor || 'var(--foreground)' }}
+                />
                 {currentColor && (
                     <div
                         className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-4 h-1 rounded"

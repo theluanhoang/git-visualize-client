@@ -101,10 +101,10 @@ export default function CodeBlock({ node, updateAttributes, editor }: NodeViewPr
 
   return (
     <NodeViewWrapper className="code-block-wrapper not-prose">
-      <Card className="bg-white rounded-lg shadow-sm border border-gray-200 my-4 gap-0">
+      <Card className="rounded-lg shadow-sm my-4 gap-0 bg-[var(--surface)] border border-[var(--border)] text-[var(--foreground)]">
         <CardHeader className="flex items-center justify-between px-4" contentEditable={false}>
           <div className="flex items-center gap-3">
-            <p className="inline-flex items-center text-xs font-medium text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full border border-gray-200">
+            <p className="inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full border bg-[color:var(--muted)] border-[var(--border)] text-[color:var(--foreground)]">
               {language}
             </p>
             {isEditable && (
@@ -112,7 +112,7 @@ export default function CodeBlock({ node, updateAttributes, editor }: NodeViewPr
                 value={language}
                 onValueChange={handleLanguageChange}
               >
-                <SelectTrigger className="text-xs border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" style={{ height: '25px' }}>
+                <SelectTrigger className="text-xs rounded px-2 py-1 bg-[var(--surface)] border border-[var(--border)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500" style={{ height: '25px' }}>
                   <SelectValue placeholder="Select language" />
                 </SelectTrigger>
                 <SelectContent>
@@ -142,14 +142,14 @@ export default function CodeBlock({ node, updateAttributes, editor }: NodeViewPr
           <div className="flex gap-4">
             <Button
               onClick={copyToClipboard}
-              className="cursor-pointer px-3 py-1.5 rounded-md border border-gray-300 bg-white text-gray-800 text-sm hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50"
+              className="cursor-pointer px-3 py-1.5 rounded-md border text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50 bg-[var(--surface)] border-[var(--border)] text-[var(--foreground)] hover:bg-[color:var(--secondary)]"
               disabled={isEmpty}
             >
               {copied ? 'Copied ✓' : 'Copy'}
             </Button>
             <Button
               onClick={toggleHide}
-              className="cursor-pointer px-3 py-1.5 rounded-md border border-gray-300 bg-white text-gray-800 text-sm hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50"
+              className="cursor-pointer px-3 py-1.5 rounded-md border text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50 bg-[var(--surface)] border-[var(--border)] text-[var(--foreground)] hover:bg-[color:var(--secondary)]"
             >
               {isHidden ? 'Hide' : 'Show'}
             </Button>
@@ -159,45 +159,45 @@ export default function CodeBlock({ node, updateAttributes, editor }: NodeViewPr
           <div className="px-4 py-3" contentEditable={false}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <label className="block text-[11px] font-medium text-gray-600 mb-1">Title</label>
+                <label className="block text-[11px] font-medium mb-1 opacity-80">Title</label>
                 <Input
                   value={title}
                   onChange={handleTitleChange}
                   placeholder="Nhập tiêu đề (tối đa 80 ký tự)"
                   maxLength={TITLE_MAX}
-                  className="text-sm border border-gray-300 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="text-sm rounded-md px-3 py-2 bg-[var(--surface)] border border-[var(--border)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
-                <div className="mt-1 text-[11px] text-gray-400">{title.length}/{TITLE_MAX}</div>
+                <div className="mt-1 text-[11px] opacity-60">{title.length}/{TITLE_MAX}</div>
               </div>
               <div>
-                <label className="block text-[11px] font-medium text-gray-600 mb-1">Description</label>
+                <label className="block text-[11px] font-medium mb-1 opacity-80">Description</label>
                 <Input
                   value={description}
                   onChange={handleDescriptionChange}
                   placeholder="Mô tả ngắn (tối đa 160 ký tự)"
                   maxLength={DESCRIPTION_MAX}
-                  className="text-sm border border-gray-300 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="text-sm rounded-md px-3 py-2 bg-[var(--surface)] border border-[var(--border)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
-                <div className="mt-1 text-[11px] text-gray-400">{description.length}/{DESCRIPTION_MAX}</div>
+                <div className="mt-1 text-[11px] opacity-60">{description.length}/{DESCRIPTION_MAX}</div>
               </div>
             </div>
           </div>
         ) : (
           <div className="px-4" contentEditable={false}>
             {title ? (
-              <p className="text-[24px] font-bold text-gray-900 my-0">{title}</p>
+              <p className="text-[24px] font-bold my-0">{title}</p>
             ) : null}
             {description ? (
-              <p className="text-[14px] text-gray-600">{description}</p>
+              <p className="text-[14px] opacity-80">{description}</p>
             ) : null}
           </div>
         )}
         {
           isHidden && (
             <CardContent className="px-4 pb-4 mt-2">
-              <div className="h-full w-full bg-gray-900 text-green-400 font-mono rounded-lg flex flex-col border border-gray-800">
-                <div className="flex items-center justify-between px-3 py-1.5 bg-gray-800 border-b border-gray-700 rounded-t-lg" contentEditable={false}>
-                  <div className="text-xs text-gray-300">{language} terminal</div>
+              <div className="h-full w-full font-mono rounded-lg flex flex-col border bg-[#0b1220] text-[#a7f3d0] border-[#0f172a]">
+                <div className="flex items-center justify-between px-3 py-1.5 bg-[#111827] border border-[#1f2937] rounded-t-lg" contentEditable={false}>
+                  <div className="text-xs opacity-80">{language} terminal</div>
                   <div className="flex space-x-1">
                     <div className="w-2.5 h-2.5 bg-red-500 rounded-full"></div>
                     <div className="w-2.5 h-2.5 bg-yellow-500 rounded-full"></div>
@@ -207,22 +207,22 @@ export default function CodeBlock({ node, updateAttributes, editor }: NodeViewPr
                 <div className="px-3 py-2 overflow-x-auto terminal-scrollbar min-h-[100px] relative">
                   <div className="text-sm leading-relaxed">
                     <NodeViewContent
-                      className="inline-block whitespace-pre font-mono text-green-400 min-w-full outline-none align-top"
+                      className="inline-block whitespace-pre font-mono min-w-full outline-none align-top"
                     />
                   </div>
                   {isEmpty && (
-                    <div className="text-gray-500 text-sm italic pointer-events-none absolute top-2 left-[26px]" contentEditable={false}>
+                    <div className="opacity-60 text-sm italic pointer-events-none absolute top-2 left-[26px]" contentEditable={false}>
                       Enter your {language} commands...
                     </div>
                   )}
                 </div>
                 <style jsx>{`
               .terminal-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
-              .terminal-scrollbar::-webkit-scrollbar-track { background: #2d3748; border-radius: 4px; }
-              .terminal-scrollbar::-webkit-scrollbar-thumb { background: #4a5568; border-radius: 4px; border: 1px solid #2d3748; }
-              .terminal-scrollbar::-webkit-scrollbar-thumb:hover { background: #718096; }
-              .terminal-scrollbar::-webkit-scrollbar-thumb:active { background: #a0aec0; }
-              .terminal-scrollbar::-webkit-scrollbar-corner { background: #2d3748; }
+              .terminal-scrollbar::-webkit-scrollbar-track { background: #0f172a; border-radius: 4px; }
+              .terminal-scrollbar::-webkit-scrollbar-thumb { background: #1f2937; border-radius: 4px; border: 1px solid #0f172a; }
+              .terminal-scrollbar::-webkit-scrollbar-thumb:hover { background: #374151; }
+              .terminal-scrollbar::-webkit-scrollbar-thumb:active { background: #4b5563; }
+              .terminal-scrollbar::-webkit-scrollbar-corner { background: #0f172a; }
             `}</style>
               </div>
             </CardContent>
