@@ -4,7 +4,7 @@ import { NodeViewProps } from '@tiptap/react';
 import { NodeViewWrapper, NodeViewContent } from '@tiptap/react';
 import React, { useState } from 'react';
 
-export default function CodeBlock({ node, updateAttributes, extension }: NodeViewProps) {
+export default function CodeBlock({ node, updateAttributes, editor }: NodeViewProps) {
   const [copied, setCopied] = useState<boolean>(false);
   const language = (node.attrs.language as string) || 'bash';
   const code = node.textContent || '';
@@ -22,13 +22,41 @@ export default function CodeBlock({ node, updateAttributes, extension }: NodeVie
   };
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
-    updateAttributes({ language: e.target.value });
+    const newLanguage = e.target.value;
+    const oldIsBash = isBash;
+    const newIsBash = newLanguage.toLowerCase() === 'bash' || newLanguage.toLowerCase() === 'sh';
+    
+    updateAttributes({ language: newLanguage });
+    
+    if (editor) {
+      editor.commands.command(({ tr, state }) => {
+        const { selection } = state;
+        const { $from } = selection;
+        const content = $from.parent.textContent;
+        const pos = $from.start();
+        
+        if (!oldIsBash && newIsBash) {
+          const trimmed = content.trim();
+          if (!trimmed || (!trimmed.startsWith('$ ') && !trimmed.startsWith('$'))) {
+            tr.insertText('$ ', pos);
+          }
+        } else if (oldIsBash && !newIsBash) {
+          if (content.startsWith('$ ')) {
+            tr.delete(pos, pos + 2);
+          } else if (content.startsWith('$')) {
+            tr.delete(pos, pos + 1);
+          }
+        }
+        
+        return true;
+      });
+    }
   };
 
   return (
     <NodeViewWrapper className="code-block-wrapper not-prose">
       <section className="bg-white rounded-lg shadow-sm border border-gray-200 my-4">
-        <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center justify-between px-4 py-3" contentEditable={false}>
           <div className="flex items-center gap-3">
             <p className="inline-flex items-center text-xs font-medium text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full border border-gray-200">
               {language}
@@ -37,7 +65,6 @@ export default function CodeBlock({ node, updateAttributes, extension }: NodeVie
               value={language}
               onChange={handleLanguageChange}
               className="text-xs border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              contentEditable={false}
             >
               <option value="javascript">JavaScript</option>
               <option value="typescript">TypeScript</option>
@@ -63,7 +90,6 @@ export default function CodeBlock({ node, updateAttributes, extension }: NodeVie
           <button
             onClick={copyToClipboard}
             className="px-3 py-1.5 rounded-md border border-gray-300 bg-white text-gray-800 text-sm hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50"
-            contentEditable={false}
             type="button"
             disabled={isEmpty}
           >
@@ -73,7 +99,7 @@ export default function CodeBlock({ node, updateAttributes, extension }: NodeVie
         <div className="px-4 pb-4">
           {isBash ? (
             <div className="h-full w-full bg-gray-900 text-green-400 font-mono rounded-lg flex flex-col border border-gray-800">
-              <div className="flex items-center justify-between px-3 py-1.5 bg-gray-800 border-b border-gray-700 rounded-t-lg">
+              <div className="flex items-center justify-between px-3 py-1.5 bg-gray-800 border-b border-gray-700 rounded-t-lg" contentEditable={false}>
                 <div className="text-xs text-gray-300">Bash Terminal</div>
                 <div className="flex space-x-1">
                   <div className="w-2.5 h-2.5 bg-red-500 rounded-full"></div>
@@ -83,13 +109,12 @@ export default function CodeBlock({ node, updateAttributes, extension }: NodeVie
               </div>
               <div className="px-3 py-2 overflow-x-auto terminal-scrollbar min-h-[100px] relative">
                 <div className="text-sm leading-relaxed">
-                  <span className="text-green-400">$ </span>
                   <NodeViewContent 
                     className="inline-block whitespace-pre font-mono text-green-400 min-w-full outline-none align-top"
                   />
                 </div>
                 {isEmpty && (
-                  <div className="text-gray-500 text-sm italic pointer-events-none absolute top-2 left-[26px]">
+                  <div className="text-gray-500 text-sm italic pointer-events-none absolute top-2 left-[26px]" contentEditable={false}>
                     Enter your bash commands...
                   </div>
                 )}
@@ -111,7 +136,7 @@ export default function CodeBlock({ node, updateAttributes, extension }: NodeVie
                 />
               </pre>
               {isEmpty && (
-                <div className="text-gray-400 text-sm italic pointer-events-none absolute top-3 left-3">
+                <div className="text-gray-400 text-sm italic pointer-events-none absolute top-3 left-3" contentEditable={false}>
                   Enter your {language} code...
                 </div>
               )}

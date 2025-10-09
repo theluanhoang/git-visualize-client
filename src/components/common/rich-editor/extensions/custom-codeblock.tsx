@@ -6,15 +6,15 @@ import CodeBlock from '../CodeBlock';
 
 export const CustomCodeBlock = Node.create({
   name: 'codeBlock',
-  
+
   group: 'block',
-  
-  content: 'text*',  // IMPORTANT: Cho phép chứa text
-  
-  marks: '', // Không cho phép marks trong code block
-  
+
+  content: 'text*',
+
+  marks: '',
+
   code: true,
-  
+
   defining: true,
 
   addAttributes() {
@@ -22,9 +22,9 @@ export const CustomCodeBlock = Node.create({
       language: {
         default: 'bash',
         parseHTML: (element) => {
-          return element.getAttribute('data-language') || 
-                 element.getAttribute('class')?.replace('language-', '') || 
-                 'bash';
+          return element.getAttribute('data-language') ||
+            element.getAttribute('class')?.replace('language-', '') ||
+            'bash';
         },
         renderHTML: (attributes) => ({
           'data-language': attributes.language,
@@ -79,14 +79,61 @@ export const CustomCodeBlock = Node.create({
     return {
       setCodeBlock:
         (attributes?: { language?: string }) =>
-        ({ commands }) => {
-          return commands.setNode(this.name, { language: attributes?.language || 'bash' });
-        },
+          ({ commands }) => {
+            return commands.setNode(this.name, { language: attributes?.language || 'bash' });
+          },
       toggleCodeBlock:
         (attributes?: { language?: string }) =>
-        ({ commands }) => {
-          return commands.toggleNode(this.name, 'paragraph', { language: attributes?.language || 'bash' });
-        },
+          ({ commands, state, chain }) => {
+            const language = attributes?.language || 'bash';
+            const isBash = language === 'bash' || language === 'sh';
+
+            // Nếu có text được select và là bash
+            if (isBash && !state.selection.empty) {
+              const { from, to } = state.selection;
+              const selectedText = state.doc.textBetween(from, to, '\n');
+
+              const lines = selectedText.split('\n');
+              const formattedText = lines
+                .map((line) => {
+                  if (!line.trim()) return line;
+                  return line.startsWith('$ ') ? line : `$ ${line}`;
+                })
+                .join('\n');
+
+              return chain()
+                .deleteSelection()
+                .insertContent({
+                  type: this.name,
+                  attrs: { language },
+                  content: [
+                    {
+                      type: 'text',
+                      text: formattedText,
+                    },
+                  ],
+                })
+                .run();
+            }
+
+            // Nếu đang ở trong paragraph và chuyển sang bash code block
+            const { $from } = state.selection;
+            const isInParagraph = $from.parent.type.name === 'paragraph';
+            
+            if (isBash && isInParagraph) {
+              const currentContent = $from.parent.textContent;
+              
+              // Nếu paragraph rỗng, tạo code block với $ sẵn
+              if (!currentContent.trim()) {
+                return chain()
+                  .toggleNode(this.name, 'paragraph', { language })
+                  .insertContent('$ ')
+                  .run();
+              }
+            }
+
+            return commands.toggleNode(this.name, 'paragraph', { language });
+          },
     };
   },
 
@@ -95,21 +142,114 @@ export const CustomCodeBlock = Node.create({
       'Mod-Alt-c': () => {
         return this.editor.commands.toggleCodeBlock();
       },
-      Backspace: () => {
-        const { empty, $anchor } = this.editor.state.selection;
-        const isAtStart = $anchor.pos === $anchor.start();
+      Enter: ({ editor }) => {
+        const { state } = editor;
+        const { selection } = state;
+        const { $from } = selection;
 
-        if (!empty || $anchor.parent.type.name !== this.name) {
+        if ($from.parent.type !== this.type) {
           return false;
         }
 
-        if (isAtStart && !$anchor.parent.textContent.length) {
-          return this.editor.commands.clearNodes();
+        const language = $from.parent.attrs.language;
+        const isBash = language === 'bash' || language === 'sh';
+
+        if (isBash) {
+          const content = $from.parent.textContent;
+          const cursorPos = $from.parentOffset;
+          
+          // Nếu code block rỗng hoặc chỉ có khoảng trắng, thêm $ đầu tiên
+          if (!content.trim()) {
+            return editor.commands.insertContent('$ ');
+          }
+          
+          // Nếu đang ở cuối dòng hoặc ở giữa, thêm newline + $
+          return editor.commands.insertContent('\n$ ');
         }
 
         return false;
       },
 
+      'Shift-Enter': ({ editor }) => {
+        const { state } = editor;
+        const { selection } = state;
+        const { $from } = selection;
+
+        if ($from.parent.type !== this.type) {
+          return false;
+        }
+
+        const language = $from.parent.attrs.language;
+        const isBash = language === 'bash' || language === 'sh';
+        
+        // Với bash, nếu block rỗng thì thêm $ trước
+        if (isBash) {
+          const content = $from.parent.textContent;
+          if (!content.trim()) {
+            return editor.commands.insertContent('$ ');
+          }
+        }
+
+        return editor.commands.insertContent('\n');
+      },
+      Backspace: () => {
+        const { state } = this.editor;
+        const { selection } = state;
+        const { empty, $anchor } = selection;
+
+        if (!empty || $anchor.parent.type.name !== this.name) {
+          return false;
+        }
+
+        const textContent = $anchor.parent.textContent;
+        const trimmedContent = textContent.trim();
+        const language = $anchor.parent.attrs.language;
+        const isBash = language === 'bash' || language === 'sh';
+
+        const isEmpty = isBash 
+          ? (trimmedContent === '' || trimmedContent === '$' || trimmedContent === '$ ')
+          : trimmedContent.length === 0;
+
+        if (isEmpty) {
+          const pos = $anchor.before();
+          const nodeSize = $anchor.parent.nodeSize;
+          
+          if (pos === 0) {
+            return this.editor
+              .chain()
+              .command(({ tr }) => {
+                const paragraph = state.schema.nodes.paragraph.create();
+                tr.replaceWith(0, nodeSize, paragraph);
+                return true;
+              })
+              .focus(1)
+              .run();
+          } else {
+            return this.editor.commands.deleteNode(this.name);
+          }
+        }
+
+        if ($anchor.parentOffset === 0) {
+          return false;
+        }
+
+        return false;
+      },
+      Delete: () => {
+        const { empty, $anchor } = this.editor.state.selection;
+
+        if (!empty || $anchor.parent.type.name !== this.name) {
+          return false;
+        }
+
+        const textContent = $anchor.parent.textContent.trim();
+
+        if (textContent.length === 0) {
+          return this.editor.commands.clearNodes();
+        }
+
+        return false;
+      },
       'Mod-Enter': () => {
         const { state } = this.editor;
         const { selection } = state;
