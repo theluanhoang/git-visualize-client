@@ -11,9 +11,21 @@ export default function CodeBlock({ node, updateAttributes, editor }: NodeViewPr
   const isBash = language.toLowerCase() === 'bash' || language.toLowerCase() === 'sh';
   const isEmpty = !code.trim();
 
-  const copyToClipboard = async (): Promise<void> => {
+const copyToClipboard = async (): Promise<void> => {
     try {
-      await navigator.clipboard.writeText(code);
+      let textToCopy = code;
+
+      if (isBash) {
+        textToCopy = code
+          .split('\n')
+          .map(line => {
+            return line.replace(/^\$\s?/, '');
+          })
+          .join('\n')
+          .trim();
+      }
+
+      await navigator.clipboard.writeText(textToCopy);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (error) {
