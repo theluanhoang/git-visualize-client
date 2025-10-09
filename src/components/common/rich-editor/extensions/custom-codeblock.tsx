@@ -31,6 +31,24 @@ export const CustomCodeBlock = Node.create({
           class: `language-${attributes.language}`,
         }),
       },
+      title: {
+        default: '',
+        parseHTML: (element) => {
+          return element.getAttribute('data-title') || '';
+        },
+        renderHTML: (attributes) => ({
+          'data-title': attributes.title,
+        }),
+      },
+      description: {
+        default: '',
+        parseHTML: (element) => {
+          return element.getAttribute('data-description') || '';
+        },
+        renderHTML: (attributes) => ({
+          'data-description': attributes.description,
+        }),
+      },
     };
   },
 
@@ -58,6 +76,8 @@ export const CustomCodeBlock = Node.create({
       'pre',
       mergeAttributes(HTMLAttributes, {
         'data-language': node.attrs.language,
+        'data-title': node.attrs.title || '',
+        'data-description': node.attrs.description || '',
       }),
       [
         'code',

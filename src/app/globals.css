@@ -1285,3 +1285,49 @@ pre code[data-line-numbers] .line::before {
   float: left;
   height: 0;
 }
+
+/* Inline code style (strictly inline only; avoid NodeViews and blocks) */
+.tiptap p > code,
+.tiptap li > code,
+.tiptap td > code,
+.tiptap th > code,
+.tiptap span > code:not([data-node-view-content]) {
+  background-color: #f8fafc;
+  border: 1px solid #e5e7eb;
+  color: #0f172a;
+  border-radius: 6px;
+  padding: 0.125rem 0.375rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.875rem;
+}
+
+.tiptap p > code a,
+.tiptap li > code a,
+.tiptap td > code a,
+.tiptap th > code a,
+.tiptap span > code:not([data-node-view-content]) a {
+  color: #16a34a;
+  text-decoration: none;
+}
+
+/* Optional: subtle token coloring heuristics for inline bash-like snippets */
+.tiptap p > code .tok-cmd,
+.tiptap li > code .tok-cmd,
+.tiptap td > code .tok-cmd,
+.tiptap th > code .tok-cmd,
+.tiptap span > code:not([data-node-view-content]) .tok-cmd { color: #16a34a; }
+.tiptap p > code .tok-flag,
+.tiptap li > code .tok-flag,
+.tiptap td > code .tok-flag,
+.tiptap th > code .tok-flag,
+.tiptap span > code:not([data-node-view-content]) .tok-flag { color: #dc2626; }
+.tiptap p > code .tok-arg,
+.tiptap li > code .tok-arg,
+.tiptap td > code .tok-arg,
+.tiptap th > code .tok-arg,
+.tiptap span > code:not([data-node-view-content]) .tok-arg  { color: #dc2626; }
+.tiptap p > code .tok-path,
+.tiptap li > code .tok-path,
+.tiptap td > code .tok-path,
+.tiptap th > code .tok-path,
+.tiptap span > code:not([data-node-view-content]) .tok-path { color: #2563eb; }

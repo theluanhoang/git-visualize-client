@@ -1,7 +1,6 @@
 'use client';
 
-import { Toggle } from '@/components/ui/toggle';
-import { Bold, CodeXml, Italic, Strikethrough } from 'lucide-react';
+import { Bold, CodeXml, Italic, Strikethrough, Code } from 'lucide-react';
 import React, { memo } from 'react';
 import FontSelection from './FontSelection';
 import TextSelection from './TextSelection';
@@ -29,6 +28,8 @@ const Menubar = memo(({ editor }: { editor: Editor | null }) => {
                 isBold: ctx.editor.isActive("bold"),
                 isItalic: ctx.editor.isActive("italic"),
                 isStrike: ctx.editor.isActive("strike"),
+                isCodeBlock: ctx.editor.isActive("codeBlock"),
+                isInlineCode: ctx.editor.isActive("code"),
             };
         },
     });
@@ -45,7 +46,7 @@ const Menubar = memo(({ editor }: { editor: Editor | null }) => {
                     variant="ghost"
                     title="Bold"
                     onClick={() => editor.chain().focus().toggleBold().run()}
-                    className={`is-active ${editorState?.isBold ? 'bg-black text-white' : ''}`}
+                    className={`${editorState?.isBold ? 'bg-black text-white' : ''}`}
                 >
                     <Bold />
                 </Button>
@@ -53,7 +54,7 @@ const Menubar = memo(({ editor }: { editor: Editor | null }) => {
                     variant="ghost"
                     title="Italic"
                     onClick={() => editor.chain().focus().toggleItalic().run()}
-                    className={`is-active ${editorState?.isItalic ? 'bg-black text-white' : ''}`}
+                    className={`${editorState?.isItalic ? 'bg-black text-white' : ''}`}
                 >
                     <Italic />
                 </Button>
@@ -61,7 +62,7 @@ const Menubar = memo(({ editor }: { editor: Editor | null }) => {
                     variant="ghost"
                     title="Strike"
                     onClick={() => editor.chain().focus().toggleStrike().run()}
-                    className={`is-active ${editorState?.isStrike ? 'bg-black text-white' : ''}`}
+                    className={`${editorState?.isStrike ? 'bg-black text-white' : ''}`}
                 >
                     <Strikethrough />
                 </Button>
@@ -76,23 +77,21 @@ const Menubar = memo(({ editor }: { editor: Editor | null }) => {
                 <HighlightColorPicker editor={editor} />
                 <Button
                     variant="ghost"
+                    title="Inline code"
+                    onClick={() => editor.chain().focus().toggleCode().run()}
+                    className={`${editorState?.isInlineCode ? 'bg-black text-white' : ''}`}
+                >
+                    <Code />
+                </Button>
+                <Button
+                    variant="ghost"
                     title="Code block"
                     onClick={() => editor.commands.toggleCodeBlock()}
-                    className="is-active"
+                    className={`${editorState?.isCodeBlock ? 'bg-black text-white' : ''}`}
                 >
                     <CodeXml />
                 </Button>
             </div>
-            {/* CSS tùy chỉnh đơn giản */}
-            <style jsx>{`
-                .is-active {
-                    background-color: #000000;
-                    color: #ffffff;
-                }
-                .is-active svg {
-                    color: #ffffff; 
-                }
-            `}</style>
         </div>
     );
 });
