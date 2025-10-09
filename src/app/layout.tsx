@@ -34,7 +34,7 @@ export default function RootLayout({
         <ThemeProvider attribute="data-theme" defaultTheme="system" enableSystem>
           <ReactQueryProvider>
             <Header />
-              {children}
+                {children}
             <Footer />
           </ReactQueryProvider>
         </ThemeProvider>

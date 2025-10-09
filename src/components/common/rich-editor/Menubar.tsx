@@ -1,11 +1,13 @@
+'use client';
+
 import { Toggle } from '@/components/ui/toggle';
 import { Bold, CodeXml, Italic, Strikethrough } from 'lucide-react';
-import React, { memo } from 'react'
+import React, { memo } from 'react';
 import FontSelection from './FontSelection';
 import TextSelection from './TextSelection';
 import FontSizeSelection from './FontSizeSelection';
 import TextAlignSelection from './TextAlignSelection';
-import { Editor } from '@tiptap/react'
+import { Editor, useEditorState } from '@tiptap/react';
 import HighlightColorPicker from './HighlightColorPicker';
 import ListButtons from './ListButtons';
 import SubSupButtons from './SubSupButtons';
@@ -18,53 +20,83 @@ const Menubar = memo(({ editor }: { editor: Editor | null }) => {
         return null;
     }
 
+    const editorState = useEditorState({
+        editor,
+        selector: (ctx) => {
+            if (!ctx.editor) return { isLink: false };
+            return {
+                isLink: ctx.editor.isActive("link"),
+                isBold: ctx.editor.isActive("bold"),
+                isItalic: ctx.editor.isActive("italic"),
+                isStrike: ctx.editor.isActive("strike"),
+            };
+        },
+    });
+
     return (
-        <div className="control-group">
+        <div className="flex items-center justify-center border-b border-gray-100 p-2 bg-gray-50">
             <div className="flex items-center gap-1">
                 <FontSelection editor={editor} />
                 <TextSelection editor={editor} />
                 <FontSizeSelection editor={editor} />
                 <TextAlignSelection editor={editor} />
                 <div className="w-px h-6 bg-gray-300 mx-1" />
-                <Toggle
+                <Button
+                    variant="ghost"
+                    title="Bold"
                     onClick={() => editor.chain().focus().toggleBold().run()}
-                    className={editor.isActive('bold') ? 'is-active' : ''}
+                    className={`is-active ${editorState?.isBold ? 'bg-black text-white' : ''}`}
                 >
                     <Bold />
-                </Toggle>
-                <Toggle
+                </Button>
+                <Button
+                    variant="ghost"
+                    title="Italic"
                     onClick={() => editor.chain().focus().toggleItalic().run()}
-                    className={editor.isActive('italic') ? 'is-active' : ''}
+                    className={`is-active ${editorState?.isItalic ? 'bg-black text-white' : ''}`}
                 >
                     <Italic />
-                </Toggle>
-                <Toggle
+                </Button>
+                <Button
+                    variant="ghost"
+                    title="Strike"
                     onClick={() => editor.chain().focus().toggleStrike().run()}
-                    className={editor.isActive('strike') ? 'is-active' : ''}
+                    className={`is-active ${editorState?.isStrike ? 'bg-black text-white' : ''}`}
                 >
                     <Strikethrough />
-                </Toggle>
+                </Button>
                 <div className="w-px h-6 bg-gray-300 mx-1" />
                 <ListButtons editor={editor} />
                 <div className="w-px h-6 bg-gray-300 mx-1" />
                 <SubSupButtons editor={editor} />
                 <div className="w-px h-6 bg-gray-300 mx-1" />
-                <LinkButton editor={editor} /> 
+                <LinkButton editor={editor} />
                 <div className="w-px h-6 bg-gray-300 mx-1" />
                 <TextColorPicker editor={editor} />
                 <HighlightColorPicker editor={editor} />
-                <Button 
-                    variant={"ghost"}
+                <Button
+                    variant="ghost"
                     title="Code block"
                     onClick={() => editor.commands.toggleCodeBlock()}
+                    className="is-active"
                 >
                     <CodeXml />
                 </Button>
             </div>
+            {/* CSS tùy chỉnh đơn giản */}
+            <style jsx>{`
+                .is-active {
+                    background-color: #000000;
+                    color: #ffffff;
+                }
+                .is-active svg {
+                    color: #ffffff; 
+                }
+            `}</style>
         </div>
-    )
-})
+    );
+});
 
-Menubar.displayName = 'Menubar'
+Menubar.displayName = 'Menubar';
 
-export default Menubar
+export default Menubar;

@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { NodeViewProps } from '@tiptap/react';
 import { NodeViewWrapper, NodeViewContent } from '@tiptap/react';
@@ -10,6 +11,8 @@ import React, { useState } from 'react';
 export default function CodeBlock({ node, updateAttributes, editor }: NodeViewProps) {
   const [copied, setCopied] = useState<boolean>(false);
   const [isHidden, setIsHidden] = useState<boolean>(true);
+  const [title, setTitle] = useState<string>(node.attrs.title || ''); // Thêm state cho title
+  const [description, setDescription] = useState<string>(node.attrs.description || ''); // Thêm state cho description
   const language = (node.attrs.language as string) || 'bash';
   const code = node.textContent || '';
   const isBash = language.toLowerCase() === 'bash' || language.toLowerCase() === 'sh';
@@ -67,6 +70,18 @@ export default function CodeBlock({ node, updateAttributes, editor }: NodeViewPr
         return true;
       });
     }
+  };
+
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newTitle = e.target.value;
+    setTitle(newTitle);
+    updateAttributes({ title: newTitle }); // Cập nhật title vào node attributes
+  };
+
+  const handleDescriptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newDescription = e.target.value;
+    setDescription(newDescription);
+    updateAttributes({ description: newDescription }); // Cập nhật description vào node attributes
   };
 
   const toggleHide = () => {
@@ -127,6 +142,23 @@ export default function CodeBlock({ node, updateAttributes, editor }: NodeViewPr
             </Button>
           </div>
         </CardHeader>
+        {/* Thêm hai input cho title và description */}
+        <div className="px-4 py-2 flex gap-4" contentEditable={false}>
+          <Input
+            value={title}
+            onChange={handleTitleChange}
+            placeholder="Enter title"
+            className="text-xs border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            style={{ height: '25px' }}
+          />
+          <Input
+            value={description}
+            onChange={handleDescriptionChange}
+            placeholder="Enter description"
+            className="text-xs border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            style={{ height: '25px' }}
+          />
+        </div>
         {
           isHidden && (
             <CardContent className="px-4 pb-4">

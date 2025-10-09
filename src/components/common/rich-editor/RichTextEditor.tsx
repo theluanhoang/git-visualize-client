@@ -17,13 +17,8 @@ import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
 import CharacterCount from '@tiptap/extension-character-count'
 import { CustomLink } from './extensions/custom-link';
-import { all, createLowlight } from 'lowlight'
-import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
-import CodeExample from '../git-theory/CodeExample';
-import ReactDOM from "react-dom";
 import { CustomCodeBlock } from './extensions/custom-codeblock';
-
-const lowlight = createLowlight(all);
+import { Button } from '@/components/ui/button';
 
 function RichTextEditor() {
     const extensions = useMemo(() => [
@@ -78,10 +73,6 @@ function RichTextEditor() {
                 class: 'task-item',
             },
         }),
-        // CodeBlockLowlight.configure({
-        //     lowlight,
-        //     enableTabIndentation: true,
-        // })
         CustomCodeBlock
     ], [])
 
@@ -108,9 +99,10 @@ function RichTextEditor() {
 }, [editor]);
 
     return (
-        <div className="border rounded-lg overflow-hidden">
-            <Menubar editor={editor} />
-            <EditorContent editor={editor} />
+        <div className=" mx-auto bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+            <Menubar editor={editor}  />
+            <EditorContent editor={editor} className="p-4 focus:outline-none" />
+            <Button>Generation Markdown</Button>
         </div>
     )
 }

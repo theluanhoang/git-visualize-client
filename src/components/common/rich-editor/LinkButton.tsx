@@ -23,7 +23,6 @@ export default function LinkButton({ editor }: LinkButtonProps) {
     
     const target = event.target as HTMLElement;
     
-    // Kiểm tra xem có click vào link không
     if (target.tagName === "A" || target.closest("a")) {
       event.preventDefault();
       event.stopPropagation();
@@ -34,10 +33,8 @@ export default function LinkButton({ editor }: LinkButtonProps) {
         const href = linkElement.getAttribute("href") || "";
         const text = linkElement.textContent || "";
         
-        // Lấy vị trí của link element
         const rect = linkElement.getBoundingClientRect();
         
-        // Set selection tại vị trí link
         try {
           const pos = editor.view.posAtDOM(linkElement, 0);
           const endPos = pos + text.length;
