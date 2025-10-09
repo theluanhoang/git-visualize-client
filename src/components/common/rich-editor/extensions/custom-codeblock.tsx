@@ -88,7 +88,6 @@ export const CustomCodeBlock = Node.create({
             const language = attributes?.language || 'bash';
             const isBash = language === 'bash' || language === 'sh';
 
-            // Nếu có text được select và là bash
             if (isBash && !state.selection.empty) {
               const { from, to } = state.selection;
               const selectedText = state.doc.textBetween(from, to, '\n');
@@ -116,14 +115,12 @@ export const CustomCodeBlock = Node.create({
                 .run();
             }
 
-            // Nếu đang ở trong paragraph và chuyển sang bash code block
             const { $from } = state.selection;
             const isInParagraph = $from.parent.type.name === 'paragraph';
             
             if (isBash && isInParagraph) {
               const currentContent = $from.parent.textContent;
               
-              // Nếu paragraph rỗng, tạo code block với $ sẵn
               if (!currentContent.trim()) {
                 return chain()
                   .toggleNode(this.name, 'paragraph', { language })
@@ -156,14 +153,11 @@ export const CustomCodeBlock = Node.create({
 
         if (isBash) {
           const content = $from.parent.textContent;
-          const cursorPos = $from.parentOffset;
           
-          // Nếu code block rỗng hoặc chỉ có khoảng trắng, thêm $ đầu tiên
           if (!content.trim()) {
             return editor.commands.insertContent('$ ');
           }
           
-          // Nếu đang ở cuối dòng hoặc ở giữa, thêm newline + $
           return editor.commands.insertContent('\n$ ');
         }
 
@@ -182,7 +176,6 @@ export const CustomCodeBlock = Node.create({
         const language = $from.parent.attrs.language;
         const isBash = language === 'bash' || language === 'sh';
         
-        // Với bash, nếu block rỗng thì thêm $ trước
         if (isBash) {
           const content = $from.parent.textContent;
           if (!content.trim()) {
