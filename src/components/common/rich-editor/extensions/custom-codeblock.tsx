@@ -120,13 +120,28 @@ export const CustomCodeBlock = Node.create({
             
             if (isBash && isInParagraph) {
               const currentContent = $from.parent.textContent;
-              
-              if (!currentContent.trim()) {
-                return chain()
-                  .toggleNode(this.name, 'paragraph', { language })
-                  .insertContent('$ ')
-                  .run();
-              }
+
+              const lines = currentContent.split('\n');
+              const formattedText = lines
+                .map((line) => {
+                  if (!line.trim()) return line;
+                  return line.startsWith('$ ') ? line : `$ ${line}`;
+                })
+                .join('\n');
+
+              return chain()
+                .deleteRange({ from: $from.start(), to: $from.end() })
+                .insertContent({
+                  type: this.name,
+                  attrs: { language },
+                  content: [
+                    {
+                      type: 'text',
+                      text: formattedText || '$ ',
+                    },
+                  ],
+                })
+                .run();
             }
 
             return commands.toggleNode(this.name, 'paragraph', { language });

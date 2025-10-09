@@ -1054,9 +1054,9 @@ pre::after {
   width: 3rem;
   height: 0.75rem;
   background-image: 
-    radial-gradient(circle at center, #ef4444 60%, transparent 60%),
-    radial-gradient(circle at center, #eab308 60%, transparent 60%),
-    radial-gradient(circle at center, #22c55e 60%, transparent 60%);
+    radial-gradient(circle at center, #fb2c36 60%, transparent 60%),
+    radial-gradient(circle at center, #f0b100 60%, transparent 60%),
+    radial-gradient(circle at center, #00c950 60%, transparent 60%);
   background-size: 0.75rem 0.75rem;
   background-position: 0 center, 1.125rem center, 2.25rem center;
   background-repeat: no-repeat;
