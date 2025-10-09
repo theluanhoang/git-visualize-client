@@ -14,9 +14,16 @@ import Subscript from '@tiptap/extension-subscript'
 import Superscript from '@tiptap/extension-superscript'
 import { CustomColor } from './extensions/custom-color';
 import TaskList from '@tiptap/extension-task-list'
-import TaskItem from '@tiptap/extension-task-item' // ✅ THÊM TaskItem gốc
+import TaskItem from '@tiptap/extension-task-item'
 import CharacterCount from '@tiptap/extension-character-count'
 import { CustomLink } from './extensions/custom-link';
+import { all, createLowlight } from 'lowlight'
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
+import CodeExample from '../git-theory/CodeExample';
+import ReactDOM from "react-dom";
+import { CustomCodeBlock } from './extensions/custom-codeblock';
+
+const lowlight = createLowlight(all);
 
 function RichTextEditor() {
     const extensions = useMemo(() => [
@@ -24,6 +31,7 @@ function RichTextEditor() {
             mode: 'textSize',
         }),
         StarterKit.configure({
+            codeBlock: false,
             heading: {
                 levels: [1, 2, 3, 4, 5, 6],
             },
@@ -70,7 +78,14 @@ function RichTextEditor() {
                 class: 'task-item',
             },
         }),
+        // CodeBlockLowlight.configure({
+        //     lowlight,
+        //     enableTabIndentation: true,
+        // })
+        CustomCodeBlock
     ], [])
+
+
 
     const editor = useEditor({
         extensions,
@@ -83,6 +98,14 @@ function RichTextEditor() {
         immediatelyRender: false,
         shouldRerenderOnTransaction: false,
     })
+
+        React.useEffect(() => {
+  if (editor) {
+    console.log('✅ Editor ready');
+    console.log('📦 Extensions:', editor.extensionManager.extensions.map(e => e.name));
+    console.log('🎯 Has codeBlock?', editor.extensionManager.extensions.some(e => e.name === 'codeBlock'));
+  }
+}, [editor]);
 
     return (
         <div className="border rounded-lg overflow-hidden">

@@ -20,7 +20,7 @@ function EditLinkPopup({ editor, isOpen, onClose, initialText, initialUrl, posit
   useEffect(() => {
     setDisplayText(initialText);
     setUrl(initialUrl);
-    setIsEditMode(false); // Reset về view mode khi mở popup
+    setIsEditMode(false);
   }, [initialText, initialUrl, isOpen]);
 
   const handleSave = () => {
@@ -57,7 +57,6 @@ function EditLinkPopup({ editor, isOpen, onClose, initialText, initialUrl, posit
 
   const handleUrlClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // URL sẽ tự động mở vì là thẻ <a>
   };
 
   if (!isOpen || !position) return null;
@@ -78,7 +77,6 @@ function EditLinkPopup({ editor, isOpen, onClose, initialText, initialUrl, posit
         </h4>
         
         {isEditMode ? (
-          // Edit Mode - Cho phép chỉnh sửa
           <>
             <div className="space-y-2">
               <div className="space-y-1">
@@ -117,7 +115,6 @@ function EditLinkPopup({ editor, isOpen, onClose, initialText, initialUrl, posit
             </div>
           </>
         ) : (
-          // View Mode - Hiển thị thông tin
           <>
             <div className="space-y-3">
               <div className="space-y-1">

@@ -1,12 +1,11 @@
 'use client';
 
 import React from 'react';
-
+import LessionPage from './[slug]/page'
 export default function GitTheoryPage() {
   return (
-    <div className="p-4">
-      <h1>Welcome to Git Theory</h1>
-      <p>Chọn bài học từ sidebar để xem chi tiết.</p>
-    </div>
+   <LessionPage params={{
+      slug: 'git-intro'
+    }} />
   );
 }

@@ -1,6 +1,5 @@
-import { Select } from '@/components/ui/select';
 import { Toggle } from '@/components/ui/toggle';
-import { Bold, Italic, Strikethrough } from 'lucide-react';
+import { Bold, CodeXml, Italic, Strikethrough } from 'lucide-react';
 import React, { memo } from 'react'
 import FontSelection from './FontSelection';
 import TextSelection from './TextSelection';
@@ -12,6 +11,7 @@ import ListButtons from './ListButtons';
 import SubSupButtons from './SubSupButtons';
 import TextColorPicker from './TextColorPicker';
 import LinkButton from './LinkButton';
+import { Button } from '@/components/ui/button';
 
 const Menubar = memo(({ editor }: { editor: Editor | null }) => {
     if (!editor) {
@@ -53,6 +53,13 @@ const Menubar = memo(({ editor }: { editor: Editor | null }) => {
                 <div className="w-px h-6 bg-gray-300 mx-1" />
                 <TextColorPicker editor={editor} />
                 <HighlightColorPicker editor={editor} />
+                <Button 
+                    variant={"ghost"}
+                    title="Code block"
+                    onClick={() => editor.commands.toggleCodeBlock()}
+                >
+                    <CodeXml />
+                </Button>
             </div>
         </div>
     )
