@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useParams, useRouter } from 'next/navigation';
 import { LessonsService } from '@/services/lessons';
 import LessonViewer from '@/components/common/git-theory/LessonViewer';
+import LessonNavigation from '@/components/common/git-theory/LessonNavigation';
 
 export default function LessonPage() {
     const router = useRouter();
@@ -12,6 +13,19 @@ export default function LessonPage() {
         queryKey: ['git-theory-lesson', slug],
         queryFn: () => LessonsService.getBySlug(slug),
         enabled: Boolean(slug),
+    });
+
+    const { data: listData } = useQuery({
+        queryKey: ['git-theory-lessons-sidebar'],
+        queryFn: async () => {
+            const res = await LessonsService.getAll({ limit: 100, offset: 0, status: 'draft' });
+            const sorted = [...res.data].sort((a: any, b: any) => {
+                const aTime = a.createdAt ? new Date(a.createdAt).getTime() : a.id ?? 0;
+                const bTime = b.createdAt ? new Date(b.createdAt).getTime() : b.id ?? 0;
+                return aTime - bTime;
+            });
+            return sorted.map((l: any) => ({ slug: l.slug, title: l.title }));
+        },
     });
 
     if (isLoading) return <div className="p-4">Đang tải bài học...</div>;
@@ -28,6 +42,22 @@ export default function LessonPage() {
             <div className="-mx-0">
                 <LessonViewer content={lesson.content} />
             </div>
+            {Array.isArray(listData) && listData.length > 0 && (
+                <div className="mt-6">
+                    <LessonNavigation
+                        onPrev={() => {
+                            const idx = listData.findIndex((l: any) => l.slug === slug);
+                            if (idx > 0) router.push(`/git-theory/${listData[idx - 1].slug}`);
+                        }}
+                        onNext={() => {
+                            const idx = listData.findIndex((l: any) => l.slug === slug);
+                            if (idx < listData.length - 1) router.push(`/git-theory/${listData[idx + 1].slug}`);
+                        }}
+                        prevDisabled={listData.findIndex((l: any) => l.slug === slug) <= 0}
+                        nextDisabled={listData.findIndex((l: any) => l.slug === slug) >= listData.length - 1}
+                    />
+                </div>
+            )}
         </div>
     );
 }
