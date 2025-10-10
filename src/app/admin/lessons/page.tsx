@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageHeader, AdminTable, ActionButtons, StatusBadge, DateDisplay, StatCard, FilterBar, EmptyState } from '@/components/admin';
+import { useLessons, useDeleteLesson } from '@/lib/react-query/hooks/use-lessons';
 
 // Mock data - trong thực tế sẽ fetch từ API
 const lessons = [
@@ -99,12 +100,25 @@ export default function LessonsPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState('updatedAt');
 
+  const { data: lessons = [], isLoading } = useLessons();
+  const deleteLessonMutation = useDeleteLesson();
+
   const filteredLessons = lessons.filter(lesson => {
     const matchesSearch = lesson.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          lesson.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || lesson.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+  const handleDeleteLesson = async (id: number) => {
+    if (confirm('Bạn có chắc chắn muốn xóa bài học này?')) {
+      try {
+        await deleteLessonMutation.mutateAsync(id);
+      } catch (error) {
+        console.error('Error deleting lesson:', error);
+      }
+    }
+  };
 
   const lessonColumns = [
     { key: 'title', label: 'Tiêu đề' },
@@ -116,10 +130,10 @@ export default function LessonsPage() {
       key: 'actions', 
       label: 'Thao tác', 
       render: (value: any, row: any) => (
-        <ActionButtons 
+        <ActionButtons
           onView={() => console.log('View lesson', row.id)}
           onEdit={() => console.log('Edit lesson', row.id)}
-          onDelete={() => console.log('Delete lesson', row.id)}
+          onDelete={() => handleDeleteLesson(row.id)}
         />
       )
     },

@@ -8,29 +8,17 @@ import {
   Shield
 } from 'lucide-react';
 import { PageHeader, AdminTable, ActionButtons, StatusBadge, DateDisplay, StatCard, FilterBar, EmptyState, UserList } from '@/components/admin';
+import { useUsers, useDeleteUser, useToggleUserStatus } from '@/lib/react-query/hooks/use-users';
 
 // Mock data - trong thực tế sẽ fetch từ API
-const users: Array<{
-  id: number;
-  name: string;
-  email: string;
-  avatar: null;
-  role: 'student' | 'instructor' | 'admin';
-  status: 'active' | 'inactive' | 'banned';
-  joinedAt: string;
-  lastActive: string;
-  lessonsCompleted: number;
-  totalTimeSpent: string;
-  progress: number;
-  achievements: number;
-}> = [
+const users = [
   {
     id: 1,
     name: 'Nguyễn Văn A',
     email: 'nguyenvana@example.com',
     avatar: null,
-    role: 'student',
-    status: 'active',
+    role: 'student' as const,
+    status: 'active' as const,
     joinedAt: '2024-01-15',
     lastActive: '2024-01-20',
     lessonsCompleted: 5,
@@ -43,8 +31,8 @@ const users: Array<{
     name: 'Trần Thị B',
     email: 'tranthib@example.com',
     avatar: null,
-    role: 'student',
-    status: 'active',
+    role: 'student' as const,
+    status: 'active' as const,
     joinedAt: '2024-01-14',
     lastActive: '2024-01-19',
     lessonsCompleted: 3,
@@ -57,8 +45,8 @@ const users: Array<{
     name: 'Lê Văn C',
     email: 'levanc@example.com',
     avatar: null,
-    role: 'instructor',
-    status: 'active',
+    role: 'instructor' as const,
+    status: 'active' as const,
     joinedAt: '2024-01-10',
     lastActive: '2024-01-20',
     lessonsCompleted: 8,
@@ -71,8 +59,8 @@ const users: Array<{
     name: 'Phạm Thị D',
     email: 'phamthid@example.com',
     avatar: null,
-    role: 'student',
-    status: 'inactive',
+    role: 'student' as const,
+    status: 'inactive' as const,
     joinedAt: '2024-01-05',
     lastActive: '2024-01-12',
     lessonsCompleted: 2,
@@ -85,8 +73,8 @@ const users: Array<{
     name: 'Hoàng Văn E',
     email: 'hoangvane@example.com',
     avatar: null,
-    role: 'admin',
-    status: 'active',
+    role: 'admin' as const,
+    status: 'active' as const,
     joinedAt: '2024-01-01',
     lastActive: '2024-01-20',
     lessonsCompleted: 12,
@@ -116,6 +104,10 @@ export default function UsersPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState('joinedAt');
 
+  const { data: users = [], isLoading } = useUsers();
+  const deleteUserMutation = useDeleteUser();
+  const toggleUserStatusMutation = useToggleUserStatus();
+
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.email.toLowerCase().includes(searchTerm.toLowerCase());
@@ -123,6 +115,25 @@ export default function UsersPage() {
     const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
     return matchesSearch && matchesRole && matchesStatus;
   });
+
+  const handleDeleteUser = async (id: number) => {
+    if (confirm('Bạn có chắc chắn muốn xóa người dùng này?')) {
+      try {
+        await deleteUserMutation.mutateAsync(id);
+      } catch (error) {
+        console.error('Error deleting user:', error);
+      }
+    }
+  };
+
+  const handleToggleUserStatus = async (user: any) => {
+    const newStatus = user.status === 'active' ? 'inactive' : 'active';
+    try {
+      await toggleUserStatusMutation.mutateAsync({ id: user.id, status: newStatus });
+    } catch (error) {
+      console.error('Error toggling user status:', error);
+    }
+  };
 
 
   return (
@@ -190,8 +201,8 @@ export default function UsersPage() {
         users={filteredUsers}
         onView={(user) => console.log('View user', user.id)}
         onEdit={(user) => console.log('Edit user', user.id)}
-        onDelete={(user) => console.log('Delete user', user.id)}
-        onToggleStatus={(user) => console.log('Toggle status', user.id)}
+        onDelete={(user) => handleDeleteUser(user.id)}
+        onToggleStatus={handleToggleUserStatus}
         onSendEmail={(user) => console.log('Send email', user.id)}
       />
 

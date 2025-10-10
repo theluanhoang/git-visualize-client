@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { ReactQueryProvider } from "@/lib/react-query/ReactQueryProvider";
+import { QueryProvider } from "@/lib/react-query/query-provider";
 import { ThemeProvider } from "next-themes";
 import Header from "@/components/common/Header";
 import Footer from "@/components/common/Footer";
@@ -32,11 +32,11 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ThemeProvider attribute="data-theme" defaultTheme="system" enableSystem>
-          <ReactQueryProvider>
+          <QueryProvider>
             <Header />
                 {children}
             <Footer />
-          </ReactQueryProvider>
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>
