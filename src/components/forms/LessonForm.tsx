@@ -12,7 +12,7 @@ import { Card } from '@/components/ui/card';
 import { Save, Eye, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import RichTextEditor from '@/components/common/rich-editor/RichTextEditor';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface LessonFormProps {
@@ -40,8 +40,6 @@ export function LessonForm({ initialData, isEdit = false, lessonId }: LessonForm
       content: initialData?.content || '',
       status: initialData?.status || 'draft',
       prerequisites: initialData?.prerequisites || [],
-      estimatedTime: initialData?.estimatedTime || '',
-      difficulty: initialData?.difficulty || 'beginner',
       tags: initialData?.tags || [],
       featured: initialData?.featured || false,
       allowComments: initialData?.allowComments || true
@@ -51,9 +49,10 @@ export function LessonForm({ initialData, isEdit = false, lessonId }: LessonForm
   const createLessonMutation = useCreateLesson();
   const updateLessonMutation = useUpdateLesson();
 
-  const watchedTitle = watch('title');
+  useEffect(() => {
+    setValue('content', content);
+  }, [content, setValue]);
 
-  // Auto-generate slug from title
   const generateSlug = (title: string) => {
     return title
       .toLowerCase()
@@ -66,6 +65,8 @@ export function LessonForm({ initialData, isEdit = false, lessonId }: LessonForm
   const onSubmit = async (data: LessonFormData) => {
     try {
       const formData = { ...data, content };
+      alert(content);
+      console.log("Form data:::", formData);
       
       if (isEdit && lessonId) {
         await updateLessonMutation.mutateAsync({ id: lessonId, data: formData });
@@ -105,7 +106,19 @@ export function LessonForm({ initialData, isEdit = false, lessonId }: LessonForm
             Xem trước
           </Button>
           <Button 
-            onClick={handleSubmit(onSubmit)}
+            onClick={() => {
+              console.log('Button clicked');
+              console.log('Form errors:', errors);
+              console.log('Current content:', content);
+              console.log('Form values:', {
+                title: watch('title'),
+                slug: watch('slug'),
+                description: watch('description'),
+                content: watch('content'),
+                status: watch('status')
+              });
+              handleSubmit(onSubmit)();
+            }}
             disabled={isSubmitting || createLessonMutation.isPending || updateLessonMutation.isPending}
           >
             <Save className="h-4 w-4 mr-2" />
@@ -124,7 +137,10 @@ export function LessonForm({ initialData, isEdit = false, lessonId }: LessonForm
             {/* Content */}
             <div>
               <div className="mt-1">
-                <RichTextEditor />
+                <RichTextEditor 
+                  value={content}
+                  onChange={setContent}
+                />
               </div>
               {errors.content && (
                 <p className="text-sm text-red-500 mt-1">{errors.content.message}</p>
@@ -138,7 +154,7 @@ export function LessonForm({ initialData, isEdit = false, lessonId }: LessonForm
           <div className="space-y-6">
             {/* Lesson Details */}
             <Card className="p-4">
-              <h3 className="text-sm font-medium text-foreground mb-4">Chi tiết bài học</h3>
+              <h3 className="font-bold text-foreground">Chi tiết bài học</h3>
               <div className="space-y-3">
                 {/* Title */}
                 <div>
@@ -191,9 +207,9 @@ export function LessonForm({ initialData, isEdit = false, lessonId }: LessonForm
 
             {/* Publish Box */}
             <Card className="p-4">
-              <h3 className="text-sm font-medium text-foreground mb-4">Xuất bản</h3>
+              <h3 className="font-bold text-foreground">Xuất bản</h3>
               <div className="space-y-3">
-                <div>
+                <div className="flex items-center justify-between gap-2">
                   <Label htmlFor="status">Trạng thái</Label>
                   <Select 
                     value={watch('status')} 
@@ -215,44 +231,6 @@ export function LessonForm({ initialData, isEdit = false, lessonId }: LessonForm
               </div>
             </Card>
 
-            {/* Lesson Settings */}
-            <Card className="p-4">
-              <h3 className="text-sm font-medium text-foreground mb-4">Cài đặt bài học</h3>
-              <div className="space-y-3">
-                <div>
-                  <Label htmlFor="estimatedTime">Thời gian ước tính *</Label>
-                  <Input
-                    id="estimatedTime"
-                    {...register('estimatedTime')}
-                    placeholder="30 phút"
-                    className="mt-1 text-sm"
-                  />
-                  {errors.estimatedTime && (
-                    <p className="text-sm text-red-500 mt-1">{errors.estimatedTime.message}</p>
-                  )}
-                </div>
-
-                <div>
-                  <Label htmlFor="difficulty">Độ khó</Label>
-                  <Select 
-                    value={watch('difficulty')} 
-                    onValueChange={(value) => setValue('difficulty', value as any)}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="beginner">Cơ bản</SelectItem>
-                      <SelectItem value="intermediate">Trung bình</SelectItem>
-                      <SelectItem value="advanced">Nâng cao</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {errors.difficulty && (
-                    <p className="text-sm text-red-500 mt-1">{errors.difficulty.message}</p>
-                  )}
-                </div>
-              </div>
-            </Card>
           </div>
         </div>
       </div>

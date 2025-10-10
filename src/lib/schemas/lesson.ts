@@ -6,12 +6,10 @@ export const lessonSchema = z.object({
   description: z.string().min(1, 'Mô tả là bắt buộc').max(500, 'Mô tả không được quá 500 ký tự'),
   content: z.string().min(1, 'Nội dung là bắt buộc'),
   status: z.enum(['draft', 'published', 'archived']),
-  prerequisites: z.array(z.string()),
-  estimatedTime: z.string().min(1, 'Thời gian ước tính là bắt buộc'),
-  difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
-  tags: z.array(z.string()),
-  featured: z.boolean(),
-  allowComments: z.boolean()
+  prerequisites: z.array(z.string()).optional(),
+  tags: z.array(z.string()).optional(),
+  featured: z.boolean().optional(),
+  allowComments: z.boolean().optional()
 });
 
 export const lessonUpdateSchema = lessonSchema.partial();

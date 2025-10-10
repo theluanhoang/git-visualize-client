@@ -22,7 +22,12 @@ import { Button } from '@/components/ui/button';
 import { InlineCodeDecorations } from './extensions/inline-code-decorations';
 import LessonViewer from '../git-theory/LessonViewer';
 
-function RichTextEditor() {
+interface RichTextEditorProps {
+  value?: string;
+  onChange?: (value: string) => void;
+}
+
+function RichTextEditor({ value = '', onChange }: RichTextEditorProps = {}) {
     const extensions = useMemo(() => [
         CharacterCount.configure({
             mode: 'textSize',
@@ -81,7 +86,7 @@ function RichTextEditor() {
 
     const editor = useEditor({
         extensions,
-        content: '',
+        content: value,
         editorProps: {
             attributes: {
                 class: 'h-full focus:outline-none prose prose-sm sm:prose-base max-w-none',
@@ -89,7 +94,18 @@ function RichTextEditor() {
         },
         immediatelyRender: false,
         shouldRerenderOnTransaction: false,
+        onUpdate: ({ editor }) => {
+            const html = editor.getHTML();
+            onChange?.(html);
+        },
     });
+
+    // Update editor content when value prop changes
+    useEffect(() => {
+        if (editor && value !== editor.getHTML()) {
+            editor.commands.setContent(value);
+        }
+    }, [editor, value]);
 
     const [savedJson, setSavedJson] = useState<any | null>(null);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
