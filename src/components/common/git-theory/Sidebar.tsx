@@ -26,37 +26,37 @@ export default function Sidebar({ items }: Props) {
 
     return (
         <aside className="w-full md:w-64 lg:w-72 xl:w-80 flex-shrink-0 md:sticky md:top-6 self-start">
-            <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
-                <h2 className="text-lg font-semibold text-gray-900">Git Theory</h2>
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-sm p-4">
+                <h2 className="text-base md:text-lg font-semibold text-foreground">Git Theory</h2>
                 <label htmlFor="git-theory-search" className="sr-only">Search lessons</label>
                 <input
                     id="git-theory-search"
                     type="search"
                     placeholder="Search lessons..."
-                    className="mt-3 w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+                    className="mt-3 w-full px-3 py-2 rounded-md bg-background border border-[var(--border)] text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     aria-label="Search lessons"
                 />
-                <nav className="mt-3" aria-label="Table of contents">
-                    <ol className="space-y-1 list-decimal ml-5">
+                <nav className="mt-3 max-h-[70vh] overflow-auto pr-1" aria-label="Table of contents">
+                    <div className="space-y-1 list-decimal">
                         {filtered.map((item) => {
                             const isActive = item.slug === activeSlug;
                             return (
-                                <li key={item.slug}>
+                                <span key={item.slug}>
                                     <Link
                                         href={`/git-theory/${item.slug}`}
-                                        className={`block text-left w-full px-2 py-1.5 rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] ${isActive ? "bg-[var(--primary-50)] text-[var(--primary-700)]" : "hover:bg-gray-50 text-gray-800"
+                                        className={`block text-left w-full px-2 py-1.5 rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] ${isActive ? "bg-[var(--primary-50)] text-[var(--primary-700)] border border-[var(--primary-200)]" : "hover:bg-muted text-foreground"
                                             }`}
                                         aria-current={isActive ? "page" : undefined}
                                     >
                                         <span className="font-medium">{item.title}</span>
-                                        <p className="text-xs text-gray-600">{item.description}</p>
+                                        <p className="text-xs text-muted-foreground">{item.description}</p>
                                     </Link>
-                                </li>
+                                </span>
                             );
                         })}
-                    </ol>
+                    </div>
                 </nav>
             </div>
         </aside>

@@ -147,7 +147,7 @@ export default function LessonViewer({ content }: LessonViewerProps) {
     if (!editor) return <div>Loading...</div>;
 
     return (
-        <div ref={containerRef} className="max-w-4xl mx-auto rounded-lg shadow-sm border bg-[var(--surface)] border-[var(--border)] text-[var(--foreground)]">
+        <div ref={containerRef} className="w-full rounded-xl shadow-sm border bg-[var(--surface)] border-[var(--border)] text-[var(--foreground)]">
             <EditorContent editor={editor} />
         </div>
     );

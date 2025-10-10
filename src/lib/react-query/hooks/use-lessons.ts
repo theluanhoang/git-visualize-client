@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { LessonFormData, LessonUpdateData } from '@/lib/schemas/lesson';
+import { LessonsService } from '@/services/lessons';
 
 // Mock API functions - replace with actual API calls
 const lessonsApi = {
@@ -42,10 +43,7 @@ const lessonsApi = {
   },
   
   create: async (data: LessonFormData) => {
-    // Mock API call
-    console.log('Creating lesson:', data);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    return { id: Date.now(), ...data };
+    return LessonsService.create(data);
   },
   
   update: async (id: number, data: LessonUpdateData) => {
@@ -66,7 +64,10 @@ const lessonsApi = {
 export const useLessons = () => {
   return useQuery({
     queryKey: ['lessons'],
-    queryFn: lessonsApi.getAll,
+    queryFn: async () => {
+      const res = await LessonsService.getAll();
+      return res.data;
+    },
   });
 };
 
