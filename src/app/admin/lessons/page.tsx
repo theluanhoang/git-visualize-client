@@ -146,7 +146,13 @@ export default function LessonsPage() {
               console.error('Failed to view lesson', e);
             }
           }}
-          onEdit={() => console.log('Edit lesson', row.id)}
+          onEdit={() => {
+            if (row.slug) {
+              window.open(`/admin/lessons/${row.slug}/edit`, '_blank', 'noopener,noreferrer');
+            } else {
+              console.warn('No slug available to edit', row);
+            }
+          }}
           onDelete={() => handleDeleteLesson(row.id)}
         />
       )

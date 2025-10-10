@@ -38,11 +38,7 @@ export function LessonForm({ initialData, isEdit = false, lessonId }: LessonForm
       slug: initialData?.slug || '',
       description: initialData?.description || '',
       content: initialData?.content || '',
-      status: initialData?.status || 'draft',
-      prerequisites: initialData?.prerequisites || [],
-      tags: initialData?.tags || [],
-      featured: initialData?.featured || false,
-      allowComments: initialData?.allowComments || true
+      status: initialData?.status || 'draft'
     }
   });
 
@@ -65,8 +61,6 @@ export function LessonForm({ initialData, isEdit = false, lessonId }: LessonForm
   const onSubmit = async (data: LessonFormData) => {
     try {
       const formData = { ...data, content };
-      alert(content);
-      console.log("Form data:::", formData);
       
       if (isEdit && lessonId) {
         await updateLessonMutation.mutateAsync({ id: lessonId, data: formData });

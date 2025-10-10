@@ -1,8 +1,6 @@
 import api from '@/lib/api/axios';
-import { LessonFormData } from '@/lib/schemas/lesson';
+import { LessonFormData, LessonUpdateData } from '@/lib/schemas/lesson';
 
-// Backend expects ELessonStatus: DRAFT | PUBLISHED | REMOVED
-// Frontend uses: 'draft' | 'published' | 'archived'
 const toBackendStatus = (status: string) => {
   switch (status) {
     case 'draft':
@@ -76,6 +74,12 @@ export const LessonsService = {
       status: toBackendStatus(data.status),
     };
     const res = await api.post('/api/v1/lesson', payload);
+    return res.data;
+  },
+  async update(id: number, data: LessonUpdateData) {
+    const payload: any = { ...data };
+    if (data.status) payload.status = toBackendStatus(data.status);
+    const res = await api.patch(`/api/v1/lesson/${id}`, payload);
     return res.data;
   },
 };

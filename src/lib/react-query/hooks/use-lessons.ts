@@ -47,10 +47,7 @@ const lessonsApi = {
   },
   
   update: async (id: number, data: LessonUpdateData) => {
-    // Mock API call
-    console.log('Updating lesson:', id, data);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    return { id, ...data };
+    return LessonsService.update(id, data);
   },
   
   delete: async (id: number) => {
