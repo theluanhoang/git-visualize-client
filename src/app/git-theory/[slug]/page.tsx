@@ -18,7 +18,7 @@ export default function LessonPage() {
     const { data: listData } = useQuery({
         queryKey: ['git-theory-lessons-sidebar'],
         queryFn: async () => {
-            const res = await LessonsService.getAll({ limit: 100, offset: 0, status: 'draft' });
+            const res = await LessonsService.getAll({ limit: 100, offset: 0, status: 'published' });
             const sorted = [...res.data].sort((a: any, b: any) => {
                 const aTime = a.createdAt ? new Date(a.createdAt).getTime() : a.id ?? 0;
                 const bTime = b.createdAt ? new Date(b.createdAt).getTime() : b.id ?? 0;

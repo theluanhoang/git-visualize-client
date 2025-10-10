@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
   Plus, 
@@ -18,6 +19,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { PageHeader, AdminTable, ActionButtons, StatusBadge, DateDisplay, StatCard, FilterBar, EmptyState } from '@/components/admin';
 import { useLessons, useDeleteLesson } from '@/lib/react-query/hooks/use-lessons';
+ 
 
 // Mock data - trong thực tế sẽ fetch từ API
 const lessons = [
@@ -96,6 +98,7 @@ const statusOptions = [
 ];
 
 export default function LessonsPage() {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState('updatedAt');
@@ -131,7 +134,18 @@ export default function LessonsPage() {
       label: 'Thao tác', 
       render: (value: any, row: any) => (
         <ActionButtons
-          onView={() => console.log('View lesson', row.id)}
+          onView={async () => {
+            try {
+              const slug = row.slug;
+              if (slug) {
+                window.open(`/git-theory/${slug}`, '_blank', 'noopener,noreferrer');
+                return;
+              }
+              console.warn('No slug available for this lesson row', row);
+            } catch (e) {
+              console.error('Failed to view lesson', e);
+            }
+          }}
           onEdit={() => console.log('Edit lesson', row.id)}
           onDelete={() => handleDeleteLesson(row.id)}
         />
@@ -199,7 +213,17 @@ export default function LessonsPage() {
         columns={lessonColumns}
         data={filteredLessons}
         emptyMessage="Không có bài học nào"
-        onRowClick={(lesson) => console.log('Row clicked', lesson.id)}
+        onRowClick={async (lesson) => {
+          try {
+            if (lesson.slug) {
+              window.open(`/git-theory/${lesson.slug}`, '_blank', 'noopener,noreferrer');
+              return;
+            }
+            console.warn('No slug available for this lesson row', lesson);
+          } catch (e) {
+            console.error('Failed to navigate to lesson', e);
+          }
+        }}
       />
 
       {/* Empty State */}
