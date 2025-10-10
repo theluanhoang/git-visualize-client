@@ -135,13 +135,13 @@ function CommitGraph() {
     };
 
     return (
-        <div className="bg-white shadow-sm rounded-lg">
-            <div className="bg-[#f9fafb] px-4 py-3 border-b border-gray-200">
-                <span className="flex items-center gap-2">
+        <div className="rounded-lg shadow-sm border border-[var(--border)] bg-[var(--surface)]">
+            <div className="px-4 py-3 border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--surface),#000_4%)] ">
+                <span className="flex items-center gap-2 text-foreground">
                     <GitCommitHorizontal />
                     <h1 className="font-bold text-xl">Commit Graph</h1>
                 </span>
-                <ul className="flex items-center text-[14px]">
+                <ul className="flex items-center text-[14px] text-muted-foreground">
                     <li>Scroll to zoom</li>
                     <li><Dot /></li>
                     <li>Drag to pan</li>
@@ -150,19 +150,19 @@ function CommitGraph() {
                 </ul>
             </div>
             <div className="p-4">
-                <div ref={containerRef} className="min-h-[400px] bg-gray-50 border border-gray-200 rounded-lg relative">
+                <div ref={containerRef} className="min-h-[400px] border border-[var(--border)] rounded-lg relative bg-[color-mix(in_srgb,var(--surface),#000_4%)] shadow-inner">
                     {/* Introduction */}
-                    <ul className="absolute z-10 flex items-center text-[12px] border px-2 rounded-sm border-gray-300 bg-white top-2 left-2 text-gray-500 ">
+                    <ul className="absolute z-10 flex items-center text-[12px] border px-2 rounded-sm border-[var(--border)] bg-background/85 backdrop-blur-sm top-2 left-2 text-muted-foreground ">
                         <li>Scroll to zoom</li>
                         <li><Dot /></li>
                         <li>Drag to pan</li>
                     </ul>
                     {/* Controls */}
                     <div className="absolute z-10 flex items-center top-2 right-2 gap-2">
-                        <button className="bg-white border border-gray-200 rounded-sm cursor-pointer p-1 text-gray-500 text-sm" onClick={handleMinus}><Minus size={16} /></button>
-                        <button className="bg-white border border-gray-200 rounded-sm cursor-pointer p-1 text-gray-500 text-sm" onClick={handlePlus}><Plus size={16} /></button>
-                        <button className="bg-white border border-gray-200 rounded-sm cursor-pointer p-1 text-gray-500 text-sm" onClick={handleReset}>Reset</button>
-                        <input disabled className="bg-white border border-gray-200 rounded-sm cursor-pointer p-1 text-gray-500 text-sm outline-none max-w-12" value={`${Math.floor(zoom * 100)}%`} />
+                        <button className="bg-background border border-[var(--border)] rounded-sm cursor-pointer p-1 text-muted-foreground text-sm hover:bg-muted" onClick={handleMinus}><Minus size={16} /></button>
+                        <button className="bg-background border border-[var(--border)] rounded-sm cursor-pointer p-1 text-muted-foreground text-sm hover:bg-muted" onClick={handlePlus}><Plus size={16} /></button>
+                        <button className="bg-background border border-[var(--border)] rounded-sm cursor-pointer p-1 text-muted-foreground text-sm hover:bg-muted" onClick={handleReset}>Reset</button>
+                        <input disabled className="bg-background border border-[var(--border)] rounded-sm p-1 text-muted-foreground text-sm outline-none max-w-12" value={`${Math.floor(zoom * 100)}%`} />
                     </div>
                     {/* SVG Component */}
                     <CommitGraphSvg 

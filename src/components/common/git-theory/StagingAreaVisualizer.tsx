@@ -11,8 +11,8 @@ function ActionButton({ label, onClick, variant = "primary" }: { label: string; 
 			onClick={onClick}
 			className={
 				variant === "primary"
-					? "px-2.5 py-1 rounded-md bg-[var(--primary)] text-white text-xs hover:bg-[var(--primary-700)]"
-					: "px-2.5 py-1 rounded-md border border-gray-300 bg-white text-gray-800 text-xs hover:bg-gray-50"
+					? "px-2.5 py-1 rounded-md bg-[var(--primary)] text-[var(--primary-foreground)] text-xs hover:bg-[var(--primary-700)]"
+					: "px-2.5 py-1 rounded-md border border-[var(--border)] bg-background text-foreground text-xs hover:bg-muted"
 			}
 		>
 			{label}
@@ -22,7 +22,7 @@ function ActionButton({ label, onClick, variant = "primary" }: { label: string; 
 
 function FileItem({ name, onAdd, onReset, onRm, onRestore }: { name: string; onAdd?: () => void; onReset?: () => void; onRm?: () => void; onRestore?: () => void; }) {
 	return (
-		<li className="px-3 py-2 rounded-md border border-gray-200 bg-gray-50 text-sm text-gray-800 flex items-center justify-between">
+		<li className="px-3 py-2 rounded-md border border-[var(--border)] bg-background text-sm text-foreground flex items-center justify-between">
 			<span className="truncate mr-2">{name}</span>
 			<div className="flex items-center gap-1">
 				{onAdd && <ActionButton label="add" onClick={onAdd} variant="outline" />}
@@ -36,14 +36,14 @@ function FileItem({ name, onAdd, onReset, onRm, onRestore }: { name: string; onA
 
 function Column({ title, items, color, renderItem }: { title: string; items: string[]; color: string; renderItem: (name: string) => React.ReactNode }) {
 	return (
-		<div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 flex-1">
-			<h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+		<div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] shadow-sm p-4 flex-1">
+			<h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
 				<span className={`inline-block w-2.5 h-2.5 rounded-full ${color}`}></span>
 				{title}
 			</h3>
 			<ul className="space-y-2 min-h-[120px]">
 				{items.length === 0 ? (
-					<li className="text-sm text-gray-500">(empty)</li>
+					<li className="text-sm text-muted-foreground">(empty)</li>
 				) : (
 					items.map((name) => (
 						<div key={name}>{renderItem(name)}</div>
@@ -68,11 +68,11 @@ export default function StagingAreaVisualizer() {
 	const exec = (cmd: string) => runGit(cmd);
 
 	return (
-		<section className="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
+		<section className="rounded-lg border border-[var(--border)] bg-[var(--surface)] shadow-sm p-4">
 			<header className="flex items-center justify-between gap-3 flex-wrap">
 				<div>
-					<h2 className="text-lg font-semibold text-gray-900">Staging Area Visualizer</h2>
-					<p className="text-sm text-gray-600">Working Directory → Staging Area → Repository</p>
+					<h2 className="text-lg font-semibold text-foreground">Staging Area Visualizer</h2>
+					<p className="text-sm text-muted-foreground">Working Directory → Staging Area → Repository</p>
 				</div>
 				<div className="flex items-center gap-2 flex-wrap">
 					<ActionButton label="git init" onClick={() => exec("git init")} variant="outline" />
@@ -130,10 +130,10 @@ export default function StagingAreaVisualizer() {
 				<h3 className="text-sm font-semibold text-gray-900">Staged deletions</h3>
 				<ul className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-2">
 					{(latestState?.stagedDeletions ?? []).length === 0 ? (
-						<li className="text-sm text-gray-500">(none)</li>
+						<li className="text-sm text-muted-foreground">(none)</li>
 					) : (
 						(latestState?.stagedDeletions ?? []).map(name => (
-							<li key={name} className="px-3 py-2 rounded-md border border-gray-200 bg-rose-50 text-sm text-gray-800 flex items-center justify-between">
+							<li key={name} className="px-3 py-2 rounded-md border border-[var(--border)] bg-red-500/10 text-sm text-foreground flex items-center justify-between">
 								<span>{name}</span>
 								<ActionButton label="unstage" onClick={() => exec(`git reset ${name}`)} variant="outline" />
 							</li>
@@ -143,9 +143,9 @@ export default function StagingAreaVisualizer() {
 			</div>
 
 			{latestState ? (
-				<p className="text-xs text-gray-600 mt-3">HEAD: {latestState.head && latestState.head.type === 'branch' ? `${latestState.head.ref}` : '(detached)'}</p>
+				<p className="text-xs text-muted-foreground mt-3">HEAD: {latestState.head && latestState.head.type === 'branch' ? `${latestState.head.ref}` : '(detached)'}</p>
 			) : (
-				<p className="text-sm text-gray-600 mt-3">Run &quot;git init&quot; to start the visualization.</p>
+				<p className="text-sm text-muted-foreground mt-3">Run &quot;git init&quot; to start the visualization.</p>
 			)}
 		</section>
 	);
