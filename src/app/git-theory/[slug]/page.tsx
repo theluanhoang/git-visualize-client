@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { LessonsService } from '@/services/lessons';
 import LessonViewer from '@/components/common/git-theory/LessonViewer';
 import LessonNavigation from '@/components/common/git-theory/LessonNavigation';
+import PracticeCTA from '@/components/common/git-theory/PracticeCTA';
 
 export default function LessonPage() {
     const router = useRouter();
@@ -41,6 +42,9 @@ export default function LessonPage() {
             </div>
             <div className="-mx-0">
                 <LessonViewer content={lesson.content} />
+            </div>
+            <div className="mt-6">
+                <PracticeCTA slug={slug} />
             </div>
             {Array.isArray(listData) && listData.length > 0 && (
                 <div className="mt-6">

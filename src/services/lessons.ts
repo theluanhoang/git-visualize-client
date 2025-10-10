@@ -82,6 +82,16 @@ export const LessonsService = {
     const res = await api.patch(`/api/v1/lesson/${id}`, payload);
     return res.data;
   },
+  async updatePractice(id: number, practice: any) {
+    const res = await api.patch(`/api/v1/lesson/${id}`, { practice });
+    return res.data;
+  },
+  async getPracticeBySlug(slug: string) {
+    const res = await api.get('/api/v1/lesson', { params: { slug } });
+    const { data } = res.data as { data: Array<any> };
+    if (!data?.length) return null;
+    return data[0]?.practice ?? null;
+  },
   async delete(id: number) {
     const res = await api.delete(`/api/v1/lesson/${id}`);
     return res.data;
