@@ -11,8 +11,8 @@ import React, { useEffect, useState } from 'react';
 export default function CodeBlock({ node, updateAttributes, editor }: NodeViewProps) {
   const [copied, setCopied] = useState<boolean>(false);
   const [isHidden, setIsHidden] = useState<boolean>(true);
-  const [title, setTitle] = useState<string>(node.attrs.title || ''); // Thêm state cho title
-  const [description, setDescription] = useState<string>(node.attrs.description || ''); // Thêm state cho description
+  const [title, setTitle] = useState<string>(node.attrs.title || '');
+  const [description, setDescription] = useState<string>(node.attrs.description || '');
   const language = (node.attrs.language as string) || 'bash';
   const code = node.textContent || '';
   const isBash = language.toLowerCase() === 'bash' || language.toLowerCase() === 'sh';
@@ -78,23 +78,23 @@ export default function CodeBlock({ node, updateAttributes, editor }: NodeViewPr
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newTitle = e.target.value;
     setTitle(newTitle);
-    updateAttributes({ title: newTitle }); // Cập nhật title vào node attributes
+    updateAttributes({ title: newTitle });
   };
 
   const handleDescriptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newDescription = e.target.value;
     setDescription(newDescription);
-    updateAttributes({ description: newDescription }); // Cập nhật description vào node attributes
+    updateAttributes({ description: newDescription });
   };
 
   const toggleHide = () => {
     setIsHidden((prev) => !prev);
   };
 
-  // Keep local title/description in sync with node attrs (e.g., when preview updates)
   useEffect(() => {
     setTitle(node.attrs.title || '');
   }, [node.attrs.title]);
+
   useEffect(() => {
     setDescription(node.attrs.description || '');
   }, [node.attrs.description]);
@@ -197,7 +197,7 @@ export default function CodeBlock({ node, updateAttributes, editor }: NodeViewPr
             <CardContent className="px-4 pb-4 mt-2">
               <div className="h-full w-full font-mono rounded-lg flex flex-col border bg-[#0b1220] text-[#a7f3d0] border-[#0f172a]">
                 <div className="flex items-center justify-between px-3 py-1.5 bg-[#111827] border border-[#1f2937] rounded-t-lg" contentEditable={false}>
-                  <div className="text-xs opacity-80">{language} terminal</div>
+                  <div className="text-xs opacity-80 text-green-400">{language} terminal</div>
                   <div className="flex space-x-1">
                     <div className="w-2.5 h-2.5 bg-red-500 rounded-full"></div>
                     <div className="w-2.5 h-2.5 bg-yellow-500 rounded-full"></div>
@@ -207,7 +207,7 @@ export default function CodeBlock({ node, updateAttributes, editor }: NodeViewPr
                 <div className="px-3 py-2 overflow-x-auto terminal-scrollbar min-h-[100px] relative">
                   <div className="text-sm leading-relaxed">
                     <NodeViewContent
-                      className="inline-block whitespace-pre font-mono min-w-full outline-none align-top"
+                      className="inline-block whitespace-pre font-mono min-w-full outline-none align-top text-green-400"
                     />
                   </div>
                   {isEmpty && (

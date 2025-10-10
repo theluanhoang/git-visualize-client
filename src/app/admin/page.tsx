@@ -15,6 +15,12 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PageHeader, StatCard, AdminTable, ActionButtons, StatusBadge, DateDisplay } from '@/components/admin';
 import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
+import { LessonsService } from '@/services/lessons';
+import { useDeleteLesson } from '@/lib/react-query/hooks/use-lessons';
+import ConfirmDialog from '@/components/common/ConfirmDialog';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 // Mock data - trong thực tế sẽ fetch từ API
 const stats = {
@@ -24,12 +30,7 @@ const stats = {
   recentActivity: 8
 };
 
-const recentLessons = [
-  { id: 1, title: 'Git Basics - Introduction', status: 'published', views: 45, lastModified: '2024-01-15' },
-  { id: 2, title: 'Advanced Git Workflows', status: 'draft', views: 0, lastModified: '2024-01-14' },
-  { id: 3, title: 'Git Branching Strategies', status: 'published', views: 32, lastModified: '2024-01-13' },
-  { id: 4, title: 'Git Hooks and Automation', status: 'published', views: 28, lastModified: '2024-01-12' },
-];
+// Fetched recent lessons from backend
 
 const recentUsers = [
   { id: 1, name: 'Nguyễn Văn A', email: 'nguyenvana@example.com', joinedAt: '2024-01-15', lessonsCompleted: 5 },
@@ -38,8 +39,46 @@ const recentUsers = [
 ];
 
 export default function AdminDashboard() {
+  const router = useRouter();
+  const deleteLessonMutation = useDeleteLesson();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
+
+  const { data: recentLessonsData } = useQuery({
+    queryKey: ['admin-recent-lessons'],
+    queryFn: async () => {
+      // Get latest 10 lessons, sorted by createdAt DESC by backend, limit capped in service
+      const res = await LessonsService.getAll({ limit: 10, offset: 0 });
+      return res.data.map((l: any) => ({
+        id: l.id,
+        title: l.title,
+        status: l.status,
+        views: l.views ?? 0,
+        lastModified: l.updatedAt ?? l.createdAt,
+        slug: l.slug,
+      }));
+    },
+  });
+
+  const openConfirmDelete = (id: number) => {
+    setPendingDeleteId(id);
+    setConfirmOpen(true);
+  };
+
+  const performDelete = async () => {
+    if (pendingDeleteId == null) return;
+    try {
+      await deleteLessonMutation.mutateAsync(pendingDeleteId);
+      setConfirmOpen(false);
+      setPendingDeleteId(null);
+    } catch (e) {
+      console.error('Failed to delete lesson', e);
+    }
+  };
   const lessonColumns = [
-    { key: 'title', label: 'Tiêu đề' },
+    { key: 'title', label: 'Tiêu đề', render: (value: string) => (
+      <span className="block max-w-[280px] truncate" title={value}>{value}</span>
+    ) },
     { key: 'status', label: 'Trạng thái', render: (value: string) => <StatusBadge status={value as any} /> },
     { key: 'views', label: 'Lượt xem' },
     { key: 'lastModified', label: 'Cập nhật cuối', render: (value: string) => <DateDisplay date={value} /> },
@@ -48,9 +87,13 @@ export default function AdminDashboard() {
       label: 'Thao tác', 
       render: (value: any, row: any) => (
         <ActionButtons 
-          onView={() => console.log('View', row.id)}
-          onEdit={() => console.log('Edit', row.id)}
-          onDelete={() => console.log('Delete', row.id)}
+          onView={() => {
+            if (row.slug) window.open(`/git-theory/${row.slug}`, '_blank', 'noopener,noreferrer');
+          }}
+          onEdit={() => {
+            if (row.slug) window.open(`/admin/lessons/${row.slug}/edit`, '_blank', 'noopener,noreferrer');
+          }}
+          onDelete={() => openConfirmDelete(row.id)}
         />
       )
     },
@@ -130,7 +173,7 @@ export default function AdminDashboard() {
           </div>
           <AdminTable 
             columns={lessonColumns}
-            data={recentLessons}
+            data={recentLessonsData ?? []}
             emptyMessage="Chưa có bài học nào"
           />
         </Card>
@@ -183,6 +226,16 @@ export default function AdminDashboard() {
           </Link>
         </div>
       </Card>
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Xóa bài học?"
+        description="Hành động này sẽ xóa bài học khỏi hệ thống. Bạn có chắc chắn?"
+        confirmText="Xóa"
+        cancelText="Hủy"
+        loading={deleteLessonMutation.isPending}
+        onConfirm={performDelete}
+        onClose={() => setConfirmOpen(false)}
+      />
     </div>
   );
 }
