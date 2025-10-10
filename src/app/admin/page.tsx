@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { PageHeader, StatCard, AdminTable, ActionButtons, StatusBadge, DateDisplay } from '@/components/admin';
 import Link from 'next/link';
 
 // Mock data - trong thực tế sẽ fetch từ API
@@ -37,71 +38,82 @@ const recentUsers = [
 ];
 
 export default function AdminDashboard() {
+  const lessonColumns = [
+    { key: 'title', label: 'Tiêu đề' },
+    { key: 'status', label: 'Trạng thái', render: (value: string) => <StatusBadge status={value as any} /> },
+    { key: 'views', label: 'Lượt xem' },
+    { key: 'lastModified', label: 'Cập nhật cuối', render: (value: string) => <DateDisplay date={value} /> },
+    { 
+      key: 'actions', 
+      label: 'Thao tác', 
+      render: (value: any, row: any) => (
+        <ActionButtons 
+          onView={() => console.log('View', row.id)}
+          onEdit={() => console.log('Edit', row.id)}
+          onDelete={() => console.log('Delete', row.id)}
+        />
+      )
+    },
+  ];
+
+  const userColumns = [
+    { key: 'name', label: 'Tên' },
+    { key: 'email', label: 'Email' },
+    { key: 'lessonsCompleted', label: 'Bài học hoàn thành' },
+    { key: 'joinedAt', label: 'Tham gia', render: (value: string) => <DateDisplay date={value} /> },
+    { 
+      key: 'actions', 
+      label: 'Thao tác', 
+      render: (value: any, row: any) => (
+        <ActionButtons 
+          onView={() => console.log('View user', row.id)}
+          onEdit={() => console.log('Edit user', row.id)}
+        />
+      )
+    },
+  ];
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground">Tổng quan về hệ thống quản lý bài học</p>
-        </div>
-        <Link href="/admin/lessons/new">
-          <Button className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Thêm bài học mới
-          </Button>
-        </Link>
-      </div>
+      <PageHeader 
+        title="Dashboard"
+        description="Tổng quan về hệ thống quản lý bài học"
+        actions={
+          <Link href="/admin/lessons/new">
+            <Button className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Thêm bài học mới
+            </Button>
+          </Link>
+        }
+      />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="p-6">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <BookOpen className="h-8 w-8 text-blue-500" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-muted-foreground">Tổng bài học</p>
-              <p className="text-2xl font-semibold text-foreground">{stats.totalLessons}</p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <Users className="h-8 w-8 text-green-500" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-muted-foreground">Người dùng</p>
-              <p className="text-2xl font-semibold text-foreground">{stats.totalUsers}</p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <Eye className="h-8 w-8 text-purple-500" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-muted-foreground">Lượt xem</p>
-              <p className="text-2xl font-semibold text-foreground">{stats.totalViews}</p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <TrendingUp className="h-8 w-8 text-orange-500" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-muted-foreground">Hoạt động gần đây</p>
-              <p className="text-2xl font-semibold text-foreground">{stats.recentActivity}</p>
-            </div>
-          </div>
-        </Card>
+        <StatCard
+          title="Tổng bài học"
+          value={stats.totalLessons}
+          icon={BookOpen}
+          color="text-blue-500"
+        />
+        <StatCard
+          title="Người dùng"
+          value={stats.totalUsers}
+          icon={Users}
+          color="text-green-500"
+        />
+        <StatCard
+          title="Lượt xem"
+          value={stats.totalViews}
+          icon={Eye}
+          color="text-purple-500"
+        />
+        <StatCard
+          title="Hoạt động gần đây"
+          value={stats.recentActivity}
+          icon={TrendingUp}
+          color="text-orange-500"
+        />
       </div>
 
       {/* Content Grid */}
@@ -109,71 +121,35 @@ export default function AdminDashboard() {
         {/* Recent Lessons */}
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium text-foreground">Bài học gần đây</h3>
+            <h3 className="text-lg font-semibold text-foreground">Bài học gần đây</h3>
             <Link href="/admin/lessons">
-              <Button variant="outline" size="sm">Xem tất cả</Button>
+              <Button variant="outline" size="sm">
+                Xem tất cả
+              </Button>
             </Link>
           </div>
-          <div className="space-y-3">
-            {recentLessons.map((lesson) => (
-              <div key={lesson.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground">{lesson.title}</p>
-                  <div className="flex items-center gap-4 mt-1">
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                      lesson.status === 'published' 
-                        ? 'bg-green-500/10 text-green-600 dark:text-green-400' 
-                        : 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400'
-                    }`}>
-                      {lesson.status === 'published' ? 'Đã xuất bản' : 'Bản nháp'}
-                    </span>
-                    <span className="text-xs text-muted-foreground">{lesson.views} lượt xem</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm">
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
+          <AdminTable 
+            columns={lessonColumns}
+            data={recentLessons}
+            emptyMessage="Chưa có bài học nào"
+          />
         </Card>
 
         {/* Recent Users */}
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium text-foreground">Người dùng mới</h3>
+            <h3 className="text-lg font-semibold text-foreground">Người dùng mới</h3>
             <Link href="/admin/users">
-              <Button variant="outline" size="sm">Xem tất cả</Button>
+              <Button variant="outline" size="sm">
+                Xem tất cả
+              </Button>
             </Link>
           </div>
-          <div className="space-y-3">
-            {recentUsers.map((user) => (
-              <div key={user.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground">{user.name}</p>
-                  <p className="text-xs text-muted-foreground">{user.email}</p>
-                  <div className="flex items-center gap-4 mt-1">
-                    <span className="text-xs text-muted-foreground">
-                      {user.lessonsCompleted} bài học hoàn thành
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      Tham gia: {user.joinedAt}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm">
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
+          <AdminTable 
+            columns={userColumns}
+            data={recentUsers}
+            emptyMessage="Chưa có người dùng nào"
+          />
         </Card>
       </div>
 

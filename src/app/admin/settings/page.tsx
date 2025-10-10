@@ -16,11 +16,7 @@ import {
   CheckCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Toggle } from '@/components/ui/toggle';
+import { PageHeader, SettingsSidebar, SettingsSection } from '@/components/admin';
 
 // Mock settings data
 const initialSettings = {
@@ -115,471 +111,346 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Cài đặt hệ thống</h1>
-          <p className="text-muted-foreground">Quản lý cấu hình và cài đặt hệ thống</p>
-        </div>
-        <div className="flex items-center gap-3">
-          {hasChanges && (
-            <div className="flex items-center text-sm text-orange-500">
-              <AlertTriangle className="h-4 w-4 mr-1" />
-              Có thay đổi chưa lưu
-            </div>
-          )}
-          <Button 
-            onClick={handleSave} 
-            disabled={isSaving || !hasChanges}
-            className="flex items-center gap-2"
-          >
-            <Save className="h-4 w-4" />
-            {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
-          </Button>
-        </div>
-      </div>
+      <PageHeader 
+        title="Cài đặt hệ thống"
+        description="Quản lý cấu hình và cài đặt hệ thống"
+        actions={
+          <div className="flex items-center gap-3">
+            {hasChanges && (
+              <div className="flex items-center text-sm text-orange-500">
+                <AlertTriangle className="h-4 w-4 mr-1" />
+                Có thay đổi chưa lưu
+              </div>
+            )}
+            <Button 
+              onClick={handleSave} 
+              disabled={isSaving || !hasChanges}
+              className="flex items-center gap-2"
+            >
+              <Save className="h-4 w-4" />
+              {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
+            </Button>
+          </div>
+        }
+      />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
         {/* Sidebar */}
         <div className="lg:col-span-1">
-          <Card className="p-4">
-            <nav className="space-y-1">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                    activeTab === tab.id
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-                  }`}
-                >
-                  <tab.icon className="h-4 w-4" />
-                  {tab.label}
-                </button>
-              ))}
-            </nav>
-          </Card>
+          <SettingsSidebar 
+            tabs={tabs}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+          />
         </div>
 
         {/* Content */}
         <div className="lg:col-span-3">
           {/* General Settings */}
           {activeTab === 'general' && (
-            <Card className="p-6">
-              <h2 className="text-lg font-semibold text-foreground mb-6">Cài đặt tổng quan</h2>
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                  <div>
-                    <Label htmlFor="siteName">Tên trang web</Label>
-                    <Input
-                      id="siteName"
-                      value={settings.general.siteName}
-                      onChange={(e) => handleSettingChange('general', 'siteName', e.target.value)}
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="siteUrl">URL trang web</Label>
-                    <Input
-                      id="siteUrl"
-                      value={settings.general.siteUrl}
-                      onChange={(e) => handleSettingChange('general', 'siteUrl', e.target.value)}
-                      className="mt-1"
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <Label htmlFor="siteDescription">Mô tả trang web</Label>
-                  <Input
-                    id="siteDescription"
-                    value={settings.general.siteDescription}
-                    onChange={(e) => handleSettingChange('general', 'siteDescription', e.target.value)}
-                    className="mt-1"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                  <div>
-                    <Label htmlFor="adminEmail">Email quản trị</Label>
-                    <Input
-                      id="adminEmail"
-                      type="email"
-                      value={settings.general.adminEmail}
-                      onChange={(e) => handleSettingChange('general', 'adminEmail', e.target.value)}
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="timezone">Múi giờ</Label>
-                    <Select 
-                      value={settings.general.timezone} 
-                      onValueChange={(value) => handleSettingChange('general', 'timezone', value)}
-                    >
-                      <SelectTrigger className="mt-1">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Asia/Ho_Chi_Minh">Asia/Ho_Chi_Minh</SelectItem>
-                        <SelectItem value="UTC">UTC</SelectItem>
-                        <SelectItem value="America/New_York">America/New_York</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-            </Card>
+            <SettingsSection
+              title="Cài đặt tổng quan"
+              layout="mixed"
+              fields={[
+                {
+                  id: "siteName",
+                  label: "Tên trang web",
+                  type: "text",
+                  value: settings.general.siteName,
+                  onChange: (value) => handleSettingChange('general', 'siteName', value)
+                },
+                {
+                  id: "siteUrl",
+                  label: "URL trang web",
+                  type: "text",
+                  value: settings.general.siteUrl,
+                  onChange: (value) => handleSettingChange('general', 'siteUrl', value)
+                },
+                {
+                  id: "siteDescription",
+                  label: "Mô tả trang web",
+                  type: "text",
+                  value: settings.general.siteDescription,
+                  onChange: (value) => handleSettingChange('general', 'siteDescription', value)
+                },
+                {
+                  id: "adminEmail",
+                  label: "Email quản trị",
+                  type: "email",
+                  value: settings.general.adminEmail,
+                  onChange: (value) => handleSettingChange('general', 'adminEmail', value)
+                },
+                {
+                  id: "timezone",
+                  label: "Múi giờ",
+                  type: "select",
+                  value: settings.general.timezone,
+                  onChange: (value) => handleSettingChange('general', 'timezone', value),
+                  options: [
+                    { value: "Asia/Ho_Chi_Minh", label: "Asia/Ho_Chi_Minh" },
+                    { value: "UTC", label: "UTC" },
+                    { value: "America/New_York", label: "America/New_York" }
+                  ]
+                }
+              ]}
+            />
           )}
 
           {/* Notifications Settings */}
           {activeTab === 'notifications' && (
-            <Card className="p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-6">Cài đặt thông báo</h2>
-              <div className="space-y-6">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-900">Thông báo email</h3>
-                      <p className="text-sm text-gray-500">Gửi thông báo qua email</p>
-                    </div>
-                    <Toggle
-                      pressed={settings.notifications.emailNotifications}
-                      onPressedChange={(pressed) => handleSettingChange('notifications', 'emailNotifications', pressed)}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-900">Đăng ký người dùng mới</h3>
-                      <p className="text-sm text-gray-500">Thông báo khi có người dùng mới đăng ký</p>
-                    </div>
-                    <Toggle
-                      pressed={settings.notifications.newUserRegistration}
-                      onPressedChange={(pressed) => handleSettingChange('notifications', 'newUserRegistration', pressed)}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-900">Bài học được xuất bản</h3>
-                      <p className="text-sm text-gray-500">Thông báo khi có bài học mới</p>
-                    </div>
-                    <Toggle
-                      pressed={settings.notifications.lessonPublished}
-                      onPressedChange={(pressed) => handleSettingChange('notifications', 'lessonPublished', pressed)}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-900">Cảnh báo hệ thống</h3>
-                      <p className="text-sm text-gray-500">Thông báo về các vấn đề hệ thống</p>
-                    </div>
-                    <Toggle
-                      pressed={settings.notifications.systemAlerts}
-                      onPressedChange={(pressed) => handleSettingChange('notifications', 'systemAlerts', pressed)}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-900">Báo cáo hàng tuần</h3>
-                      <p className="text-sm text-gray-500">Gửi báo cáo thống kê hàng tuần</p>
-                    </div>
-                    <Toggle
-                      pressed={settings.notifications.weeklyReports}
-                      onPressedChange={(pressed) => handleSettingChange('notifications', 'weeklyReports', pressed)}
-                    />
-                  </div>
-                </div>
-              </div>
-            </Card>
+            <SettingsSection
+              title="Cài đặt thông báo"
+              layout="mixed"
+              fields={[
+                {
+                  id: "emailNotifications",
+                  label: "Thông báo email",
+                  type: "toggle",
+                  value: settings.notifications.emailNotifications,
+                  onChange: (value) => handleSettingChange('notifications', 'emailNotifications', value),
+                  description: "Gửi thông báo qua email"
+                },
+                {
+                  id: "newUserRegistration",
+                  label: "Đăng ký người dùng mới",
+                  type: "toggle",
+                  value: settings.notifications.newUserRegistration,
+                  onChange: (value) => handleSettingChange('notifications', 'newUserRegistration', value),
+                  description: "Thông báo khi có người dùng mới đăng ký"
+                },
+                {
+                  id: "lessonPublished",
+                  label: "Bài học được xuất bản",
+                  type: "toggle",
+                  value: settings.notifications.lessonPublished,
+                  onChange: (value) => handleSettingChange('notifications', 'lessonPublished', value),
+                  description: "Thông báo khi có bài học mới"
+                },
+                {
+                  id: "systemAlerts",
+                  label: "Cảnh báo hệ thống",
+                  type: "toggle",
+                  value: settings.notifications.systemAlerts,
+                  onChange: (value) => handleSettingChange('notifications', 'systemAlerts', value),
+                  description: "Thông báo về các vấn đề hệ thống"
+                },
+                {
+                  id: "weeklyReports",
+                  label: "Báo cáo hàng tuần",
+                  type: "toggle",
+                  value: settings.notifications.weeklyReports,
+                  onChange: (value) => handleSettingChange('notifications', 'weeklyReports', value),
+                  description: "Gửi báo cáo thống kê hàng tuần"
+                }
+              ]}
+            />
           )}
 
           {/* Security Settings */}
           {activeTab === 'security' && (
-            <Card className="p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-6">Cài đặt bảo mật</h2>
-              <div className="space-y-6">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-900">Xác thực email</h3>
-                      <p className="text-sm text-gray-500">Yêu cầu xác thực email khi đăng ký</p>
-                    </div>
-                    <Toggle
-                      pressed={settings.security.requireEmailVerification}
-                      onPressedChange={(pressed) => handleSettingChange('security', 'requireEmailVerification', pressed)}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-900">Cho phép đăng ký</h3>
-                      <p className="text-sm text-gray-500">Cho phép người dùng tự đăng ký</p>
-                    </div>
-                    <Toggle
-                      pressed={settings.security.allowUserRegistration}
-                      onPressedChange={(pressed) => handleSettingChange('security', 'allowUserRegistration', pressed)}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-900">Xác thực 2 yếu tố</h3>
-                      <p className="text-sm text-gray-500">Yêu cầu 2FA cho tài khoản admin</p>
-                    </div>
-                    <Toggle
-                      pressed={settings.security.enableTwoFactor}
-                      onPressedChange={(pressed) => handleSettingChange('security', 'enableTwoFactor', pressed)}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                  <div>
-                    <Label htmlFor="maxLoginAttempts">Số lần đăng nhập tối đa</Label>
-                    <Input
-                      id="maxLoginAttempts"
-                      type="number"
-                      value={settings.security.maxLoginAttempts}
-                      onChange={(e) => handleSettingChange('security', 'maxLoginAttempts', parseInt(e.target.value))}
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="sessionTimeout">Thời gian phiên (phút)</Label>
-                    <Input
-                      id="sessionTimeout"
-                      type="number"
-                      value={settings.security.sessionTimeout}
-                      onChange={(e) => handleSettingChange('security', 'sessionTimeout', parseInt(e.target.value))}
-                      className="mt-1"
-                    />
-                  </div>
-                </div>
-              </div>
-            </Card>
+            <SettingsSection
+              title="Cài đặt bảo mật"
+              layout="mixed"
+              fields={[
+                {
+                  id: "requireEmailVerification",
+                  label: "Xác thực email",
+                  type: "toggle",
+                  value: settings.security.requireEmailVerification,
+                  onChange: (value) => handleSettingChange('security', 'requireEmailVerification', value),
+                  description: "Yêu cầu xác thực email khi đăng ký"
+                },
+                {
+                  id: "allowUserRegistration",
+                  label: "Cho phép đăng ký",
+                  type: "toggle",
+                  value: settings.security.allowUserRegistration,
+                  onChange: (value) => handleSettingChange('security', 'allowUserRegistration', value),
+                  description: "Cho phép người dùng tự đăng ký"
+                },
+                {
+                  id: "enableTwoFactor",
+                  label: "Xác thực 2 yếu tố",
+                  type: "toggle",
+                  value: settings.security.enableTwoFactor,
+                  onChange: (value) => handleSettingChange('security', 'enableTwoFactor', value),
+                  description: "Yêu cầu 2FA cho tài khoản admin"
+                },
+                {
+                  id: "maxLoginAttempts",
+                  label: "Số lần đăng nhập tối đa",
+                  type: "number",
+                  value: settings.security.maxLoginAttempts,
+                  onChange: (value) => handleSettingChange('security', 'maxLoginAttempts', parseInt(value))
+                },
+                {
+                  id: "sessionTimeout",
+                  label: "Thời gian phiên (phút)",
+                  type: "number",
+                  value: settings.security.sessionTimeout,
+                  onChange: (value) => handleSettingChange('security', 'sessionTimeout', parseInt(value))
+                }
+              ]}
+            />
           )}
 
           {/* Appearance Settings */}
           {activeTab === 'appearance' && (
-            <Card className="p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-6">Cài đặt giao diện</h2>
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                  <div>
-                    <Label htmlFor="theme">Chủ đề</Label>
-                    <Select 
-                      value={settings.appearance.theme} 
-                      onValueChange={(value) => handleSettingChange('appearance', 'theme', value)}
-                    >
-                      <SelectTrigger className="mt-1">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="light">Sáng</SelectItem>
-                        <SelectItem value="dark">Tối</SelectItem>
-                        <SelectItem value="auto">Tự động</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="primaryColor">Màu chính</Label>
-                    <Input
-                      id="primaryColor"
-                      type="color"
-                      value={settings.appearance.primaryColor}
-                      onChange={(e) => handleSettingChange('appearance', 'primaryColor', e.target.value)}
-                      className="mt-1 h-10"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                  <div>
-                    <Label htmlFor="logoUrl">URL Logo</Label>
-                    <Input
-                      id="logoUrl"
-                      value={settings.appearance.logoUrl}
-                      onChange={(e) => handleSettingChange('appearance', 'logoUrl', e.target.value)}
-                      className="mt-1"
-                      placeholder="https://example.com/logo.png"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="faviconUrl">URL Favicon</Label>
-                    <Input
-                      id="faviconUrl"
-                      value={settings.appearance.faviconUrl}
-                      onChange={(e) => handleSettingChange('appearance', 'faviconUrl', e.target.value)}
-                      className="mt-1"
-                      placeholder="https://example.com/favicon.ico"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="customCSS">CSS tùy chỉnh</Label>
-                  <textarea
-                    id="customCSS"
-                    value={settings.appearance.customCSS}
-                    onChange={(e) => handleSettingChange('appearance', 'customCSS', e.target.value)}
-                    className="mt-1 w-full h-32 p-3 border border-gray-300 rounded-md font-mono text-sm"
-                    placeholder="/* CSS tùy chỉnh */"
-                  />
-                </div>
-              </div>
-            </Card>
+            <SettingsSection
+              title="Cài đặt giao diện"
+              layout="mixed"
+              fields={[
+                {
+                  id: "theme",
+                  label: "Chủ đề",
+                  type: "select",
+                  value: settings.appearance.theme,
+                  onChange: (value) => handleSettingChange('appearance', 'theme', value),
+                  options: [
+                    { value: "light", label: "Sáng" },
+                    { value: "dark", label: "Tối" },
+                    { value: "auto", label: "Tự động" }
+                  ]
+                },
+                {
+                  id: "primaryColor",
+                  label: "Màu chính",
+                  type: "color",
+                  value: settings.appearance.primaryColor,
+                  onChange: (value) => handleSettingChange('appearance', 'primaryColor', value),
+                  className: "h-10"
+                },
+                {
+                  id: "logoUrl",
+                  label: "URL Logo",
+                  type: "text",
+                  value: settings.appearance.logoUrl,
+                  onChange: (value) => handleSettingChange('appearance', 'logoUrl', value),
+                  placeholder: "https://example.com/logo.png"
+                },
+                {
+                  id: "faviconUrl",
+                  label: "URL Favicon",
+                  type: "text",
+                  value: settings.appearance.faviconUrl,
+                  onChange: (value) => handleSettingChange('appearance', 'faviconUrl', value),
+                  placeholder: "https://example.com/favicon.ico"
+                },
+                {
+                  id: "customCSS",
+                  label: "CSS tùy chỉnh",
+                  type: "textarea",
+                  value: settings.appearance.customCSS,
+                  onChange: (value) => handleSettingChange('appearance', 'customCSS', value),
+                  placeholder: "/* CSS tùy chỉnh */"
+                }
+              ]}
+            />
           )}
 
           {/* Email Settings */}
           {activeTab === 'email' && (
-            <Card className="p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-6">Cài đặt email</h2>
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                  <div>
-                    <Label htmlFor="smtpHost">SMTP Host</Label>
-                    <Input
-                      id="smtpHost"
-                      value={settings.email.smtpHost}
-                      onChange={(e) => handleSettingChange('email', 'smtpHost', e.target.value)}
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="smtpPort">SMTP Port</Label>
-                    <Input
-                      id="smtpPort"
-                      type="number"
-                      value={settings.email.smtpPort}
-                      onChange={(e) => handleSettingChange('email', 'smtpPort', parseInt(e.target.value))}
-                      className="mt-1"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                  <div>
-                    <Label htmlFor="smtpUsername">SMTP Username</Label>
-                    <Input
-                      id="smtpUsername"
-                      value={settings.email.smtpUsername}
-                      onChange={(e) => handleSettingChange('email', 'smtpUsername', e.target.value)}
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="smtpPassword">SMTP Password</Label>
-                    <Input
-                      id="smtpPassword"
-                      type="password"
-                      value={settings.email.smtpPassword}
-                      onChange={(e) => handleSettingChange('email', 'smtpPassword', e.target.value)}
-                      className="mt-1"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                  <div>
-                    <Label htmlFor="fromEmail">Email gửi</Label>
-                    <Input
-                      id="fromEmail"
-                      type="email"
-                      value={settings.email.fromEmail}
-                      onChange={(e) => handleSettingChange('email', 'fromEmail', e.target.value)}
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="fromName">Tên người gửi</Label>
-                    <Input
-                      id="fromName"
-                      value={settings.email.fromName}
-                      onChange={(e) => handleSettingChange('email', 'fromName', e.target.value)}
-                      className="mt-1"
-                    />
-                  </div>
-                </div>
-              </div>
-            </Card>
+            <SettingsSection
+              title="Cài đặt email"
+              layout="double"
+              fields={[
+                {
+                  id: "smtpHost",
+                  label: "SMTP Host",
+                  type: "text",
+                  value: settings.email.smtpHost,
+                  onChange: (value) => handleSettingChange('email', 'smtpHost', value)
+                },
+                {
+                  id: "smtpPort",
+                  label: "SMTP Port",
+                  type: "number",
+                  value: settings.email.smtpPort,
+                  onChange: (value) => handleSettingChange('email', 'smtpPort', parseInt(value))
+                },
+                {
+                  id: "smtpUsername",
+                  label: "SMTP Username",
+                  type: "text",
+                  value: settings.email.smtpUsername,
+                  onChange: (value) => handleSettingChange('email', 'smtpUsername', value)
+                },
+                {
+                  id: "smtpPassword",
+                  label: "SMTP Password",
+                  type: "password",
+                  value: settings.email.smtpPassword,
+                  onChange: (value) => handleSettingChange('email', 'smtpPassword', value)
+                },
+                {
+                  id: "fromEmail",
+                  label: "Email gửi",
+                  type: "email",
+                  value: settings.email.fromEmail,
+                  onChange: (value) => handleSettingChange('email', 'fromEmail', value)
+                },
+                {
+                  id: "fromName",
+                  label: "Tên người gửi",
+                  type: "text",
+                  value: settings.email.fromName,
+                  onChange: (value) => handleSettingChange('email', 'fromName', value)
+                }
+              ]}
+            />
           )}
 
           {/* Backup Settings */}
           {activeTab === 'backup' && (
-            <Card className="p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-6">Cài đặt sao lưu</h2>
-              <div className="space-y-6">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-900">Sao lưu tự động</h3>
-                      <p className="text-sm text-gray-500">Tự động sao lưu dữ liệu</p>
-                    </div>
-                    <Toggle
-                      pressed={settings.backup.autoBackup}
-                      onPressedChange={(pressed) => handleSettingChange('backup', 'autoBackup', pressed)}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-900">Lưu trữ đám mây</h3>
-                      <p className="text-sm text-gray-500">Sao lưu lên cloud storage</p>
-                    </div>
-                    <Toggle
-                      pressed={settings.backup.cloudStorage}
-                      onPressedChange={(pressed) => handleSettingChange('backup', 'cloudStorage', pressed)}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                  <div>
-                    <Label htmlFor="backupFrequency">Tần suất sao lưu</Label>
-                    <Select 
-                      value={settings.backup.backupFrequency} 
-                      onValueChange={(value) => handleSettingChange('backup', 'backupFrequency', value)}
-                    >
-                      <SelectTrigger className="mt-1">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="hourly">Hàng giờ</SelectItem>
-                        <SelectItem value="daily">Hàng ngày</SelectItem>
-                        <SelectItem value="weekly">Hàng tuần</SelectItem>
-                        <SelectItem value="monthly">Hàng tháng</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="backupRetention">Thời gian lưu trữ (ngày)</Label>
-                    <Input
-                      id="backupRetention"
-                      type="number"
-                      value={settings.backup.backupRetention}
-                      onChange={(e) => handleSettingChange('backup', 'backupRetention', parseInt(e.target.value))}
-                      className="mt-1"
-                    />
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-900">Sao lưu thủ công</h3>
-                      <p className="text-sm text-gray-500">Tạo bản sao lưu ngay bây giờ</p>
-                    </div>
-                    <Button variant="outline">
-                      Tạo sao lưu
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </Card>
+            <SettingsSection
+              title="Cài đặt sao lưu"
+              layout="mixed"
+              fields={[
+                {
+                  id: "autoBackup",
+                  label: "Sao lưu tự động",
+                  type: "toggle",
+                  value: settings.backup.autoBackup,
+                  onChange: (value) => handleSettingChange('backup', 'autoBackup', value),
+                  description: "Tự động sao lưu dữ liệu"
+                },
+                {
+                  id: "cloudStorage",
+                  label: "Lưu trữ đám mây",
+                  type: "toggle",
+                  value: settings.backup.cloudStorage,
+                  onChange: (value) => handleSettingChange('backup', 'cloudStorage', value),
+                  description: "Sao lưu lên cloud storage"
+                },
+                {
+                  id: "backupFrequency",
+                  label: "Tần suất sao lưu",
+                  type: "select",
+                  value: settings.backup.backupFrequency,
+                  onChange: (value) => handleSettingChange('backup', 'backupFrequency', value),
+                  options: [
+                    { value: "hourly", label: "Hàng giờ" },
+                    { value: "daily", label: "Hàng ngày" },
+                    { value: "weekly", label: "Hàng tuần" },
+                    { value: "monthly", label: "Hàng tháng" }
+                  ]
+                },
+                {
+                  id: "backupRetention",
+                  label: "Thời gian lưu trữ (ngày)",
+                  type: "number",
+                  value: settings.backup.backupRetention,
+                  onChange: (value) => handleSettingChange('backup', 'backupRetention', parseInt(value))
+                }
+              ]}
+              actions={[
+                {
+                  label: "Tạo sao lưu",
+                  onClick: () => console.log('Create backup'),
+                  variant: "outline"
+                }
+              ]}
+            />
           )}
         </div>
       </div>

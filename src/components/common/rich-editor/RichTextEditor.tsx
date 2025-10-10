@@ -84,7 +84,7 @@ function RichTextEditor() {
         content: '',
         editorProps: {
             attributes: {
-                class: 'min-h-[156px] border rounded-md bg-slate-50 px-3 py-2 focus:outline-none',
+                class: 'h-full focus:outline-none prose prose-sm sm:prose-base max-w-none',
             },
         },
         immediatelyRender: false,
@@ -103,12 +103,17 @@ function RichTextEditor() {
         return htmlContent;
     };
     return (
-        <div className="mx-auto rounded-lg shadow-sm border overflow-hidden bg-[var(--surface)] border-[var(--border)] text-[var(--foreground)]">
+        <div className="mx-auto rounded-lg shadow-sm border overflow-hidden bg-[var(--surface)] border-[var(--border)] text-[var(--foreground)] flex flex-col h-[600px] sm:h-[700px] lg:h-[800px]">
             <Menubar editor={editor} />
-            <EditorContent editor={editor} className="tiptap p-4 focus:outline-none" />
+            <div className="flex-1 overflow-hidden">
+                <EditorContent 
+                    editor={editor} 
+                    className="tiptap p-2 sm:p-4 focus:outline-none h-full overflow-y-auto" 
+                />
+            </div>
             <Button
                 onClick={openPreview}
-                className="w-full py-2 rounded-b-lg transition-colors duration-200 bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-[var(--primary-700)]"
+                className="w-full py-2 rounded-b-lg transition-colors duration-200 bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-[var(--primary-700)] shrink-0"
             >
                 Preview
             </Button>

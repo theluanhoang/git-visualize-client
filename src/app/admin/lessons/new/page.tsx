@@ -8,9 +8,6 @@ import {
   ArrowLeft, 
   Plus, 
   Trash2,
-  MoveUp,
-  MoveDown,
-  Code,
   Image,
   FileText
 } from 'lucide-react';
@@ -22,21 +19,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import RichTextEditor from '@/components/common/rich-editor/RichTextEditor';
 import Link from 'next/link';
 
-interface Section {
-  id: string;
-  heading: string;
-  body: string;
-  examples: CodeSample[];
-  imageUrl?: string;
-}
-
-interface CodeSample {
-  id: string;
-  title: string;
-  language: string;
-  code: string;
-  description?: string;
-}
 
 export default function NewLessonPage() {
   const router = useRouter();
@@ -50,14 +32,6 @@ export default function NewLessonPage() {
     estimatedTime: '',
     difficulty: 'beginner'
   });
-  const [sections, setSections] = useState<Section[]>([
-    {
-      id: '1',
-      heading: '',
-      body: '',
-      examples: []
-    }
-  ]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -80,84 +54,8 @@ export default function NewLessonPage() {
     }
   };
 
-  const addSection = () => {
-    const newSection: Section = {
-      id: Date.now().toString(),
-      heading: '',
-      body: '',
-      examples: []
-    };
-    setSections(prev => [...prev, newSection]);
-  };
 
-  const removeSection = (sectionId: string) => {
-    if (sections.length > 1) {
-      setSections(prev => prev.filter(section => section.id !== sectionId));
-    }
-  };
 
-  const moveSection = (sectionId: string, direction: 'up' | 'down') => {
-    const currentIndex = sections.findIndex(section => section.id === sectionId);
-    if (
-      (direction === 'up' && currentIndex > 0) ||
-      (direction === 'down' && currentIndex < sections.length - 1)
-    ) {
-      const newSections = [...sections];
-      const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-      [newSections[currentIndex], newSections[targetIndex]] = [newSections[targetIndex], newSections[currentIndex]];
-      setSections(newSections);
-    }
-  };
-
-  const updateSection = (sectionId: string, field: string, value: string) => {
-    setSections(prev => prev.map(section => 
-      section.id === sectionId 
-        ? { ...section, [field]: value }
-        : section
-    ));
-  };
-
-  const addCodeExample = (sectionId: string) => {
-    const newExample: CodeSample = {
-      id: Date.now().toString(),
-      title: '',
-      language: 'bash',
-      code: '',
-      description: ''
-    };
-    
-    setSections(prev => prev.map(section => 
-      section.id === sectionId 
-        ? { ...section, examples: [...section.examples, newExample] }
-        : section
-    ));
-  };
-
-  const updateCodeExample = (sectionId: string, exampleId: string, field: string, value: string) => {
-    setSections(prev => prev.map(section => 
-      section.id === sectionId 
-        ? {
-            ...section,
-            examples: section.examples.map(example =>
-              example.id === exampleId 
-                ? { ...example, [field]: value }
-                : example
-            )
-          }
-        : section
-    ));
-  };
-
-  const removeCodeExample = (sectionId: string, exampleId: string) => {
-    setSections(prev => prev.map(section => 
-      section.id === sectionId 
-        ? {
-            ...section,
-            examples: section.examples.filter(example => example.id !== exampleId)
-          }
-        : section
-    ));
-  };
 
   const handleSubmit = async (status: 'draft' | 'published') => {
     setIsSubmitting(true);
@@ -174,23 +72,10 @@ export default function NewLessonPage() {
         return;
       }
 
-      // Validate sections
-      for (const section of sections) {
-        if (!section.heading.trim()) {
-          alert('Vui lòng nhập tiêu đề cho tất cả các phần');
-          return;
-        }
-      }
 
       const lessonData = {
         ...formData,
-        status,
-        sections: sections.map(section => ({
-          heading: section.heading,
-          body: section.body,
-          examples: section.examples,
-          imageUrl: section.imageUrl
-        }))
+        status
       };
 
       // TODO: Gửi dữ liệu lên API
@@ -211,313 +96,276 @@ export default function NewLessonPage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/admin/lessons">
-            <Button variant="outline" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Quay lại
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-2xl font-bold text-[var(--foreground)]">Tạo bài học mới</h1>
-            <p className="text-gray-600">Thêm bài học mới vào hệ thống</p>
+    <div className="min-h-screen bg-background">
+      {/* WordPress-style Header */}
+      <div className="sticky top-0 z-40 bg-background border-b border-border px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link href="/admin/lessons">
+              <Button variant="outline" size="sm">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Quay lại
+              </Button>
+            </Link>
+            <div>
+              <h1 className="text-xl font-bold text-foreground">Tạo bài học mới</h1>
+              <p className="text-sm text-muted-foreground">Thêm bài học mới vào hệ thống</p>
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
-            onClick={() => handleSubmit('draft')}
-            disabled={isSubmitting}
-          >
-            <Save className="h-4 w-4 mr-2" />
-            Lưu bản nháp
-          </Button>
-          <Button 
-            onClick={() => handleSubmit('published')}
-            disabled={isSubmitting}
-          >
-            <Eye className="h-4 w-4 mr-2" />
-            Xuất bản
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => handleSubmit('draft')}
+              disabled={isSubmitting}
+            >
+              <Save className="h-4 w-4 mr-2" />
+              Lưu bản nháp
+            </Button>
+            <Button 
+              onClick={() => handleSubmit('published')}
+              disabled={isSubmitting}
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              Xuất bản
+            </Button>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Basic Information */}
-          <Card className="p-6">
-            <h2 className="text-lg font-semibold text-[var(--foreground)] mb-4">Thông tin cơ bản</h2>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="title">Tiêu đề bài học *</Label>
-                <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) => handleInputChange('title', e.target.value)}
-                  placeholder="Nhập tiêu đề bài học..."
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="slug">Slug *</Label>
-                <Input
-                  id="slug"
-                  value={formData.slug}
-                  onChange={(e) => handleInputChange('slug', e.target.value)}
-                  placeholder="slug-bai-hoc"
-                  className="mt-1"
-                />
-                <p className="text-sm text-gray-500 mt-1">
-                  URL sẽ là: /git-theory/{formData.slug}
-                </p>
-              </div>
-              <div>
-                <Label htmlFor="description">Mô tả ngắn</Label>
-                <Input
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => handleInputChange('description', e.target.value)}
-                  placeholder="Mô tả ngắn về bài học..."
-                  className="mt-1"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="estimatedTime">Thời gian ước tính</Label>
-                  <Input
-                    id="estimatedTime"
-                    value={formData.estimatedTime}
-                    onChange={(e) => handleInputChange('estimatedTime', e.target.value)}
-                    placeholder="30 phút"
-                    className="mt-1"
-                  />
+      <div className="flex flex-col lg:flex-row min-h-[calc(100vh-8rem)] gap-4 lg:gap-6">
+        {/* Main Content - WordPress Style Editor */}
+        <div className="flex-1 px-2 sm:px-4 py-4 sm:py-6 min-w-0">
+          {/* WordPress-style Title Input */}
+          <div className="mb-6">
+            <Input
+              id="title"
+              value={formData.title}
+              onChange={(e) => handleInputChange('title', e.target.value)}
+              placeholder="Nhập tiêu đề bài học..."
+              className="text-2xl font-bold border-0 border-b-2 border-border rounded-none px-0 py-3 focus:border-primary focus:ring-0 bg-transparent"
+            />
+            <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-muted-foreground">
+              <span>Slug: /git-theory/{formData.slug || 'slug-bai-hoc'}</span>
+              <span className="hidden sm:inline">•</span>
+              <span>Thời gian: {formData.estimatedTime || 'Chưa xác định'}</span>
+              <span className="hidden sm:inline">•</span>
+              <span>Độ khó: {formData.difficulty === 'beginner' ? 'Cơ bản' : formData.difficulty === 'intermediate' ? 'Trung bình' : 'Nâng cao'}</span>
+            </div>
+          </div>
+
+          {/* WordPress-style Editor */}
+          <Card className="border-0 shadow-none bg-transparent">
+            <div className="border border-border rounded-lg overflow-hidden">
+              {/* Editor Toolbar */}
+              <div className="bg-muted/50 border-b border-border px-4 py-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-foreground">Nội dung bài học</span>
+                  </div>
                 </div>
+              </div>
+              
+              {/* Editor Content */}
+              <div className="p-4 sm:p-6">
+                <div className="border border-border rounded-lg overflow-hidden">
+                  <RichTextEditor />
+                </div>
+              </div>
+            </div>
+          </Card>
+
+        </div>
+
+        {/* WordPress-style Sidebar */}
+        <div className="w-full lg:w-80 bg-muted/30 border-t lg:border-t-0 lg:border-l border-border px-2 sm:px-4 py-4 sm:py-6 shrink-0">
+          <div className="space-y-6">
+            {/* Publish Box */}
+            <Card className="p-4">
+              <h3 className="text-sm font-semibold text-foreground mb-3">Xuất bản</h3>
+              <div className="space-y-3">
                 <div>
-                  <Label htmlFor="difficulty">Độ khó</Label>
-                  <Select value={formData.difficulty} onValueChange={(value) => handleInputChange('difficulty', value)}>
+                  <Label htmlFor="status" className="text-xs text-muted-foreground">Trạng thái</Label>
+                  <Select value={formData.status} onValueChange={(value) => handleInputChange('status', value)}>
                     <SelectTrigger className="mt-1">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="beginner">Cơ bản</SelectItem>
-                      <SelectItem value="intermediate">Trung bình</SelectItem>
-                      <SelectItem value="advanced">Nâng cao</SelectItem>
+                      <SelectItem value="draft">Bản nháp</SelectItem>
+                      <SelectItem value="published">Đã xuất bản</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleSubmit('draft')}
+                    disabled={isSubmitting}
+                    className="flex-1"
+                  >
+                    <Save className="h-4 w-4 mr-1" />
+                    Lưu nháp
+                  </Button>
+                  <Button 
+                    size="sm"
+                    onClick={() => handleSubmit('published')}
+                    disabled={isSubmitting}
+                    className="flex-1"
+                  >
+                    <Eye className="h-4 w-4 mr-1" />
+                    Xuất bản
+                  </Button>
+                </div>
               </div>
-            </div>
-          </Card>
+            </Card>
 
-          {/* Sections */}
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Nội dung bài học</h2>
-              <Button onClick={addSection} size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                Thêm phần
-              </Button>
-            </div>
-            
-            <div className="space-y-6">
-              {sections.map((section, index) => (
-                <div key={section.id} className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-md font-medium text-gray-900">
-                      Phần {index + 1}
-                    </h3>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => moveSection(section.id, 'up')}
-                        disabled={index === 0}
-                      >
-                        <MoveUp className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => moveSection(section.id, 'down')}
-                        disabled={index === sections.length - 1}
-                      >
-                        <MoveDown className="h-4 w-4" />
-                      </Button>
-                      {sections.length > 1 && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeSection(section.id)}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
+            {/* Lesson Settings */}
+            <Card className="p-4">
+              <h3 className="text-sm font-semibold text-foreground mb-3">Cài đặt bài học</h3>
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="slug" className="text-xs text-muted-foreground">Slug</Label>
+                  <Input
+                    id="slug"
+                    value={formData.slug}
+                    onChange={(e) => handleInputChange('slug', e.target.value)}
+                    placeholder="slug-bai-hoc"
+                    className="mt-1 text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    /git-theory/{formData.slug || 'slug-bai-hoc'}
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="description" className="text-xs text-muted-foreground">Mô tả</Label>
+                  <Input
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => handleInputChange('description', e.target.value)}
+                    placeholder="Mô tả ngắn..."
+                    className="mt-1 text-sm"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label htmlFor="estimatedTime" className="text-xs text-muted-foreground">Thời gian</Label>
+                    <Input
+                      id="estimatedTime"
+                      value={formData.estimatedTime}
+                      onChange={(e) => handleInputChange('estimatedTime', e.target.value)}
+                      placeholder="30 phút"
+                      className="mt-1 text-sm"
+                    />
                   </div>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <Label>Tiêu đề phần *</Label>
-                      <Input
-                        value={section.heading}
-                        onChange={(e) => updateSection(section.id, 'heading', e.target.value)}
-                        placeholder="Tiêu đề của phần này..."
-                        className="mt-1"
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label>Nội dung</Label>
-                      <div className="mt-1">
-                        <div className="border border-gray-300 rounded-md p-4 min-h-[200px]">
-                          <RichTextEditor />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Code Examples */}
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <Label>Ví dụ code</Label>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => addCodeExample(section.id)}
-                        >
-                          <Code className="h-4 w-4 mr-2" />
-                          Thêm ví dụ
-                        </Button>
-                      </div>
-                      
-                      {section.examples.map((example) => (
-                        <div key={example.id} className="border border-gray-200 rounded-lg p-4 mb-2">
-                          <div className="flex items-center justify-between mb-2">
-                            <h4 className="text-sm font-medium">Ví dụ code</h4>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removeCodeExample(section.id, example.id)}
-                              className="text-red-600 hover:text-red-700"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                          
-                          <div className="grid grid-cols-2 gap-2 mb-2">
-                            <Input
-                              value={example.title}
-                              onChange={(e) => updateCodeExample(section.id, example.id, 'title', e.target.value)}
-                              placeholder="Tiêu đề ví dụ..."
-                            />
-                            <Select 
-                              value={example.language} 
-                              onValueChange={(value) => updateCodeExample(section.id, example.id, 'language', value)}
-                            >
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="bash">Bash</SelectItem>
-                                <SelectItem value="git">Git</SelectItem>
-                                <SelectItem value="js">JavaScript</SelectItem>
-                                <SelectItem value="ts">TypeScript</SelectItem>
-                                <SelectItem value="json">JSON</SelectItem>
-                                <SelectItem value="md">Markdown</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          
-                          <textarea
-                            value={example.code}
-                            onChange={(e) => updateCodeExample(section.id, example.id, 'code', e.target.value)}
-                            placeholder="Nhập code..."
-                            className="w-full h-24 p-2 border border-gray-300 rounded-md font-mono text-sm"
-                          />
-                          
-                          <Input
-                            value={example.description || ''}
-                            onChange={(e) => updateCodeExample(section.id, example.id, 'description', e.target.value)}
-                            placeholder="Mô tả ví dụ (tùy chọn)..."
-                            className="mt-2"
-                          />
-                        </div>
-                      ))}
-                    </div>
+                  <div>
+                    <Label htmlFor="difficulty" className="text-xs text-muted-foreground">Độ khó</Label>
+                    <Select value={formData.difficulty} onValueChange={(value) => handleInputChange('difficulty', value)}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="beginner">Cơ bản</SelectItem>
+                        <SelectItem value="intermediate">Trung bình</SelectItem>
+                        <SelectItem value="advanced">Nâng cao</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
-              ))}
-            </div>
-          </Card>
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Status & Actions */}
-          <Card className="p-4">
-            <h3 className="text-md font-semibold text-gray-900 mb-3">Trạng thái & Hành động</h3>
-            <div className="space-y-3">
-              <div>
-                <Label htmlFor="status">Trạng thái</Label>
-                <Select value={formData.status} onValueChange={(value) => handleInputChange('status', value)}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="draft">Bản nháp</SelectItem>
-                    <SelectItem value="published">Đã xuất bản</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
-              
-              <div className="pt-2 space-y-2">
-                <Button 
-                  className="w-full" 
-                  onClick={() => handleSubmit('published')}
-                  disabled={isSubmitting}
-                >
-                  <Eye className="h-4 w-4 mr-2" />
-                  Xuất bản ngay
-                </Button>
-                <Button 
-                  variant="outline" 
+            </Card>
+
+            {/* Prerequisites */}
+            <Card className="p-4">
+              <h3 className="text-sm font-semibold text-foreground mb-3">Điều kiện tiên quyết</h3>
+              <div className="space-y-2">
+                {formData.prerequisites.map((prereq, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <Input
+                      value={prereq}
+                      onChange={(e) => {
+                        const newPrereqs = [...formData.prerequisites];
+                        newPrereqs[index] = e.target.value;
+                        setFormData(prev => ({ ...prev, prerequisites: newPrereqs }));
+                      }}
+                      placeholder="Điều kiện tiên quyết..."
+                      className="text-sm"
+                    />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        const newPrereqs = formData.prerequisites.filter((_, i) => i !== index);
+                        setFormData(prev => ({ ...prev, prerequisites: newPrereqs }));
+                      }}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setFormData(prev => ({
+                      ...prev,
+                      prerequisites: [...prev.prerequisites, '']
+                    }));
+                  }}
                   className="w-full"
-                  onClick={() => handleSubmit('draft')}
-                  disabled={isSubmitting}
                 >
-                  <Save className="h-4 w-4 mr-2" />
-                  Lưu bản nháp
+                  <Plus className="h-4 w-4 mr-2" />
+                  Thêm điều kiện
                 </Button>
               </div>
-            </div>
-          </Card>
+            </Card>
 
-          {/* Preview */}
-          <Card className="p-4">
-            <h3 className="text-md font-semibold text-gray-900 mb-3">Xem trước</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-500">Tiêu đề:</span>
-                <span className="font-medium">{formData.title || 'Chưa có tiêu đề'}</span>
+            {/* Lesson Stats */}
+            <Card className="p-4">
+              <h3 className="text-sm font-semibold text-foreground mb-3">Thống kê</h3>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <div className="flex justify-between">
+                  <span>Tiêu đề:</span>
+                  <span className="text-foreground">{formData.title.length} ký tự</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Mô tả:</span>
+                  <span className="text-foreground">{formData.description.length} ký tự</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Tổng ký tự:</span>
+                  <span className="text-foreground">
+                    {formData.title.length + formData.description.length}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Trạng thái:</span>
+                  <span className="text-foreground">
+                    {formData.status === 'draft' ? 'Bản nháp' : 'Đã xuất bản'}
+                  </span>
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">Slug:</span>
-                <span className="font-mono text-xs">{formData.slug || 'chua-co-slug'}</span>
+            </Card>
+
+            {/* Quick Actions */}
+            <Card className="p-4">
+              <h3 className="text-sm font-semibold text-foreground mb-3">Thao tác nhanh</h3>
+              <div className="space-y-2">
+                <Button variant="outline" size="sm" className="w-full justify-start">
+                  <Eye className="h-4 w-4 mr-2" />
+                  Xem trước
+                </Button>
+                <Button variant="outline" size="sm" className="w-full justify-start">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Xuất PDF
+                </Button>
+                <Button variant="outline" size="sm" className="w-full justify-start">
+                  <Image className="h-4 w-4 mr-2" />
+                  Thêm hình ảnh
+                </Button>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">Số phần:</span>
-                <span className="font-medium">{sections.length}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">Thời gian:</span>
-                <span className="font-medium">{formData.estimatedTime || 'Chưa xác định'}</span>
-              </div>
-            </div>
-          </Card>
+            </Card>
+          </div>
         </div>
       </div>
     </div>
