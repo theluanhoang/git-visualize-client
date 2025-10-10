@@ -51,10 +51,7 @@ const lessonsApi = {
   },
   
   delete: async (id: number) => {
-    // Mock API call
-    console.log('Deleting lesson:', id);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    return { success: true };
+    return LessonsService.delete(id);
   }
 };
 

@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageHeader, AdminTable, ActionButtons, StatusBadge, DateDisplay, StatCard, FilterBar, EmptyState } from '@/components/admin';
+import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { useLessons, useDeleteLesson } from '@/lib/react-query/hooks/use-lessons';
  
 
@@ -102,6 +103,8 @@ export default function LessonsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState('updatedAt');
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
 
   const { data: lessons = [], isLoading } = useLessons();
   const deleteLessonMutation = useDeleteLesson();
@@ -113,13 +116,19 @@ export default function LessonsPage() {
     return matchesSearch && matchesStatus;
   });
 
-  const handleDeleteLesson = async (id: number) => {
-    if (confirm('Bạn có chắc chắn muốn xóa bài học này?')) {
-      try {
-        await deleteLessonMutation.mutateAsync(id);
-      } catch (error) {
-        console.error('Error deleting lesson:', error);
-      }
+  const openConfirmDelete = (id: number) => {
+    setPendingDeleteId(id);
+    setConfirmOpen(true);
+  };
+
+  const performDelete = async () => {
+    if (pendingDeleteId == null) return;
+    try {
+      await deleteLessonMutation.mutateAsync(pendingDeleteId);
+      setConfirmOpen(false);
+      setPendingDeleteId(null);
+    } catch (error) {
+      console.error('Error deleting lesson:', error);
     }
   };
 
@@ -153,7 +162,7 @@ export default function LessonsPage() {
               console.warn('No slug available to edit', row);
             }
           }}
-          onDelete={() => handleDeleteLesson(row.id)}
+          onDelete={() => openConfirmDelete(row.id)}
         />
       )
     },
@@ -230,6 +239,17 @@ export default function LessonsPage() {
             console.error('Failed to navigate to lesson', e);
           }
         }}
+      />
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Xóa bài học?"
+        description="Hành động này sẽ xóa bài học khỏi hệ thống. Bạn có chắc chắn?"
+        confirmText="Xóa"
+        cancelText="Hủy"
+        loading={deleteLessonMutation.isPending}
+        onConfirm={performDelete}
+        onClose={() => setConfirmOpen(false)}
       />
 
       {/* Empty State */}

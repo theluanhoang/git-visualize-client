@@ -82,6 +82,10 @@ export const LessonsService = {
     const res = await api.patch(`/api/v1/lesson/${id}`, payload);
     return res.data;
   },
+  async delete(id: number) {
+    const res = await api.delete(`/api/v1/lesson/${id}`);
+    return res.data;
+  },
 };
 
 export default LessonsService;
