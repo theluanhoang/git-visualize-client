@@ -2,6 +2,7 @@ import { Dot, GitCommitHorizontal, Minus, Plus, RotateCcw, Trash2 } from 'lucide
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import CommitGraphSvg from './svgs/CommitGraphSvg'
 import { useGitEngine } from '@/lib/react-query/hooks/use-git-engine';
+import ConfirmDialog from './ConfirmDialog';
 
 function CommitGraph() {
     const [containerSize, setContainerSize] = useState({ width: 1504, height: 400 });
@@ -10,6 +11,12 @@ function CommitGraph() {
     const [isDragging, setIsDragging] = useState(false);
     const [pointerOffset, setPointerOffset] = useState({ x: 0, y: 0 });
     const containerRef = useRef<HTMLDivElement>(null);
+    
+    // Dialog states
+    const [showClearAllDialog, setShowClearAllDialog] = useState(false);
+    const [showClearPositionsDialog, setShowClearPositionsDialog] = useState(false);
+    const [isClearing, setIsClearing] = useState(false);
+    const [isClearingPositions, setIsClearingPositions] = useState(false);
     
     // Get clearAllData function from git engine
     const { clearAllData } = useGitEngine();
@@ -138,19 +145,48 @@ function CommitGraph() {
     };
 
     const handleClearPositions = () => {
-        if ((window as any).clearCommitGraphPositions) {
-            (window as any).clearCommitGraphPositions();
-        }
+        setShowClearPositionsDialog(true);
     };
 
-    const handleClearAllData = () => {
-        if (confirm('Are you sure you want to clear all data? This will reset the terminal, commit graph, and all saved positions.')) {
-            clearAllData();
-            // Also clear commit graph positions
+    const handleConfirmClearPositions = async () => {
+        setIsClearingPositions(true);
+        try {
             if ((window as any).clearCommitGraphPositions) {
                 (window as any).clearCommitGraphPositions();
             }
+            setShowClearPositionsDialog(false);
+        } finally {
+            setIsClearingPositions(false);
         }
+    };
+
+    const handleCancelClearPositions = () => {
+        setShowClearPositionsDialog(false);
+    };
+
+    const handleClearAllData = () => {
+        setShowClearAllDialog(true);
+    };
+
+    const handleConfirmClearAll = async () => {
+        setIsClearing(true);
+        try {
+            // Clear all data first
+            clearAllData();
+            
+            // Also clear commit graph positions immediately
+            if ((window as any).clearCommitGraphPositions) {
+                (window as any).clearCommitGraphPositions();
+            }
+            
+            setShowClearAllDialog(false);
+        } finally {
+            setIsClearing(false);
+        }
+    };
+
+    const handleCancelClearAll = () => {
+        setShowClearAllDialog(false);
     };
 
     return (
@@ -204,6 +240,30 @@ function CommitGraph() {
                     />
                 </div>
             </div>
+            
+            {/* Clear All Data Confirmation Dialog */}
+            <ConfirmDialog
+                open={showClearAllDialog}
+                title="Xóa toàn bộ dữ liệu"
+                description="Bạn có chắc chắn muốn xóa toàn bộ dữ liệu? Hành động này sẽ reset terminal, commit graph và tất cả vị trí đã lưu. Không thể hoàn tác."
+                confirmText="Xóa tất cả"
+                cancelText="Hủy"
+                loading={isClearing}
+                onConfirm={handleConfirmClearAll}
+                onClose={handleCancelClearAll}
+            />
+            
+            {/* Clear Positions Confirmation Dialog */}
+            <ConfirmDialog
+                open={showClearPositionsDialog}
+                title="Reset vị trí commit"
+                description="Bạn có chắc chắn muốn reset vị trí các commit về layout mặc định? Hành động này sẽ xóa tất cả vị trí đã được điều chỉnh."
+                confirmText="Reset vị trí"
+                cancelText="Hủy"
+                loading={isClearingPositions}
+                onConfirm={handleConfirmClearPositions}
+                onClose={handleCancelClearPositions}
+            />
         </div>
     )
 }

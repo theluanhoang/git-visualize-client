@@ -107,14 +107,21 @@ export const initializeAppData = () => {
 export const useGitEngine = () => {
   const { mutateAsync: runCommand, isPending: isRunning } = useExecuteGitCommand();
   const { data: responses = [] } = useTerminalResponses();
+  const queryClient = useQueryClient();
   
   const clearAllData = () => {
-    const queryClient = useQueryClient();
-    queryClient.setQueryData(['terminal-responses'], []);
-    queryClient.setQueryData(['git', 'state'], null);
+    // Clear localStorage first
     localStorage.removeItem(TERMINAL_RESPONSES_KEY);
     localStorage.removeItem('git-repository-state');
     localStorage.removeItem('git-commit-graph-node-positions');
+    
+    // Clear query cache
+    queryClient.setQueryData(['terminal-responses'], []);
+    queryClient.setQueryData(['git', 'state'], null);
+    
+    // Invalidate and refetch queries to force re-render
+    queryClient.invalidateQueries({ queryKey: ['terminal-responses'] });
+    queryClient.invalidateQueries({ queryKey: ['git', 'state'] });
   };
   
   return { responses, runCommand, isRunning, clearAllData };

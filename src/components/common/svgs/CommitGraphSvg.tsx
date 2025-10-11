@@ -95,7 +95,12 @@ function CommitGraphSvg({
         }
     }, [responses.length, queryClient]);
     useEffect(() => {
-        if (responses.length === 0) return;
+        if (responses.length === 0) {
+            // Clear commit nodes when no responses
+            setCommitNodes([]);
+            setHead(null);
+            return;
+        }
 
         const latestRepositoryState = responses[responses.length - 1].repositoryState;
         branchCommits.current = {};
