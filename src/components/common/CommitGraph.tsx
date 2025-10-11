@@ -1,4 +1,4 @@
-import { Dot, GitCommitHorizontal, Minus, Plus } from 'lucide-react'
+import { Dot, GitCommitHorizontal, Minus, Plus, RotateCcw } from 'lucide-react'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import CommitGraphSvg from './svgs/CommitGraphSvg'
 
@@ -134,6 +134,12 @@ function CommitGraph() {
         });
     };
 
+    const handleClearPositions = () => {
+        if ((window as any).clearCommitGraphPositions) {
+            (window as any).clearCommitGraphPositions();
+        }
+    };
+
     return (
         <div className="rounded-lg shadow-sm border border-[var(--border)] bg-[var(--surface)]">
             <div className="px-4 py-3 border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--surface),#000_4%)] ">
@@ -147,6 +153,8 @@ function CommitGraph() {
                     <li>Drag to pan</li>
                     <li><Dot /></li>
                     <li>Click commits for details</li>
+                    <li><Dot /></li>
+                    <li>Drag commits to reposition</li>
                 </ul>
             </div>
             <div className="p-4">
@@ -162,6 +170,9 @@ function CommitGraph() {
                         <button className="bg-background border border-[var(--border)] rounded-sm cursor-pointer p-1 text-muted-foreground text-sm hover:bg-muted" onClick={handleMinus}><Minus size={16} /></button>
                         <button className="bg-background border border-[var(--border)] rounded-sm cursor-pointer p-1 text-muted-foreground text-sm hover:bg-muted" onClick={handlePlus}><Plus size={16} /></button>
                         <button className="bg-background border border-[var(--border)] rounded-sm cursor-pointer p-1 text-muted-foreground text-sm hover:bg-muted" onClick={handleReset}>Reset</button>
+                        <button className="bg-background border border-[var(--border)] rounded-sm cursor-pointer p-1 text-muted-foreground text-sm hover:bg-muted" onClick={handleClearPositions} title="Reset commit positions">
+                            <RotateCcw size={16} />
+                        </button>
                         <input disabled className="bg-background border border-[var(--border)] rounded-sm p-1 text-muted-foreground text-sm outline-none max-w-12" value={`${Math.floor(zoom * 100)}%`} />
                     </div>
                     {/* SVG Component */}

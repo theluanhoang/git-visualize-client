@@ -3,6 +3,36 @@ import CommitSvg from './CommitSvg';
 import { useTerminalResponses } from '@/lib/react-query/hooks/use-git-engine';
 import { ICommit, IHead } from '@/types/git';
 
+// Storage key for persisting node positions
+const NODE_POSITIONS_KEY = 'git-commit-graph-node-positions';
+
+// Utility functions for position persistence
+const saveNodePositions = (positions: Record<string, { x: number; y: number }>) => {
+    try {
+        localStorage.setItem(NODE_POSITIONS_KEY, JSON.stringify(positions));
+    } catch (error) {
+        console.warn('Failed to save node positions:', error);
+    }
+};
+
+const loadNodePositions = (): Record<string, { x: number; y: number }> => {
+    try {
+        const saved = localStorage.getItem(NODE_POSITIONS_KEY);
+        return saved ? JSON.parse(saved) : {};
+    } catch (error) {
+        console.warn('Failed to load node positions:', error);
+        return {};
+    }
+};
+
+const clearNodePositions = () => {
+    try {
+        localStorage.removeItem(NODE_POSITIONS_KEY);
+    } catch (error) {
+        console.warn('Failed to clear node positions:', error);
+    }
+};
+
 interface CommitNode {
     commit: ICommit;
     x: number;
@@ -24,6 +54,7 @@ interface CommitGraphSvgProps extends React.SVGProps<SVGSVGElement> {
     height: number;
     pan: { x: number; y: number };
     zoom: number;
+    onClearPositions?: () => void;
 }
 
 const R = 30;
@@ -33,6 +64,7 @@ function CommitGraphSvg({
     height,
     pan,
     zoom,
+    onClearPositions,
     ...svgProps
 }: CommitGraphSvgProps) {
     const [head, setHead] = useState<IHead>(null);
@@ -54,7 +86,17 @@ function CommitGraphSvg({
         branchCommits.current = {};
         const commitNodes = calculateTreeLayout();
 
-        setCommitNodes(commitNodes);
+        // Restore saved positions if available
+        const savedPositions = loadNodePositions();
+        const commitNodesWithSavedPositions = commitNodes.map(node => {
+            const savedPos = savedPositions[node.commit.id];
+            if (savedPos) {
+                return { ...node, x: savedPos.x, y: savedPos.y };
+            }
+            return node;
+        });
+
+        setCommitNodes(commitNodesWithSavedPositions);
 
         setHead(latestRepositoryState?.head ?? null);
     }, [responses]);
@@ -396,6 +438,13 @@ function CommitGraphSvg({
     // Handle mouse up to end drag
     const handleMouseUp = useCallback(() => {
         if (dragState.isDragging) {
+            // Save current positions to localStorage
+            const currentPositions: Record<string, { x: number; y: number }> = {};
+            commitNodes.forEach(node => {
+                currentPositions[node.commit.id] = { x: node.x, y: node.y };
+            });
+            saveNodePositions(currentPositions);
+
             setDragState({
                 isDragging: false,
                 draggedNodeId: null,
@@ -404,7 +453,28 @@ function CommitGraphSvg({
                 currentMousePosition: { x: 0, y: 0 }
             });
         }
-    }, [dragState.isDragging]);
+    }, [dragState.isDragging, commitNodes]);
+
+    // Function to clear saved positions and reset to default layout
+    const clearSavedPositions = useCallback(() => {
+        clearNodePositions();
+        // Recalculate layout without saved positions
+        const latestRepositoryState = responses[responses.length - 1]?.repositoryState;
+        if (latestRepositoryState) {
+            branchCommits.current = {};
+            const commitNodes = calculateTreeLayout();
+            setCommitNodes(commitNodes);
+        }
+        onClearPositions?.();
+    }, [responses, onClearPositions]);
+
+    // Expose clear function to parent component
+    useEffect(() => {
+        if (onClearPositions) {
+            // This allows parent to call clearSavedPositions
+            (window as any).clearCommitGraphPositions = clearSavedPositions;
+        }
+    }, [clearSavedPositions, onClearPositions]);
 
     // Add global mouse event listeners
     useEffect(() => {
