@@ -103,7 +103,7 @@ function CommitGraphSvg({
 
         // Restore saved positions if available
         const savedPositions = loadNodePositions();
-        const commitNodesWithSavedPositions = commitNodes.map(node => {
+        let commitNodesWithSavedPositions = commitNodes.map(node => {
             const savedPos = savedPositions[node.commit.id];
             if (savedPos) {
                 return { ...node, x: savedPos.x, y: savedPos.y };
@@ -111,12 +111,69 @@ function CommitGraphSvg({
             return node;
         });
 
+        // Recalculate positions for commits that don't have saved positions
+        // but need to follow their parent's position
+        commitNodesWithSavedPositions = recalculatePositionsFromParents(commitNodesWithSavedPositions, savedPositions);
+
         setCommitNodes(commitNodesWithSavedPositions);
 
         setHead(latestRepositoryState?.head ?? null);
     }, [responses]);
 
+    // Function to recalculate positions for commits that should follow their parent's position
+    const recalculatePositionsFromParents = (nodes: CommitNode[], savedPositions: Record<string, { x: number; y: number }>) => {
+        const nodeMap = new Map(nodes.map(node => [node.commit.id, node]));
+        const updatedNodes = [...nodes];
+        
+        // Process nodes in chronological order to ensure parents are processed first
+        const sortedNodes = [...nodes].sort((a, b) => {
+            const dateA = new Date(a.commit.committer.date).getTime();
+            const dateB = new Date(b.commit.committer.date).getTime();
+            return dateA - dateB;
+        });
 
+        for (const node of sortedNodes) {
+            // Skip if this node already has a saved position
+            if (savedPositions[node.commit.id]) {
+                continue;
+            }
+
+            // Find the primary parent (first parent)
+            const primaryParentId = node.commit.parents[0];
+            if (!primaryParentId) {
+                continue; // Root commit, keep original position
+            }
+
+            const parentNode = nodeMap.get(primaryParentId);
+            if (!parentNode) {
+                continue; // Parent not found, keep original position
+            }
+
+            // Check if parent has a saved position or was already updated
+            const parentIndex = updatedNodes.findIndex(n => n.commit.id === primaryParentId);
+            if (parentIndex === -1) {
+                continue;
+            }
+
+            const parentNodeUpdated = updatedNodes[parentIndex];
+            
+            // If parent is on the same branch, place child directly below parent
+            if (node.commit.branch === parentNodeUpdated.commit.branch) {
+                const updatedNode = {
+                    ...node,
+                    x: parentNodeUpdated.x,
+                    y: parentNodeUpdated.y + 4*R + 20 // Same spacing as levelHeight
+                };
+                
+                const nodeIndex = updatedNodes.findIndex(n => n.commit.id === node.commit.id);
+                if (nodeIndex !== -1) {
+                    updatedNodes[nodeIndex] = updatedNode;
+                }
+            }
+        }
+
+        return updatedNodes;
+    };
 
     const calculateTreeLayout = () => {
         const lastCommits = responses[responses.length - 1].repositoryState?.commits ?? [];
@@ -202,8 +259,6 @@ function CommitGraphSvg({
             branchPositions.set(branch, startX + laneNumber * branchSpacing);
         });
 
-        console.log('Branch lanes:', Object.fromEntries(branchLanes));
-        console.log('Branch positions:', Object.fromEntries(branchPositions));
 
         // Step 2: Place commits using hierarchical positioning
         const maxLevel = Object.values(levelById).reduce((m, v) => Math.max(m, v), 0);
