@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react'
 import CommitSvg from './CommitSvg';
 import { useTerminalResponses } from '@/lib/react-query/hooks/use-git-engine';
 import { ICommit, IHead } from '@/types/git';
+import { useQueryClient } from '@tanstack/react-query';
 
 // Storage key for persisting node positions
 const NODE_POSITIONS_KEY = 'git-commit-graph-node-positions';
@@ -18,7 +19,8 @@ const saveNodePositions = (positions: Record<string, { x: number; y: number }>) 
 const loadNodePositions = (): Record<string, { x: number; y: number }> => {
     try {
         const saved = localStorage.getItem(NODE_POSITIONS_KEY);
-        return saved ? JSON.parse(saved) : {};
+        const positions = saved ? JSON.parse(saved) : {};
+        return positions;
     } catch (error) {
         console.warn('Failed to load node positions:', error);
         return {};
@@ -79,6 +81,19 @@ function CommitGraphSvg({
     const { data: responses = [] } = useTerminalResponses();
     const branchCommits = useRef<{ [branchName: string]: ICommit[] }>({});
     const svgRef = useRef<SVGSVGElement>(null);
+    const queryClient = useQueryClient();
+
+    // Auto-fix detection for persistence issues
+    useEffect(() => {
+        // Force re-render if responses are empty but localStorage has data
+        if (responses.length === 0) {
+            const savedResponses = JSON.parse(localStorage.getItem('git-terminal-responses') || '[]');
+            if (savedResponses.length > 0) {
+                // Manually set the query data to fix the issue
+                queryClient.setQueryData(['terminal-responses'], savedResponses);
+            }
+        }
+    }, [responses.length, queryClient]);
     useEffect(() => {
         if (responses.length === 0) return;
 

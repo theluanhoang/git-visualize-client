@@ -1,15 +1,18 @@
-import { Dot, GitCommitHorizontal, Minus, Plus, RotateCcw } from 'lucide-react'
+import { Dot, GitCommitHorizontal, Minus, Plus, RotateCcw, Trash2 } from 'lucide-react'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import CommitGraphSvg from './svgs/CommitGraphSvg'
+import { useGitEngine } from '@/lib/react-query/hooks/use-git-engine';
 
 function CommitGraph() {
     const [containerSize, setContainerSize] = useState({ width: 1504, height: 400 });
-
     const [zoom, setZoom] = useState(1);
     const [pan, setPan] = useState({ x: 0, y: 0 });
     const [isDragging, setIsDragging] = useState(false);
     const [pointerOffset, setPointerOffset] = useState({ x: 0, y: 0 });
     const containerRef = useRef<HTMLDivElement>(null);
+    
+    // Get clearAllData function from git engine
+    const { clearAllData } = useGitEngine();
 
     useEffect(() => {
         const updateSize = () => {
@@ -140,6 +143,16 @@ function CommitGraph() {
         }
     };
 
+    const handleClearAllData = () => {
+        if (confirm('Are you sure you want to clear all data? This will reset the terminal, commit graph, and all saved positions.')) {
+            clearAllData();
+            // Also clear commit graph positions
+            if ((window as any).clearCommitGraphPositions) {
+                (window as any).clearCommitGraphPositions();
+            }
+        }
+    };
+
     return (
         <div className="rounded-lg shadow-sm border border-[var(--border)] bg-[var(--surface)]">
             <div className="px-4 py-3 border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--surface),#000_4%)] ">
@@ -152,9 +165,9 @@ function CommitGraph() {
                     <li><Dot /></li>
                     <li>Drag to pan</li>
                     <li><Dot /></li>
-                    <li>Click commits for details</li>
-                    <li><Dot /></li>
                     <li>Drag commits to reposition</li>
+                    <li><Dot /></li>
+                    <li>State persists on reload</li>
                 </ul>
             </div>
             <div className="p-4">
@@ -172,6 +185,9 @@ function CommitGraph() {
                         <button className="bg-background border border-[var(--border)] rounded-sm cursor-pointer p-1 text-muted-foreground text-sm hover:bg-muted" onClick={handleReset}>Reset</button>
                         <button className="bg-background border border-[var(--border)] rounded-sm cursor-pointer p-1 text-muted-foreground text-sm hover:bg-muted" onClick={handleClearPositions} title="Reset commit positions">
                             <RotateCcw size={16} />
+                        </button>
+                        <button className="bg-background border border-[var(--border)] rounded-sm cursor-pointer p-1 text-muted-foreground text-sm hover:bg-muted hover:text-red-500" onClick={handleClearAllData} title="Clear all data (terminal + graph)">
+                            <Trash2 size={16} />
                         </button>
                         <input disabled className="bg-background border border-[var(--border)] rounded-sm p-1 text-muted-foreground text-sm outline-none max-w-12" value={`${Math.floor(zoom * 100)}%`} />
                     </div>
