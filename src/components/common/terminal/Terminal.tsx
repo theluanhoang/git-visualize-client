@@ -1,22 +1,16 @@
-import { useGitCommandMutation } from '@/lib/react-query/mutations/useGitCommand';
-import { useGitResponses } from '@/lib/react-query/queries/useGitResponses';
 import React, { useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form';
+import { useGitEngine } from '@/lib/react-query/hooks/use-git-engine';
 
 function Terminal() {
     const outputRef = useRef<HTMLDivElement>(null);
+    const { responses, runCommand } = useGitEngine();
 
     const { register, handleSubmit, reset } = useForm<{ command: string }>();
-    const { mutate: executeGitCommand } = useGitCommandMutation();
-    const { data: responses = [] } = useGitResponses();
 
-    const onSubmit = ({ command }: { command: string }) => {
+    const onSubmit = async ({ command }: { command: string }) => {
         if (command.trim()) {
-            executeGitCommand(command, {
-                onSuccess: () => reset({ command: '' }),
-                onError: (error) => console.error('Git command error:', error),
-            });
-
+            await runCommand(command.trim());
             reset({ command: "" });
         }
     };

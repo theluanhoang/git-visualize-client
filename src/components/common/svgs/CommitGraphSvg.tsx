@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import CommitSvg from './CommitSvg';
-import { useGitResponses } from '@/lib/react-query/queries/useGitResponses';
+import { useTerminalResponses } from '@/lib/react-query/hooks/use-git-engine';
 import { ICommit, IHead } from '@/types/git';
 
 interface CommitNode {
@@ -29,11 +29,9 @@ function CommitGraphSvg({
 }: CommitGraphSvgProps) {
     const [head, setHead] = useState<IHead>(null);
     const [commitNodes, setCommitNodes] = useState<CommitNode[]>([]);
-    const { data: responses = [], isLoading, isFetching, isError, error } = useGitResponses();
+    const { data: responses = [] } = useTerminalResponses();
     const branchCommits = useRef<{ [branchName: string]: ICommit[] }>({});
     useEffect(() => {
-        if (isLoading || isFetching) return;
-
         if (responses.length === 0) return;
 
         const latestRepositoryState = responses[responses.length - 1].repositoryState;
@@ -43,12 +41,13 @@ function CommitGraphSvg({
         setCommitNodes(commitNodes);
 
         setHead(latestRepositoryState?.head ?? null);
-    }, [responses, isLoading, isFetching]);
+    }, [responses]);
 
 
 
     const calculateTreeLayout = () => {
         const lastCommits = responses[responses.length - 1].repositoryState?.commits ?? [];
+        
         // Maps for quick lookup
         const idToCommit: Record<string, ICommit> = {};
         lastCommits.forEach(c => { idToCommit[c.id] = c; });
@@ -101,45 +100,56 @@ function CommitGraphSvg({
 
         // Constants for layout
         const levelHeight = 4*R + 20;
-        const branchSpacing = 300; // horizontal spacing between siblings
+        const branchSpacing = 120; // Horizontal spacing between branches
         const startX = width / 2 - R; // center X
         const startY = height / 2;    // base Y
 
-        // Compute X positions per node
+        // Compute X positions per node using hierarchical layout
         const xById: Record<string, number> = {};
+        const branchLanes: Map<string, number> = new Map(); // branch -> lane number
+        const branchPositions: Map<string, number> = new Map(); // branch -> base X position
 
-        // Helper to generate alternating offsets: [0, -1, +1, -2, +2, ...] * spacing
-        const alternatingOffsets = (count: number): number[] => {
-            const offsets: number[] = [];
-            for (let i = 0; i < count; i++) {
-                if (i === 0) {
-                    offsets.push(0);
-                } else {
-                    const step = Math.ceil(i / 2);
-                    const sign = i % 2 === 0 ? 1 : -1; // even index -> +, odd -> - (after the first)
-                    offsets.push(sign * step);
-                }
-            }
-            return offsets.map(m => m * branchSpacing);
-        };
+        // Step 1: Identify all branches and assign lanes
+        const allBranches = new Set<string>();
+        sortedCommits.forEach(commit => allBranches.add(commit.branch));
+        
+        const branchList = Array.from(allBranches);
+        const mainBranch = branchList.find(b => b === 'main' || b === 'master') || branchList[0];
+        const otherBranches = branchList.filter(b => b !== mainBranch);
 
-        // Levels present in the graph
-        const maxLevel = Object.values(levelById).reduce((m, v) => Math.max(m, v), 0);
+        // Assign main branch to lane 0
+        branchLanes.set(mainBranch, 0);
+        branchPositions.set(mainBranch, startX);
 
-        // Place roots around center using alternating offsets
-        const rootOffsets = alternatingOffsets(roots.length);
-        roots.forEach((rootId, idx) => {
-            xById[rootId] = startX + rootOffsets[idx];
+        // Assign other branches to symmetric lanes
+        otherBranches.forEach((branch, index) => {
+            const lane = Math.floor(index / 2) + 1;
+            const laneNumber = index % 2 === 0 ? lane : -lane;
+            branchLanes.set(branch, laneNumber);
+            branchPositions.set(branch, startX + laneNumber * branchSpacing);
         });
 
-        // For each subsequent level, position children around their parent
+        console.log('Branch lanes:', Object.fromEntries(branchLanes));
+        console.log('Branch positions:', Object.fromEntries(branchPositions));
+
+        // Step 2: Place commits using hierarchical positioning
+        const maxLevel = Object.values(levelById).reduce((m, v) => Math.max(m, v), 0);
+
+        // Place roots at their branch positions
+        roots.forEach((rootId) => {
+            const commit = idToCommit[rootId];
+            const branch = commit.branch;
+            const branchX = branchPositions.get(branch) || startX;
+            xById[rootId] = branchX;
+        });
+
+        // Process each level from top to bottom
         for (let lvl = 1; lvl <= maxLevel; lvl++) {
-            // Collect nodes at this level
             const nodesAtLevel = sortedCommits
                 .filter(c => levelById[c.id] === lvl)
                 .map(c => c.id);
 
-            // Group by parent (primary parent)
+            // Group nodes by their parent
             const nodesByParent: Record<string, string[]> = {};
             for (const id of nodesAtLevel) {
                 const parentId = idToCommit[id].parents[0];
@@ -148,46 +158,75 @@ function CommitGraphSvg({
                 nodesByParent[parentId].push(id);
             }
 
-            // Position each sibling group around its parent.x with alternating offsets
+            // Position each group of siblings
             for (const parentId of Object.keys(nodesByParent)) {
                 const siblings = nodesByParent[parentId];
-                // stable sort by commit time
+                const parentCommit = idToCommit[parentId];
+                const parentBranch = parentCommit.branch;
+                const parentX = xById[parentId] || startX;
+
+                // Sort siblings by commit time for consistent ordering
                 siblings.sort((a, b) => {
                     const da = new Date(idToCommit[a].committer.date).getTime();
                     const db = new Date(idToCommit[b].committer.date).getTime();
                     return da - db;
                 });
-                const parentX = xById[parentId] ?? startX;
-                const offsets = alternatingOffsets(siblings.length);
-                siblings.forEach((childId, idx) => {
-                    xById[childId] = parentX + offsets[idx];
+
+                // Group siblings by branch
+                const siblingsByBranch: Record<string, string[]> = {};
+                siblings.forEach(childId => {
+                    const commit = idToCommit[childId];
+                    const branch = commit.branch;
+                    if (!siblingsByBranch[branch]) {
+                        siblingsByBranch[branch] = [];
+                    }
+                    siblingsByBranch[branch].push(childId);
+                });
+
+                // Position each branch's commits
+                Object.entries(siblingsByBranch).forEach(([branchName, branchSiblings]) => {
+                    const branchX = branchPositions.get(branchName) || startX;
+                    
+                    branchSiblings.forEach((childId) => {
+                        // All commits in a branch follow the same vertical line
+                        xById[childId] = branchX;
+                    });
                 });
             }
 
-            // Handle any nodes without a known parent placement (fallback to center distribution)
+            // Handle any unplaced nodes
             const unplaced = nodesAtLevel.filter(id => xById[id] === undefined);
             if (unplaced.length > 0) {
-                const offs = alternatingOffsets(unplaced.length);
                 unplaced.forEach((id, idx) => {
-                    xById[id] = startX + offs[idx];
+                    const commit = idToCommit[id];
+                    const branch = commit.branch;
+                    const branchX = branchPositions.get(branch) || startX;
+                    xById[id] = branchX;
                 });
             }
         }
 
-        // Collision avoidance: ensure minimum horizontal gap at each level
-        const minGap = R * 2 + 24; // circle diameter + margin
+        // Step 3: Collision avoidance - ensure minimum spacing between commits at same level
+        const minGap = R * 2 + 20; // circle diameter + margin
         for (let lvl = 0; lvl <= maxLevel; lvl++) {
             const idsAtLevel = sortedCommits
                 .filter(c => (levelById[c.id] ?? 0) === lvl)
                 .map(c => c.id)
                 .filter(id => xById[id] !== undefined);
+            
+            if (idsAtLevel.length <= 1) continue;
+            
+            // Sort by X position
             idsAtLevel.sort((a, b) => (xById[a] as number) - (xById[b] as number));
+            
+            // Resolve collisions by shifting nodes
             for (let i = 1; i < idsAtLevel.length; i++) {
                 const prevId = idsAtLevel[i - 1];
                 const currId = idsAtLevel[i];
                 const prevX = xById[prevId] as number;
                 const currX = xById[currId] as number;
                 const gap = currX - prevX;
+                
                 if (gap < minGap) {
                     const shift = minGap - gap;
                     xById[currId] = currX + shift;
@@ -225,24 +264,22 @@ function CommitGraphSvg({
     const minX = Math.min(...commitNodes.map(n => n.x)) - 200;
     const maxX = Math.max(...commitNodes.map(n => n.x)) + 200;
     const maxY = Math.max(...commitNodes.map(n => n.y)) + 200;
-    const graphWidth = Math.max(width, maxX - minX);
-    const graphHeight = Math.max(height, maxY);
 
-    if (isLoading) {
-        return (
-            <div className="w-full h-full flex items-center justify-center">
-                <div className="text-gray-500">Loading...</div>
-            </div>
-        );
-    }
+    // Calculate viewport bounds for grid coverage
+    const viewportMinX = (-pan.x) / zoom;
+    const viewportMaxX = (width - pan.x) / zoom;
+    const viewportMinY = (-pan.y) / zoom;
+    const viewportMaxY = (height - pan.y) / zoom;
 
-    if (isError) {
-        return (
-            <div className="w-full h-full flex items-center justify-center">
-                <div className="text-red-500">Error: {error?.message || 'Failed to load data'}</div>
-            </div>
-        );
-    }
+    // Ensure grid covers the full viewport
+    const gridMinX = Math.min(viewportMinX, minX);
+    const gridMaxX = Math.max(viewportMaxX, maxX);
+    const gridMinY = Math.min(viewportMinY, 0);
+    const gridMaxY = Math.max(viewportMaxY, maxY);
+    const gridWidth = gridMaxX - gridMinX;
+    const gridHeight = gridMaxY - gridMinY;
+
+    // No loading or error states for client-only cache
 
     if (commitNodes.length === 0) {
         return (
@@ -297,7 +334,7 @@ function CommitGraphSvg({
                         <path d="M 50 0 L 0 0 0 50" fill="none" stroke="#e5e7eb" strokeWidth="0.5" />
                     </pattern>
                 </defs>
-                <rect x={minX} y={0} width={graphWidth} height={graphHeight} fill="url(#grid)" />
+                <rect x={gridMinX} y={gridMinY} width={gridWidth} height={gridHeight} fill="url(#grid)" />
             </g>
             <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`} >
                 {/* Draw connection */}

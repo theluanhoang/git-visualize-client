@@ -1,8 +1,7 @@
 "use client";
 
 import React from "react";
-import { useGitResponses } from "@/lib/react-query/queries/useGitResponses";
-import { useGitCommandMutation } from "@/lib/react-query/mutations/useGitCommand";
+import { useGitEngine } from "@/lib/react-query/hooks/use-git-engine";
 import { IRepositoryState } from "@/types/git";
 
 function ActionButton({ label, onClick, variant = "primary" }: { label: string; onClick: () => void; variant?: "primary" | "outline" }) {
@@ -55,8 +54,7 @@ function Column({ title, items, color, renderItem }: { title: string; items: str
 }
 
 export default function StagingAreaVisualizer() {
-	const { data: responses = [] } = useGitResponses();
-	const { mutate: runGit } = useGitCommandMutation();
+	const { responses = [], runCommand } = useGitEngine();
 
 	const latestState: IRepositoryState | null = React.useMemo(() => {
 		for (let i = responses.length - 1; i >= 0; i--) {
@@ -65,7 +63,7 @@ export default function StagingAreaVisualizer() {
 		return null;
 	}, [responses]);
 
-	const exec = (cmd: string) => runGit(cmd);
+	const exec = (cmd: string) => void runCommand(cmd);
 
 	return (
 		<section className="rounded-lg border border-[var(--border)] bg-[var(--surface)] shadow-sm p-4">
