@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState, useCallback } from 'react'
 import CommitSvg from './CommitSvg';
 import { useTerminalResponses } from '@/lib/react-query/hooks/use-git-engine';
 import { ICommit, IHead } from '@/types/git';
@@ -9,6 +9,14 @@ interface CommitNode {
     y: number;
     level: number;
     branch: string;
+}
+
+interface DragState {
+    isDragging: boolean;
+    draggedNodeId: string | null;
+    dragOffset: { x: number; y: number };
+    startPosition: { x: number; y: number };
+    currentMousePosition: { x: number; y: number };
 }
 
 interface CommitGraphSvgProps extends React.SVGProps<SVGSVGElement> {
@@ -29,8 +37,16 @@ function CommitGraphSvg({
 }: CommitGraphSvgProps) {
     const [head, setHead] = useState<IHead>(null);
     const [commitNodes, setCommitNodes] = useState<CommitNode[]>([]);
+    const [dragState, setDragState] = useState<DragState>({
+        isDragging: false,
+        draggedNodeId: null,
+        dragOffset: { x: 0, y: 0 },
+        startPosition: { x: 0, y: 0 },
+        currentMousePosition: { x: 0, y: 0 }
+    });
     const { data: responses = [] } = useTerminalResponses();
     const branchCommits = useRef<{ [branchName: string]: ICommit[] }>({});
+    const svgRef = useRef<SVGSVGElement>(null);
     useEffect(() => {
         if (responses.length === 0) return;
 
@@ -260,6 +276,158 @@ function CommitGraphSvg({
         return nodes;
     }
 
+    // Convert screen coordinates to graph coordinates
+    const screenToGraph = useCallback((screenX: number, screenY: number) => {
+        return {
+            x: (screenX - pan.x) / zoom,
+            y: (screenY - pan.y) / zoom
+        };
+    }, [pan.x, pan.y, zoom]);
+
+    // Handle mouse down on commit node
+    const handleNodeMouseDown = useCallback((e: React.MouseEvent, nodeId: string) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const rect = svgRef.current?.getBoundingClientRect();
+        if (!rect) return;
+
+        const screenX = e.clientX - rect.left;
+        const screenY = e.clientY - rect.top;
+        const graphPos = screenToGraph(screenX, screenY);
+        
+        const node = commitNodes.find(n => n.commit.id === nodeId);
+        if (!node) return;
+
+        // Calculate offset from node center to mouse position
+        // This is the distance from node center to where we clicked
+        const offsetX = node.x - graphPos.x;
+        const offsetY = node.y - graphPos.y;
+        
+
+        setDragState({
+            isDragging: true,
+            draggedNodeId: nodeId,
+            dragOffset: { x: offsetX, y: offsetY },
+            startPosition: { x: screenX, y: screenY },
+            currentMousePosition: { x: screenX, y: screenY }
+        });
+    }, [commitNodes, screenToGraph, pan, zoom]);
+
+    // Get all nodes that should follow the dragged node (subsequent nodes in the branch)
+    const getNodesToDrag = useCallback((draggedNodeId: string) => {
+        const draggedNode = commitNodes.find(n => n.commit.id === draggedNodeId);
+        if (!draggedNode) return [];
+
+        // Find all nodes that are descendants of the dragged node
+        const nodesToDrag = [draggedNodeId];
+        const visited = new Set<string>();
+        const queue = [draggedNodeId];
+
+        while (queue.length > 0) {
+            const currentNodeId = queue.shift()!;
+            if (visited.has(currentNodeId)) continue;
+            visited.add(currentNodeId);
+
+            // Find all children of current node
+            const children = commitNodes.filter(node => 
+                node.commit.parents.includes(currentNodeId)
+            );
+
+            children.forEach(child => {
+                if (!visited.has(child.commit.id)) {
+                    nodesToDrag.push(child.commit.id);
+                    queue.push(child.commit.id);
+                }
+            });
+        }
+
+        return nodesToDrag;
+    }, [commitNodes]);
+
+    // Handle mouse move during drag
+    const handleMouseMove = useCallback((e: MouseEvent) => {
+        if (!dragState.isDragging || !dragState.draggedNodeId) return;
+
+        const rect = svgRef.current?.getBoundingClientRect();
+        if (!rect) return;
+
+        const screenX = e.clientX - rect.left;
+        const screenY = e.clientY - rect.top;
+        const graphPos = screenToGraph(screenX, screenY);
+
+        // Calculate new position for the dragged node (following cursor exactly)
+        // New position = mouse position + offset (to maintain relative position)
+        const newX = graphPos.x + dragState.dragOffset.x;
+        const newY = graphPos.y + dragState.dragOffset.y;
+
+        // Get all nodes that should follow the dragged node
+        const nodesToDrag = getNodesToDrag(dragState.draggedNodeId);
+
+        // Update mouse position in drag state
+        setDragState(prev => ({
+            ...prev,
+            currentMousePosition: { x: screenX, y: screenY }
+        }));
+
+        // Update positions of all nodes in the chain simultaneously
+        setCommitNodes(prevNodes => {
+            // Find the current position of the dragged node
+            const currentDraggedNode = prevNodes.find(n => n.commit.id === dragState.draggedNodeId);
+            if (!currentDraggedNode) return prevNodes;
+
+            // Calculate delta from current position to new position
+            const deltaX = newX - currentDraggedNode.x;
+            const deltaY = newY - currentDraggedNode.y;
+
+
+            // Update all nodes in the chain at once
+            const updatedNodes = prevNodes.map(node => 
+                nodesToDrag.includes(node.commit.id)
+                    ? { ...node, x: node.x + deltaX, y: node.y + deltaY }
+                    : node
+            );
+            
+            
+            return updatedNodes;
+        });
+    }, [dragState, screenToGraph, getNodesToDrag]);
+
+    // Handle mouse up to end drag
+    const handleMouseUp = useCallback(() => {
+        if (dragState.isDragging) {
+            setDragState({
+                isDragging: false,
+                draggedNodeId: null,
+                dragOffset: { x: 0, y: 0 },
+                startPosition: { x: 0, y: 0 },
+                currentMousePosition: { x: 0, y: 0 }
+            });
+        }
+    }, [dragState.isDragging]);
+
+    // Add global mouse event listeners
+    useEffect(() => {
+        if (dragState.isDragging) {
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+            document.body.style.cursor = 'grabbing';
+            document.body.style.userSelect = 'none';
+        } else {
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+        }
+
+        return () => {
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+        };
+    }, [dragState.isDragging, handleMouseMove, handleMouseUp]);
+
     // Calculate total graph dimensions
     const minX = Math.min(...commitNodes.map(n => n.x)) - 200;
     const maxX = Math.max(...commitNodes.map(n => n.x)) + 200;
@@ -295,9 +463,10 @@ function CommitGraphSvg({
 
     return (
         <svg
+            ref={svgRef}
             width={width}
             height={height}
-            className={`absolute inset-0 cursor-grab`}
+            className={`absolute inset-0 ${dragState.isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
             {...svgProps}
         >
             <defs>
@@ -337,7 +506,7 @@ function CommitGraphSvg({
                 <rect x={gridMinX} y={gridMinY} width={gridWidth} height={gridHeight} fill="url(#grid)" />
             </g>
             <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`} >
-                {/* Draw connection */}
+                {/* Draw connection lines - no transition during drag for better sync */}
                 {commitNodes.map((commitNode) => {
                     const parentNodes = commitNode.commit.parents.map(parentId =>
                         commitNodes.find(commitNode => commitNode.commit.id === parentId)
@@ -353,7 +522,7 @@ function CommitGraphSvg({
                             stroke="#6b7280"
                             strokeWidth="3"
                             markerEnd="url(#arrowhead)"
-                            className="transition-all duration-200"
+                            className={dragState.isDragging ? "" : "transition-all duration-200"}
                         />
                     ));
                 })}
@@ -365,9 +534,28 @@ function CommitGraphSvg({
                         const isHead = commitNode.commit.id === currentHead;
                         const index = branchCommits.current[currentBranch!] && branchCommits.current[currentBranch!].find((commit) => commit.id === commitNode.commit.id);
                         const isCurrentBranch = index ? true : false;
+                        const isDragging = dragState.draggedNodeId === commitNode.commit.id;
 
                         return (
-                            <CommitSvg x={commitNode.x} y={commitNode.y} isHead={isHead} isCurrentBranch={isCurrentBranch} commit={commitNode.commit} />
+                            <g
+                                key={commitNode.commit.id}
+                                style={{
+                                    cursor: isDragging ? 'grabbing' : 'grab',
+                                    filter: isDragging ? 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))' : undefined,
+                                    transition: dragState.isDragging ? 'none' : 'all 0.2s ease'
+                                }}
+                                onMouseDown={(e) => handleNodeMouseDown(e, commitNode.commit.id)}
+                            >
+                                <g transform={`translate(${commitNode.x}, ${commitNode.y})`}>
+                                    <CommitSvg 
+                                        x={0} 
+                                        y={0} 
+                                        isHead={isHead} 
+                                        isCurrentBranch={isCurrentBranch} 
+                                        commit={commitNode.commit} 
+                                    />
+                                </g>
+                            </g>
                         )
                     })
                 }
