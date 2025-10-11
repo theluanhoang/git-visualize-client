@@ -56,7 +56,9 @@ interface CommitGraphSvgProps extends React.SVGProps<SVGSVGElement> {
     height: number;
     pan: { x: number; y: number };
     zoom: number;
-    onClearPositions?: () => void;
+    onResetView?: (targetPanX?: number, targetPanY?: number) => void;
+    onCommitsChange?: (hasCommits: boolean) => void;
+    onCommitDoubleClick?: (commit: ICommit) => void;
 }
 
 const R = 30;
@@ -66,7 +68,9 @@ function CommitGraphSvg({
     height,
     pan,
     zoom,
-    onClearPositions,
+    onResetView,
+    onCommitsChange,
+    onCommitDoubleClick,
     ...svgProps
 }: CommitGraphSvgProps) {
     const [head, setHead] = useState<IHead>(null);
@@ -78,6 +82,7 @@ function CommitGraphSvg({
         startPosition: { x: 0, y: 0 },
         currentMousePosition: { x: 0, y: 0 }
     });
+    const [hasAutoCentered, setHasAutoCentered] = useState(false);
     const { data: responses = [] } = useTerminalResponses();
     const branchCommits = useRef<{ [branchName: string]: ICommit[] }>({});
     const svgRef = useRef<SVGSVGElement>(null);
@@ -99,6 +104,7 @@ function CommitGraphSvg({
             // Clear commit nodes when no responses
             setCommitNodes([]);
             setHead(null);
+            setHasAutoCentered(false); // Reset auto-center flag
             return;
         }
 
@@ -124,6 +130,59 @@ function CommitGraphSvg({
 
         setHead(latestRepositoryState?.head ?? null);
     }, [responses]);
+
+    // Auto-center graph when commit nodes are first created (only once)
+    useEffect(() => {
+        if (commitNodes.length > 0 && onResetView && !hasAutoCentered) {
+            // Small delay to ensure the component is fully rendered
+            const timer = setTimeout(() => {
+                // Find main branch commits
+                const mainBranchCommits = commitNodes.filter(node => node.branch === 'main');
+                
+                if (mainBranchCommits.length > 0) {
+                    // Calculate the center of main branch commits only
+                    const minX = Math.min(...mainBranchCommits.map(n => n.x));
+                    const maxX = Math.max(...mainBranchCommits.map(n => n.x));
+                    const minY = Math.min(...mainBranchCommits.map(n => n.y));
+                    const maxY = Math.max(...mainBranchCommits.map(n => n.y));
+                    
+                    const centerX = (minX + maxX) / 2;
+                    const centerY = (minY + maxY) / 2;
+                    
+                    // Calculate the pan offset to center the main branch in the viewport
+                    const targetPanX = width / 2 - centerX;
+                    const targetPanY = height / 2 - centerY;
+                    
+                    // Call the parent's reset view function with calculated values
+                    onResetView(targetPanX, targetPanY);
+                } else {
+                    // Fallback: center all commits if no main branch found
+                    const minX = Math.min(...commitNodes.map(n => n.x));
+                    const maxX = Math.max(...commitNodes.map(n => n.x));
+                    const minY = Math.min(...commitNodes.map(n => n.y));
+                    const maxY = Math.max(...commitNodes.map(n => n.y));
+                    
+                    const centerX = (minX + maxX) / 2;
+                    const centerY = (minY + maxY) / 2;
+                    
+                    const targetPanX = width / 2 - centerX;
+                    const targetPanY = height / 2 - centerY;
+                    
+                    onResetView(targetPanX, targetPanY);
+                }
+                
+                // Mark as auto-centered to prevent repeated centering
+                setHasAutoCentered(true);
+            }, 100);
+
+            return () => clearTimeout(timer);
+        }
+    }, [commitNodes.length, onResetView, width, height, commitNodes, hasAutoCentered]);
+
+    // Notify parent component when commits change
+    useEffect(() => {
+        onCommitsChange?.(commitNodes.length > 0);
+    }, [commitNodes.length, onCommitsChange]);
 
     // Function to recalculate positions for commits that should follow their parent's position
     const recalculatePositionsFromParents = (nodes: CommitNode[], savedPositions: Record<string, { x: number; y: number }>) => {
@@ -431,6 +490,17 @@ function CommitGraphSvg({
         });
     }, [commitNodes, screenToGraph, pan, zoom]);
 
+    // Handle double click on commit node
+    const handleNodeDoubleClick = useCallback((e: React.MouseEvent, nodeId: string) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const node = commitNodes.find(n => n.commit.id === nodeId);
+        if (!node) return;
+
+        onCommitDoubleClick?.(node.commit);
+    }, [commitNodes, onCommitDoubleClick]);
+
     // Get all nodes that should follow the dragged node (subsequent nodes in the branch)
     const getNodesToDrag = useCallback((draggedNodeId: string) => {
         const draggedNode = commitNodes.find(n => n.commit.id === draggedNodeId);
@@ -530,26 +600,54 @@ function CommitGraphSvg({
         }
     }, [dragState.isDragging, commitNodes]);
 
-    // Function to clear saved positions and reset to default layout
-    const clearSavedPositions = useCallback(() => {
-        clearNodePositions();
-        // Recalculate layout without saved positions
-        const latestRepositoryState = responses[responses.length - 1]?.repositoryState;
-        if (latestRepositoryState) {
-            branchCommits.current = {};
-            const commitNodes = calculateTreeLayout();
-            setCommitNodes(commitNodes);
-        }
-        onClearPositions?.();
-    }, [responses, onClearPositions]);
 
-    // Expose clear function to parent component
-    useEffect(() => {
-        if (onClearPositions) {
-            // This allows parent to call clearSavedPositions
-            (window as any).clearCommitGraphPositions = clearSavedPositions;
+    // Function to reset view (zoom and pan) to center the graph
+    const resetView = useCallback(() => {
+        if (commitNodes.length === 0) return;
+
+        // Find main branch commits
+        const mainBranchCommits = commitNodes.filter(node => node.branch === 'main');
+        
+        if (mainBranchCommits.length > 0) {
+            // Calculate the center of main branch commits only
+            const minX = Math.min(...mainBranchCommits.map(n => n.x));
+            const maxX = Math.max(...mainBranchCommits.map(n => n.x));
+            const minY = Math.min(...mainBranchCommits.map(n => n.y));
+            const maxY = Math.max(...mainBranchCommits.map(n => n.y));
+            
+            const centerX = (minX + maxX) / 2;
+            const centerY = (minY + maxY) / 2;
+            
+            // Calculate the pan offset to center the main branch in the viewport
+            const targetPanX = width / 2 - centerX;
+            const targetPanY = height / 2 - centerY;
+            
+            // Call the parent's reset view function with calculated values
+            onResetView?.(targetPanX, targetPanY);
+        } else {
+            // Fallback: center all commits if no main branch found
+            const minX = Math.min(...commitNodes.map(n => n.x));
+            const maxX = Math.max(...commitNodes.map(n => n.x));
+            const minY = Math.min(...commitNodes.map(n => n.y));
+            const maxY = Math.max(...commitNodes.map(n => n.y));
+            
+            const centerX = (minX + maxX) / 2;
+            const centerY = (minY + maxY) / 2;
+            
+            const targetPanX = width / 2 - centerX;
+            const targetPanY = height / 2 - centerY;
+            
+            onResetView?.(targetPanX, targetPanY);
         }
-    }, [clearSavedPositions, onClearPositions]);
+    }, [commitNodes, width, height, onResetView]);
+
+    // Expose functions to parent component
+    useEffect(() => {
+        if (onResetView) {
+            // This allows parent to call resetView
+            (window as any).resetCommitGraphView = resetView;
+        }
+    }, [resetView, onResetView]);
 
     // Add global mouse event listeners
     useEffect(() => {
@@ -596,7 +694,14 @@ function CommitGraphSvg({
 
     if (commitNodes.length === 0) {
         return (
-            <div className="w-full h-full flex items-center justify-center">
+            <div 
+                className="w-full h-full flex items-center justify-center absolute inset-0"
+                style={{ 
+                    width: width, 
+                    height: height,
+                    pointerEvents: 'none' // Disable all interactions
+                }}
+            >
                 <div className="text-center text-gray-500">
                     <div className="text-lg mb-2">📊</div>
                     <div>No commits yet</div>
@@ -690,6 +795,7 @@ function CommitGraphSvg({
                                     transition: dragState.isDragging ? 'none' : 'all 0.2s ease'
                                 }}
                                 onMouseDown={(e) => handleNodeMouseDown(e, commitNode.commit.id)}
+                                onDoubleClick={(e) => handleNodeDoubleClick(e, commitNode.commit.id)}
                             >
                                 <g transform={`translate(${commitNode.x}, ${commitNode.y})`}>
                                     <CommitSvg 

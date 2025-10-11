@@ -1,8 +1,10 @@
-import { Dot, GitCommitHorizontal, Minus, Plus, RotateCcw, Trash2 } from 'lucide-react'
+import { Dot, GitCommitHorizontal, Minus, Plus, Trash2 } from 'lucide-react'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import CommitGraphSvg from './svgs/CommitGraphSvg'
 import { useGitEngine } from '@/lib/react-query/hooks/use-git-engine';
 import ConfirmDialog from './ConfirmDialog';
+import CommitDetailsDialog from './CommitDetailsDialog';
+import { ICommit } from '@/types/git';
 
 function CommitGraph() {
     const [containerSize, setContainerSize] = useState({ width: 1504, height: 400 });
@@ -10,16 +12,44 @@ function CommitGraph() {
     const [pan, setPan] = useState({ x: 0, y: 0 });
     const [isDragging, setIsDragging] = useState(false);
     const [pointerOffset, setPointerOffset] = useState({ x: 0, y: 0 });
+    const [hasCommits, setHasCommits] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
     
     // Dialog states
     const [showClearAllDialog, setShowClearAllDialog] = useState(false);
-    const [showClearPositionsDialog, setShowClearPositionsDialog] = useState(false);
     const [isClearing, setIsClearing] = useState(false);
-    const [isClearingPositions, setIsClearingPositions] = useState(false);
+    const [showCommitDetailsDialog, setShowCommitDetailsDialog] = useState(false);
+    const [selectedCommit, setSelectedCommit] = useState<ICommit | null>(null);
     
     // Get clearAllData function from git engine
     const { clearAllData } = useGitEngine();
+
+    // Function to reset view (zoom and pan)
+    const handleResetView = useCallback((targetPanX?: number, targetPanY?: number) => {
+        setZoom(1);
+        if (targetPanX !== undefined && targetPanY !== undefined) {
+            setPan({ x: targetPanX, y: targetPanY });
+        } else {
+            setPan({ x: 0, y: 0 });
+        }
+    }, []);
+
+    // Handle commits change from CommitGraphSvg
+    const handleCommitsChange = useCallback((hasCommits: boolean) => {
+        setHasCommits(hasCommits);
+    }, []);
+
+    // Handle commit double click
+    const handleCommitDoubleClick = useCallback((commit: ICommit) => {
+        setSelectedCommit(commit);
+        setShowCommitDetailsDialog(true);
+    }, []);
+
+    // Handle close commit details dialog
+    const handleCloseCommitDetails = useCallback(() => {
+        setShowCommitDetailsDialog(false);
+        setSelectedCommit(null);
+    }, []);
 
     useEffect(() => {
         const updateSize = () => {
@@ -35,6 +65,13 @@ function CommitGraph() {
     }, [containerRef])
 
     const handleWheel = useCallback((e: WheelEvent) => {
+        // Block zoom when no commits
+        if (!hasCommits) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+        }
+
         e.preventDefault();
         e.stopPropagation();
 
@@ -54,7 +91,7 @@ function CommitGraph() {
         });
 
         setZoom(newZoom);
-    }, [zoom, pan]);
+    }, [zoom, pan, hasCommits]);
 
     useEffect(() => {
         const container = containerRef.current;
@@ -68,13 +105,20 @@ function CommitGraph() {
     }, [handleWheel]);
 
     const handleMouseDown = useCallback((e: React.MouseEvent) => {
+        // Block drag when no commits
+        if (!hasCommits) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+        }
+
         if (e.button === 0) {
             e.preventDefault();
             e.stopPropagation();
             setIsDragging(true);
             setPointerOffset({ x: e.clientX - pan.x, y: e.clientY - pan.y });
         }
-    }, [pan]);
+    }, [pan, hasCommits]);
 
     const handleMouseMove = useCallback((e: React.MouseEvent) => {
         if (isDragging) {
@@ -94,18 +138,14 @@ function CommitGraph() {
     }, []);
 
     const handleReset = () => {
-        if (!containerRef.current) return;
-
-        const centerX = containerSize.width / 2;
-        const centerY = containerSize.height / 2;
-        const newZoom = 1;
-
-        setPan(prevPan => ({
-            x: centerX - (centerX - prevPan.x) * (newZoom / zoom),
-            y: centerY - (centerY - prevPan.y) * (newZoom / zoom)
-        }));
-
-        setZoom(newZoom);
+        // Use the reset view function from CommitGraphSvg to center the graph
+        if ((window as any).resetCommitGraphView) {
+            (window as any).resetCommitGraphView();
+        } else {
+            // Fallback to simple reset if CommitGraphSvg is not ready
+            setZoom(1);
+            setPan({ x: 0, y: 0 });
+        }
     };
 
     const handlePlus = () => {
@@ -144,25 +184,6 @@ function CommitGraph() {
         });
     };
 
-    const handleClearPositions = () => {
-        setShowClearPositionsDialog(true);
-    };
-
-    const handleConfirmClearPositions = async () => {
-        setIsClearingPositions(true);
-        try {
-            if ((window as any).clearCommitGraphPositions) {
-                (window as any).clearCommitGraphPositions();
-            }
-            setShowClearPositionsDialog(false);
-        } finally {
-            setIsClearingPositions(false);
-        }
-    };
-
-    const handleCancelClearPositions = () => {
-        setShowClearPositionsDialog(false);
-    };
 
     const handleClearAllData = () => {
         setShowClearAllDialog(true);
@@ -173,11 +194,6 @@ function CommitGraph() {
         try {
             // Clear all data first
             clearAllData();
-            
-            // Also clear commit graph positions immediately
-            if ((window as any).clearCommitGraphPositions) {
-                (window as any).clearCommitGraphPositions();
-            }
             
             setShowClearAllDialog(false);
         } finally {
@@ -219,9 +235,6 @@ function CommitGraph() {
                         <button className="bg-background border border-[var(--border)] rounded-sm cursor-pointer p-1 text-muted-foreground text-sm hover:bg-muted" onClick={handleMinus}><Minus size={16} /></button>
                         <button className="bg-background border border-[var(--border)] rounded-sm cursor-pointer p-1 text-muted-foreground text-sm hover:bg-muted" onClick={handlePlus}><Plus size={16} /></button>
                         <button className="bg-background border border-[var(--border)] rounded-sm cursor-pointer p-1 text-muted-foreground text-sm hover:bg-muted" onClick={handleReset}>Reset</button>
-                        <button className="bg-background border border-[var(--border)] rounded-sm cursor-pointer p-1 text-muted-foreground text-sm hover:bg-muted" onClick={handleClearPositions} title="Reset commit positions">
-                            <RotateCcw size={16} />
-                        </button>
                         <button className="bg-background border border-[var(--border)] rounded-sm cursor-pointer p-1 text-muted-foreground text-sm hover:bg-muted hover:text-red-500" onClick={handleClearAllData} title="Clear all data (terminal + graph)">
                             <Trash2 size={16} />
                         </button>
@@ -236,7 +249,10 @@ function CommitGraph() {
                         onMouseDown={handleMouseDown}
                         onMouseMove={handleMouseMove}
                         onMouseUp={handleMouseUp}
-                        onMouseLeave={handleMouseUp} 
+                        onMouseLeave={handleMouseUp}
+                        onResetView={handleResetView}
+                        onCommitsChange={handleCommitsChange}
+                        onCommitDoubleClick={handleCommitDoubleClick}
                     />
                 </div>
             </div>
@@ -253,17 +269,13 @@ function CommitGraph() {
                 onClose={handleCancelClearAll}
             />
             
-            {/* Clear Positions Confirmation Dialog */}
-            <ConfirmDialog
-                open={showClearPositionsDialog}
-                title="Reset vị trí commit"
-                description="Bạn có chắc chắn muốn reset vị trí các commit về layout mặc định? Hành động này sẽ xóa tất cả vị trí đã được điều chỉnh."
-                confirmText="Reset vị trí"
-                cancelText="Hủy"
-                loading={isClearingPositions}
-                onConfirm={handleConfirmClearPositions}
-                onClose={handleCancelClearPositions}
+            {/* Commit Details Dialog */}
+            <CommitDetailsDialog
+                open={showCommitDetailsDialog}
+                commit={selectedCommit}
+                onClose={handleCloseCommitDetails}
             />
+            
         </div>
     )
 }
