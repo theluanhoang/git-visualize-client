@@ -30,7 +30,7 @@ function Terminal() {
 
     return (
         <div className="h-full w-full bg-gray-900 text-green-400 font-mono rounded-lg flex flex-col border-l border-r" style={{ height: '300px' }}>
-            {/* Header */}
+            {}
             <div className="flex items-center justify-between px-4 py-2 bg-gray-800 border-b border-gray-700">
                 <div className="text-sm text-gray-300">
                     Git Terminal
@@ -42,7 +42,7 @@ function Terminal() {
                 </div>
             </div>
 
-            {/* Output area with custom scrollbar */}
+            {}
             <div
                 ref={outputRef}
                 className="flex-1 overflow-y-auto px-4 py-2 space-y-1 terminal-scrollbar"
@@ -62,7 +62,7 @@ function Terminal() {
                 ))}
             </div>
 
-            {/* Input area - fixed at bottom */}
+            {}
             <div className="px-4 py-2 bg-gray-800 border-t border-gray-700">
                 <form onKeyDown={handleKeyDown} className="flex items-center">
                     <span className="text-green-400 mr-2 text-sm">$</span>
@@ -77,7 +77,7 @@ function Terminal() {
                 </form>
             </div>
 
-            {/* Custom scrollbar styles */}
+            {}
             <style jsx>
                 {`
                   .terminal-scrollbar::-webkit-scrollbar {

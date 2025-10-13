@@ -55,7 +55,7 @@ const CommitDetailsDialog: React.FC<CommitDetailsDialogProps> = ({ open, commit,
 
                 <ScrollArea className="max-h-[calc(90vh-140px)]">
                     <div className="p-6 space-y-6">
-                        {/* Commit Hash */}
+                        {}
                         <Card>
                             <CardHeader className="pb-3">
                                 <CardTitle className="text-sm flex items-center gap-2">
@@ -80,7 +80,7 @@ const CommitDetailsDialog: React.FC<CommitDetailsDialogProps> = ({ open, commit,
                             </CardContent>
                         </Card>
 
-                        {/* Commit Message */}
+                        {}
                         <Card>
                             <CardHeader className="pb-3">
                                 <CardTitle className="text-sm flex items-center gap-2">
@@ -96,7 +96,7 @@ const CommitDetailsDialog: React.FC<CommitDetailsDialogProps> = ({ open, commit,
                         </Card>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Author Information */}
+                            {}
                             <Card>
                                 <CardHeader className="pb-3">
                                     <CardTitle className="text-sm flex items-center gap-2">
@@ -121,7 +121,7 @@ const CommitDetailsDialog: React.FC<CommitDetailsDialogProps> = ({ open, commit,
                                 </CardContent>
                             </Card>
 
-                            {/* Committer Information */}
+                            {}
                             <Card>
                                 <CardHeader className="pb-3">
                                     <CardTitle className="text-sm flex items-center gap-2">
@@ -147,7 +147,7 @@ const CommitDetailsDialog: React.FC<CommitDetailsDialogProps> = ({ open, commit,
                             </Card>
                         </div>
 
-                        {/* Branch Information */}
+                        {}
                         <Card>
                             <CardHeader className="pb-3">
                                 <CardTitle className="text-sm flex items-center gap-2">
@@ -162,7 +162,7 @@ const CommitDetailsDialog: React.FC<CommitDetailsDialogProps> = ({ open, commit,
                             </CardContent>
                         </Card>
 
-                        {/* Parent Commits */}
+                        {}
                         {commit?.parents && commit.parents.length > 0 && (
                             <Card>
                                 <CardHeader className="pb-3">

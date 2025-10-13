@@ -123,7 +123,7 @@ export default function StagingAreaVisualizer() {
 				/>
 			</div>
 
-			{/* Staged deletions list */}
+			{}
 			<div className="mt-4">
 				<h3 className="text-sm font-semibold text-gray-900">Staged deletions</h3>
 				<ul className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-2">

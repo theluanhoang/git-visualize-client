@@ -18,7 +18,6 @@ const ListButtons = memo(({ editor }: { editor: Editor | null }) => {
         editor.chain().focus().toggleTaskList().run();
     }, [editor]);
 
-    // Sử dụng useEditorState để tránh re-render không cần thiết
     const editorState = useEditorState({
         editor,
         selector: (ctx) => {

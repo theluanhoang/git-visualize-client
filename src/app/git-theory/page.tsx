@@ -2,16 +2,13 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useQuery } from '@tanstack/react-query';
-import { LessonsService } from '@/services/lessons';
+import { useLessons } from '@/lib/react-query/hooks/use-lessons';
 
 export default function GitTheoryPage() {
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['git-theory-lessons'],
-    queryFn: async () => {
-      const res = await LessonsService.getAll({ limit: 100, offset: 0, status: 'published' });
-      return res.data;
-    },
+  const { data, isLoading, error } = useLessons({
+    limit: 100,
+    offset: 0,
+    status: 'published'
   });
 
   if (isLoading) return <div className="p-4">Đang tải bài học...</div>;

@@ -2,8 +2,7 @@
 
 import Sidebar from '@/components/common/git-theory/Sidebar'
 import Link from 'next/link';
-import { useQuery } from '@tanstack/react-query';
-import { LessonsService } from '@/services/lessons';
+import { useLessons } from '@/lib/react-query/hooks/use-lessons';
 import React, { ReactNode } from 'react'
 
 type Props = {
@@ -11,24 +10,25 @@ type Props = {
 };
 
 function GitTheoryLayout({ children }: Props) {
-    const { data, isLoading } = useQuery({
-        queryKey: ['git-theory-lessons-sidebar'],
-        queryFn: async () => {
-            const res = await LessonsService.getAll({ limit: 100, offset: 0, status: 'published' });
-            const sorted = [...res.data].sort((a: any, b: any) => {
-                const aTime = a.createdAt ? new Date(a.createdAt).getTime() : a.id ?? 0;
-                const bTime = b.createdAt ? new Date(b.createdAt).getTime() : b.id ?? 0;
-                return aTime - bTime; // oldest -> newest
-            });
-            return sorted.map((l: any) => ({ slug: l.slug, title: l.title, description: l.description ?? '' }));
-        },
+    const { data: lessonsData, isLoading } = useLessons({
+        limit: 100,
+        offset: 0,
+        status: 'published'
     });
+
+    const data = lessonsData ? lessonsData
+        .sort((a: any, b: any) => {
+            const aTime = a.createdAt ? new Date(a.createdAt).getTime() : a.id ?? 0;
+            const bTime = b.createdAt ? new Date(b.createdAt).getTime() : b.id ?? 0;
+            return aTime - bTime; // oldest -> newest
+        })
+        .map((l: any) => ({ slug: l.slug, title: l.title, description: l.description ?? '' })) : [];
 
     return (
         <main className='container mx-auto mt-8 md:mt-10'>
-            {/* TOP INFORMATION */}
+            {}
             <div className="relative overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm p-5 md:p-6">
-                {/* Decorative background */}
+                {}
                 <div className="pointer-events-none absolute inset-0 opacity-60 [mask-image:radial-gradient(60%_60%_at_20%_0%,#000_20%,transparent_70%)]">
                     <div className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-[radial-gradient(circle_at_center,theme(colors.primary.DEFAULT)/15%,transparent_60%)]" />
                     <div className="absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-[radial-gradient(circle_at_center,theme(colors.primary.700)/10%,transparent_60%)]" />

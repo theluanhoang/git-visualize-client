@@ -6,7 +6,7 @@ import { PageHeaderProps } from './types';
 export function PageHeader({ title, description, actions, breadcrumbs }: PageHeaderProps) {
   return (
     <div className="space-y-4">
-      {/* Breadcrumbs */}
+      {}
       {breadcrumbs && breadcrumbs.length > 0 && (
         <nav className="flex items-center space-x-2 text-sm text-muted-foreground">
           {breadcrumbs.map((crumb, index) => (
@@ -26,7 +26,7 @@ export function PageHeader({ title, description, actions, breadcrumbs }: PageHea
         </nav>
       )}
 
-      {/* Header Content */}
+      {}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">{title}</h1>

@@ -36,10 +36,8 @@ function FontSizeSelection({ editor }: { editor: Editor | null }) {
                 return
             }
 
-            // Remove 'px' if present
             const sizeValue = fontSize.toString().replace('px', '')
             
-            // Check if this size exists in our list
             const matchedSize = fontSizes.find(s => s.value === sizeValue)
             
             if (matchedSize) {

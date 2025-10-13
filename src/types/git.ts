@@ -74,7 +74,6 @@ export interface IRepositoryState {
   tags: ITag[];
   head: IHead;
 
-  // NEW 
     workingDirectory: IFileName[];
   stagingArea: IFileName[];
   stagedDeletions: IFileName[];

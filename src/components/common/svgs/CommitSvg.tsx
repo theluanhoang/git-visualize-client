@@ -12,7 +12,7 @@ interface CommitSvgParams {
 function CommitSvg({ x, y, commit, isHead, isCurrentBranch }: CommitSvgParams) {
     return (
         <g>
-            {/* Commit circle with shadow */}
+            {}
             <circle
                 cx={x}
                 cy={y}
@@ -21,11 +21,10 @@ function CommitSvg({ x, y, commit, isHead, isCurrentBranch }: CommitSvgParams) {
                   stroke={isHead ? '#059669' : isCurrentBranch ? '#2563eb' : '#4b5563'}
                   strokeWidth="4"
                   className="cursor-pointer hover:opacity-80 transition-all duration-200"
-                //   onClick={() => onCommitClick(node.commit)}
                   filter="url(#shadow)"
             />
 
-            {/* Inner circle for depth */}
+            {}
             <circle
                 cx={x}
                 cy={y}
@@ -34,7 +33,7 @@ function CommitSvg({ x, y, commit, isHead, isCurrentBranch }: CommitSvgParams) {
                 className="pointer-events-none"
             />
 
-            {/* Commit ID */}
+            {}
             <text
                 x={x}
                 y={y + 5}
@@ -44,7 +43,7 @@ function CommitSvg({ x, y, commit, isHead, isCurrentBranch }: CommitSvgParams) {
                 {commit ? commit.id.substring(0, 7) : "7aj8dc"}
             </text>
 
-            {/* Commit message */}
+            {}
             <text
                 x={x}
                 y={y - 50}
@@ -55,7 +54,7 @@ function CommitSvg({ x, y, commit, isHead, isCurrentBranch }: CommitSvgParams) {
                 {commit ? commit.message : "feat: create a commit"}
             </text>
 
-            {/* Branch label */}
+            {}
             <rect
                 x={x - 30}
                 y={y + 40}

@@ -128,7 +128,7 @@ export function UserCard({
               </div>
             </div>
             
-            {/* Progress Bar */}
+            {}
             <div className="mt-3">
               <div className="flex items-center justify-between text-sm text-muted-foreground mb-1">
                 <span>Tiến độ học tập</span>

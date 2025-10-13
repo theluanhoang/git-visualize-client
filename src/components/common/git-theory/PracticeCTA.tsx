@@ -34,5 +34,3 @@ export default function PracticeCTA({ slug, title = 'Thử ngay!', description =
     </div>
   );
 }
-
-

@@ -107,7 +107,7 @@ export default function AdminDemoPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Demo Admin Panel</h1>
@@ -141,7 +141,7 @@ export default function AdminDemoPage() {
         </div>
       </div>
 
-      {/* Progress */}
+      {}
       <Card className="p-4">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium text-gray-700">
@@ -159,9 +159,9 @@ export default function AdminDemoPage() {
         </div>
       </Card>
 
-      {/* Demo Content */}
+      {}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Main Demo */}
+        {}
         <div className="lg:col-span-2">
           <Card className="p-8">
             <div className="text-center mb-8">
@@ -188,7 +188,7 @@ export default function AdminDemoPage() {
               </ul>
             </div>
 
-            {/* Demo Actions */}
+            {}
             <div className="mt-8 pt-6 border-t border-gray-200">
               <div className="flex items-center justify-between">
                 <Button
@@ -209,9 +209,9 @@ export default function AdminDemoPage() {
           </Card>
         </div>
 
-        {/* Sidebar */}
+        {}
         <div className="space-y-6">
-          {/* Quick Stats */}
+          {}
           <Card className="p-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Thống kê nhanh</h3>
             <div className="space-y-3">
@@ -234,7 +234,7 @@ export default function AdminDemoPage() {
             </div>
           </Card>
 
-          {/* Quick Actions */}
+          {}
           <Card className="p-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Thao tác nhanh</h3>
             <div className="space-y-2">
@@ -257,7 +257,7 @@ export default function AdminDemoPage() {
             </div>
           </Card>
 
-          {/* Tips */}
+          {}
           <Card className="p-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Mẹo sử dụng</h3>
             <div className="space-y-3 text-sm text-gray-600">
@@ -278,7 +278,7 @@ export default function AdminDemoPage() {
         </div>
       </div>
 
-      {/* Navigation Steps */}
+      {}
       <Card className="p-4">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Các bước demo</h3>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">

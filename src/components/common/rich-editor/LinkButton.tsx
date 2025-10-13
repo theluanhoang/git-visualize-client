@@ -43,7 +43,6 @@ export default function LinkButton({ editor }: LinkButtonProps) {
           console.error("Error setting selection:", e);
         }
         
-        // Mở popup edit
         setEditLinkData({
           text,
           url: href,
@@ -64,7 +63,6 @@ export default function LinkButton({ editor }: LinkButtonProps) {
 
     const editorElement = editor.view.dom;
     
-    // Sử dụng mousedown thay vì click để bắt event sớm hơn
     editorElement.addEventListener("mousedown", handleLinkClick, true);
     editorElement.addEventListener("click", handleLinkClick, true);
 

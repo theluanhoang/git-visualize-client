@@ -19,7 +19,6 @@ function buildDecorations(doc: any): DecorationSet {
     const hasInlineCode = node.marks?.some((m: any) => m.type?.name === 'code');
     if (!hasInlineCode) return;
     const text: string = node.text || '';
-    // Split by whitespace but keep delimiters
     const parts = text.split(/(\s+)/);
     let offset = 0;
     for (const part of parts) {
@@ -60,5 +59,3 @@ export const InlineCodeDecorations = Extension.create({
     ];
   },
 });
-
-

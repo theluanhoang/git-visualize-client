@@ -21,7 +21,6 @@ import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PageHeader, StatCard, AdminTable, AdminTabs, MetricCard, TopLessonsCard, SegmentChart, ActivityTimeline, AchievementsCard, ActivityHeatmap } from '@/components/admin';
 
-// Mock data - trong thực tế sẽ fetch từ API
 const analyticsData = {
   overview: {
     totalUsers: 1247,
@@ -94,8 +93,6 @@ export default function AnalyticsPage() {
     { id: 'users', label: 'Người dùng', icon: Users },
     { id: 'engagement', label: 'Tương tác', icon: Activity }
   ];
-
-
   return (
     <div className="space-y-6">
       <PageHeader 
@@ -125,10 +122,10 @@ export default function AnalyticsPage() {
 
       <AdminTabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
 
-      {/* Overview Tab */}
+      {}
       {activeTab === 'overview' && (
         <div className="space-y-6">
-          {/* Key Metrics */}
+          {}
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard
               title="Tổng người dùng"
@@ -162,7 +159,7 @@ export default function AnalyticsPage() {
             />
           </div>
 
-          {/* Performance Metrics */}
+          {}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
             <MetricCard
               title="Tỷ lệ hoàn thành"
@@ -188,15 +185,15 @@ export default function AnalyticsPage() {
             />
           </div>
 
-          {/* Top Lessons */}
+          {}
           <TopLessonsCard lessons={analyticsData.topLessons} />
         </div>
       )}
 
-      {/* Users Tab */}
+      {}
       {activeTab === 'users' && (
         <div className="space-y-6">
-          {/* User Segments */}
+          {}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <SegmentChart 
               segments={analyticsData.userSegments} 
@@ -210,12 +207,12 @@ export default function AnalyticsPage() {
             />
           </div>
 
-          {/* Activity Timeline */}
+          {}
           <ActivityHeatmap timeStats={analyticsData.timeStats} />
         </div>
       )}
 
-      {/* Lessons Tab */}
+      {}
       {activeTab === 'lessons' && (
         <div className="space-y-6">
           <Card className="p-6">
@@ -278,7 +275,7 @@ export default function AnalyticsPage() {
         </div>
       )}
 
-      {/* Engagement Tab */}
+      {}
       {activeTab === 'engagement' && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">

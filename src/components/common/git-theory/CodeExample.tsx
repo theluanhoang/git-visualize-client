@@ -31,7 +31,6 @@ export default function CodeExample({ id, title, language, code, description, in
 			setCopied(true);
 			window.setTimeout(() => setCopied(false), 1500);
 		} catch {
-			// noop
 		}
 	}
 

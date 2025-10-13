@@ -152,6 +152,4 @@ function EditLinkPopup({ editor, isOpen, onClose, initialText, initialUrl, posit
   );
 }
 
-
-
 export default EditLinkPopup;

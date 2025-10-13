@@ -1,10 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Settings } from '@/lib/schemas/settings';
 
-// Mock API functions - replace with actual API calls
 const settingsApi = {
   get: async (): Promise<Settings> => {
-    // Mock data
     return {
       general: {
         siteName: 'Git Learning Platform',
@@ -55,8 +53,6 @@ const settingsApi = {
   },
   
   update: async (data: Settings) => {
-    // Mock API call
-    console.log('Updating settings:', data);
     await new Promise(resolve => setTimeout(resolve, 1000));
     return data;
   }

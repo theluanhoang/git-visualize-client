@@ -76,7 +76,7 @@ export default function DarkModeDemoPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Dark Mode Demo</h1>
@@ -88,7 +88,7 @@ export default function DarkModeDemoPage() {
         </div>
       </div>
 
-      {/* Theme Selector */}
+      {}
       <Card className="p-6">
         <div className="flex items-center gap-4 mb-6">
           <Palette className="h-6 w-6 text-primary" />
@@ -119,7 +119,7 @@ export default function DarkModeDemoPage() {
         </div>
       </Card>
 
-      {/* Features */}
+      {}
       <Card className="p-6">
         <div className="flex items-center gap-4 mb-6">
           <CheckCircle className="h-6 w-6 text-green-500" />
@@ -139,12 +139,12 @@ export default function DarkModeDemoPage() {
         </div>
       </Card>
 
-      {/* Color Palette Demo */}
+      {}
       <Card className="p-6">
         <h2 className="text-lg font-semibold text-foreground mb-6">Color Palette</h2>
         
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-          {/* Light Mode Colors */}
+          {}
           <div className="space-y-4">
             <h3 className="font-medium text-foreground flex items-center gap-2">
               <Sun className="h-4 w-4" />
@@ -170,7 +170,7 @@ export default function DarkModeDemoPage() {
             </div>
           </div>
 
-          {/* Dark Mode Colors */}
+          {}
           <div className="space-y-4">
             <h3 className="font-medium text-foreground flex items-center gap-2">
               <Moon className="h-4 w-4" />
@@ -198,9 +198,9 @@ export default function DarkModeDemoPage() {
         </div>
       </Card>
 
-      {/* Component Examples */}
+      {}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Buttons */}
+        {}
         <Card className="p-6">
           <h3 className="text-lg font-semibold text-foreground mb-4">Buttons</h3>
           <div className="space-y-3">
@@ -212,7 +212,7 @@ export default function DarkModeDemoPage() {
           </div>
         </Card>
 
-        {/* Cards */}
+        {}
         <Card className="p-6">
           <h3 className="text-lg font-semibold text-foreground mb-4">Cards & Content</h3>
           <div className="space-y-3">
@@ -229,7 +229,7 @@ export default function DarkModeDemoPage() {
         </Card>
       </div>
 
-      {/* Status Indicators */}
+      {}
       <Card className="p-6">
         <h3 className="text-lg font-semibold text-foreground mb-4">Status Indicators</h3>
         <div className="flex flex-wrap gap-3">
@@ -252,7 +252,7 @@ export default function DarkModeDemoPage() {
         </div>
       </Card>
 
-      {/* Implementation Notes */}
+      {}
       <Card className="p-6">
         <h3 className="text-lg font-semibold text-foreground mb-4">Implementation Notes</h3>
         <div className="space-y-3 text-sm text-muted-foreground">

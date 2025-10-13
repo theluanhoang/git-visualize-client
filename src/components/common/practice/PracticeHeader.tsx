@@ -3,7 +3,12 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 
-export default function PracticeHeader() {
+interface PracticeHeaderProps {
+  lessonTitle?: string;
+  lessonDescription?: string;
+}
+
+export default function PracticeHeader({ lessonTitle, lessonDescription }: PracticeHeaderProps) {
   return (
     <motion.section 
       className="rounded-lg border border-[var(--border)] bg-[var(--surface)] shadow-sm p-6 mb-6 relative overflow-hidden"
@@ -17,8 +22,12 @@ export default function PracticeHeader() {
       </div>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Git Practice Lab</h1>
-          <p className="text-muted-foreground mt-1">Thực hành các lệnh Git bạn đã học với terminal và xem kết quả trên đồ thị commit.</p>
+          <h1 className="text-2xl font-bold text-foreground">
+            {lessonTitle ? `Practice: ${lessonTitle}` : 'Git Practice Lab'}
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            {lessonDescription || 'Thực hành các lệnh Git bạn đã học với terminal và xem kết quả trên đồ thị commit.'}
+          </p>
         </div>
         <Link 
           href="/git-theory" 
@@ -30,5 +39,3 @@ export default function PracticeHeader() {
     </motion.section>
   );
 }
-
-

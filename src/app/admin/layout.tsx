@@ -21,14 +21,14 @@ export default function AdminLayout({
         setSidebarCollapsed={setSidebarCollapsed}
       />
 
-      {/* Main content */}
+      {}
       <div className={cn(
         "transition-all duration-300",
         sidebarCollapsed ? "lg:pl-16" : "lg:pl-64"
       )}>
         <AdminTopBar onMenuClick={() => setSidebarOpen(true)} />
 
-        {/* Page content */}
+        {}
         <main className="py-4 sm:py-6">
           <div className="container mx-auto px-2 sm:px-4 lg:px-6 xl:px-8">
             {children}

@@ -77,7 +77,7 @@ export function SettingsForm() {
       />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
-        {/* Sidebar */}
+        {}
         <div className="lg:col-span-1">
           <SettingsSidebar 
             tabs={tabs}
@@ -86,10 +86,10 @@ export function SettingsForm() {
           />
         </div>
 
-        {/* Content */}
+        {}
         <div className="lg:col-span-3">
           <form onSubmit={handleSubmit(onSubmit)}>
-            {/* General Settings */}
+            {}
             {activeTab === 'general' && (
               <SettingsSection
                 title="Cài đặt tổng quan"
@@ -139,7 +139,7 @@ export function SettingsForm() {
               />
             )}
 
-            {/* Notifications Settings */}
+            {}
             {activeTab === 'notifications' && (
               <SettingsSection
                 title="Cài đặt thông báo"
@@ -189,7 +189,7 @@ export function SettingsForm() {
               />
             )}
 
-            {/* Security Settings */}
+            {}
             {activeTab === 'security' && (
               <SettingsSection
                 title="Cài đặt bảo mật"
@@ -237,7 +237,7 @@ export function SettingsForm() {
               />
             )}
 
-            {/* Appearance Settings */}
+            {}
             {activeTab === 'appearance' && (
               <SettingsSection
                 title="Cài đặt giao diện"
@@ -285,13 +285,13 @@ export function SettingsForm() {
                     type: "textarea",
                     value: watch('appearance.customCSS'),
                     onChange: (value) => setValue('appearance.customCSS', value),
-                    placeholder: "/* CSS tùy chỉnh */"
+                    placeholder: ""
                   }
                 ]}
               />
             )}
 
-            {/* Email Settings */}
+            {}
             {activeTab === 'email' && (
               <SettingsSection
                 title="Cài đặt email"
@@ -343,7 +343,7 @@ export function SettingsForm() {
               />
             )}
 
-            {/* Backup Settings */}
+            {}
             {activeTab === 'backup' && (
               <SettingsSection
                 title="Cài đặt sao lưu"
@@ -389,7 +389,7 @@ export function SettingsForm() {
                 actions={[
                   {
                     label: "Tạo sao lưu",
-                    onClick: () => console.log('Create backup'),
+                    onClick: () => {},
                     variant: "outline"
                   }
                 ]}

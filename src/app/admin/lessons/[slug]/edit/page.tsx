@@ -23,5 +23,3 @@ export default function EditLessonPage() {
         <LessonForm initialData={lesson} isEdit={true} lessonId={lesson.id} />
     );
 }
-
-

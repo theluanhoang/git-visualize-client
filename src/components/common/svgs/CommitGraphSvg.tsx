@@ -1,24 +1,25 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import CommitSvg from './CommitSvg';
-import { useTerminalResponses } from '@/lib/react-query/hooks/use-git-engine';
-import { ICommit, IHead } from '@/types/git';
+import { useTerminalResponses, useGoalTerminalResponses } from '@/lib/react-query/hooks/use-git-engine';
+import { ICommit, IHead, GitCommandResponse } from '@/types/git';
 import { useQueryClient } from '@tanstack/react-query';
 
-// Storage key for persisting node positions
-const NODE_POSITIONS_KEY = 'git-commit-graph-node-positions';
+const getNodePositionsKey = (dataSource: 'practice' | 'goal') => 
+    dataSource === 'goal' ? 'git-goal-commit-graph-node-positions' : 'git-commit-graph-node-positions';
 
-// Utility functions for position persistence
-const saveNodePositions = (positions: Record<string, { x: number; y: number }>) => {
+const saveNodePositions = (positions: Record<string, { x: number; y: number }>, dataSource: 'practice' | 'goal') => {
     try {
-        localStorage.setItem(NODE_POSITIONS_KEY, JSON.stringify(positions));
+        const key = getNodePositionsKey(dataSource);
+        localStorage.setItem(key, JSON.stringify(positions));
     } catch (error) {
         console.warn('Failed to save node positions:', error);
     }
 };
 
-const loadNodePositions = (): Record<string, { x: number; y: number }> => {
+const loadNodePositions = (dataSource: 'practice' | 'goal'): Record<string, { x: number; y: number }> => {
     try {
-        const saved = localStorage.getItem(NODE_POSITIONS_KEY);
+        const key = getNodePositionsKey(dataSource);
+        const saved = localStorage.getItem(key);
         const positions = saved ? JSON.parse(saved) : {};
         return positions;
     } catch (error) {
@@ -27,9 +28,10 @@ const loadNodePositions = (): Record<string, { x: number; y: number }> => {
     }
 };
 
-const clearNodePositions = () => {
+const clearNodePositions = (dataSource: 'practice' | 'goal') => {
     try {
-        localStorage.removeItem(NODE_POSITIONS_KEY);
+        const key = getNodePositionsKey(dataSource);
+        localStorage.removeItem(key);
     } catch (error) {
         console.warn('Failed to clear node positions:', error);
     }
@@ -59,6 +61,8 @@ interface CommitGraphSvgProps extends React.SVGProps<SVGSVGElement> {
     onResetView?: (targetPanX?: number, targetPanY?: number) => void;
     onCommitsChange?: (hasCommits: boolean) => void;
     onCommitDoubleClick?: (commit: ICommit) => void;
+    dataSource?: 'practice' | 'goal';
+    customResponses?: GitCommandResponse[];
 }
 
 const R = 30;
@@ -71,6 +75,8 @@ function CommitGraphSvg({
     onResetView,
     onCommitsChange,
     onCommitDoubleClick,
+    dataSource = 'practice',
+    customResponses,
     ...svgProps
 }: CommitGraphSvgProps) {
     const [head, setHead] = useState<IHead>(null);
@@ -83,25 +89,47 @@ function CommitGraphSvg({
         currentMousePosition: { x: 0, y: 0 }
     });
     const [hasAutoCentered, setHasAutoCentered] = useState(false);
-    const { data: responses = [] } = useTerminalResponses();
+    
+    const { data: practiceResponses = [] } = useTerminalResponses();
+    const { data: goalResponses = [] } = useGoalTerminalResponses();
+    
+    const responses = customResponses || (dataSource === 'goal' ? goalResponses : practiceResponses);
+    
     const branchCommits = useRef<{ [branchName: string]: ICommit[] }>({});
     const svgRef = useRef<SVGSVGElement>(null);
     const queryClient = useQueryClient();
 
-    // Auto-fix detection for persistence issues
     useEffect(() => {
-        // Force re-render if responses are empty but localStorage has data
+        const storageKey = dataSource === 'goal' ? 'git-goal-terminal-responses' : 'git-terminal-responses';
+        const queryKey = dataSource === 'goal' ? ['goal-terminal-responses'] : ['terminal-responses'];
+        
+        const rawData = localStorage.getItem(storageKey);
+        const savedResponses = JSON.parse(rawData || '[]');
+        
+        if (savedResponses.length > 0) {
+            queryClient.setQueryData(queryKey, savedResponses);
+        }
+    }, [queryClient, dataSource]);
+
+    useEffect(() => {
         if (responses.length === 0) {
-            const savedResponses = JSON.parse(localStorage.getItem('git-terminal-responses') || '[]');
+            const storageKey = dataSource === 'goal' ? 'git-goal-terminal-responses' : 'git-terminal-responses';
+            const queryKey = dataSource === 'goal' ? ['goal-terminal-responses'] : ['terminal-responses'];
+            const savedResponses = JSON.parse(localStorage.getItem(storageKey) || '[]');
             if (savedResponses.length > 0) {
-                // Manually set the query data to fix the issue
-                queryClient.setQueryData(['terminal-responses'], savedResponses);
+                queryClient.setQueryData(queryKey, savedResponses);
             }
         }
-    }, [responses.length, queryClient]);
+    }, [responses.length, queryClient, dataSource]);
     useEffect(() => {
         if (responses.length === 0) {
-            // Clear commit nodes when no responses
+            const storageKey = dataSource === 'goal' ? 'git-goal-terminal-responses' : 'git-terminal-responses';
+            const savedResponses = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            
+            if (savedResponses.length > 0) {
+                return; // Don't clear if there's saved data
+            }
+            
             setCommitNodes([]);
             setHead(null);
             setHasAutoCentered(false); // Reset auto-center flag
@@ -112,8 +140,7 @@ function CommitGraphSvg({
         branchCommits.current = {};
         const commitNodes = calculateTreeLayout();
 
-        // Restore saved positions if available
-        const savedPositions = loadNodePositions();
+        const savedPositions = loadNodePositions(dataSource);
         let commitNodesWithSavedPositions = commitNodes.map(node => {
             const savedPos = savedPositions[node.commit.id];
             if (savedPos) {
@@ -122,8 +149,6 @@ function CommitGraphSvg({
             return node;
         });
 
-        // Recalculate positions for commits that don't have saved positions
-        // but need to follow their parent's position
         commitNodesWithSavedPositions = recalculatePositionsFromParents(commitNodesWithSavedPositions, savedPositions);
 
         setCommitNodes(commitNodesWithSavedPositions);
@@ -131,16 +156,12 @@ function CommitGraphSvg({
         setHead(latestRepositoryState?.head ?? null);
     }, [responses]);
 
-    // Auto-center graph when commit nodes are first created (only once)
     useEffect(() => {
         if (commitNodes.length > 0 && onResetView && !hasAutoCentered) {
-            // Small delay to ensure the component is fully rendered
             const timer = setTimeout(() => {
-                // Find main branch commits
                 const mainBranchCommits = commitNodes.filter(node => node.branch === 'main');
                 
                 if (mainBranchCommits.length > 0) {
-                    // Calculate the center of main branch commits only
                     const minX = Math.min(...mainBranchCommits.map(n => n.x));
                     const maxX = Math.max(...mainBranchCommits.map(n => n.x));
                     const minY = Math.min(...mainBranchCommits.map(n => n.y));
@@ -149,14 +170,11 @@ function CommitGraphSvg({
                     const centerX = (minX + maxX) / 2;
                     const centerY = (minY + maxY) / 2;
                     
-                    // Calculate the pan offset to center the main branch in the viewport
                     const targetPanX = width / 2 - centerX;
                     const targetPanY = height / 2 - centerY;
                     
-                    // Call the parent's reset view function with calculated values
                     onResetView(targetPanX, targetPanY);
                 } else {
-                    // Fallback: center all commits if no main branch found
                     const minX = Math.min(...commitNodes.map(n => n.x));
                     const maxX = Math.max(...commitNodes.map(n => n.x));
                     const minY = Math.min(...commitNodes.map(n => n.y));
@@ -171,7 +189,6 @@ function CommitGraphSvg({
                     onResetView(targetPanX, targetPanY);
                 }
                 
-                // Mark as auto-centered to prevent repeated centering
                 setHasAutoCentered(true);
             }, 100);
 
@@ -179,17 +196,14 @@ function CommitGraphSvg({
         }
     }, [commitNodes.length, onResetView, width, height, commitNodes, hasAutoCentered]);
 
-    // Notify parent component when commits change
     useEffect(() => {
         onCommitsChange?.(commitNodes.length > 0);
     }, [commitNodes.length, onCommitsChange]);
 
-    // Function to recalculate positions for commits that should follow their parent's position
     const recalculatePositionsFromParents = (nodes: CommitNode[], savedPositions: Record<string, { x: number; y: number }>) => {
         const nodeMap = new Map(nodes.map(node => [node.commit.id, node]));
         const updatedNodes = [...nodes];
         
-        // Process nodes in chronological order to ensure parents are processed first
         const sortedNodes = [...nodes].sort((a, b) => {
             const dateA = new Date(a.commit.committer.date).getTime();
             const dateB = new Date(b.commit.committer.date).getTime();
@@ -197,12 +211,10 @@ function CommitGraphSvg({
         });
 
         for (const node of sortedNodes) {
-            // Skip if this node already has a saved position
             if (savedPositions[node.commit.id]) {
                 continue;
             }
 
-            // Find the primary parent (first parent)
             const primaryParentId = node.commit.parents[0];
             if (!primaryParentId) {
                 continue; // Root commit, keep original position
@@ -213,7 +225,6 @@ function CommitGraphSvg({
                 continue; // Parent not found, keep original position
             }
 
-            // Check if parent has a saved position or was already updated
             const parentIndex = updatedNodes.findIndex(n => n.commit.id === primaryParentId);
             if (parentIndex === -1) {
                 continue;
@@ -221,7 +232,6 @@ function CommitGraphSvg({
 
             const parentNodeUpdated = updatedNodes[parentIndex];
             
-            // If parent is on the same branch, place child directly below parent
             if (node.commit.branch === parentNodeUpdated.commit.branch) {
                 const updatedNode = {
                     ...node,
@@ -242,18 +252,15 @@ function CommitGraphSvg({
     const calculateTreeLayout = () => {
         const lastCommits = responses[responses.length - 1].repositoryState?.commits ?? [];
         
-        // Maps for quick lookup
         const idToCommit: Record<string, ICommit> = {};
         lastCommits.forEach(c => { idToCommit[c.id] = c; });
 
-        // Sort commits chronologically (oldest first) for deterministic ordering
         const sortedCommits = [...lastCommits].sort((a, b) => {
             const dateA = new Date(a.committer.date).getTime();
             const dateB = new Date(b.committer.date).getTime();
             return dateA - dateB;
         });
 
-        // Build parent -> children map using primary parent (first parent)
         const childrenMap: Record<string, string[]> = {};
         sortedCommits.forEach(commit => {
             const primaryParent = commit.parents[0];
@@ -263,13 +270,11 @@ function CommitGraphSvg({
             }
         });
 
-        // Find root commits (no parent or parent not in set)
         const commitIdSet = new Set(sortedCommits.map(c => c.id));
         const roots: string[] = sortedCommits
             .filter(c => c.parents.length === 0 || !commitIdSet.has(c.parents[0]))
             .map(c => c.id);
 
-        // Compute levels by BFS from roots using primary parent
         const levelById: Record<string, number> = {};
         const queue: string[] = [];
         roots.forEach(id => { levelById[id] = 0; queue.push(id); });
@@ -278,7 +283,6 @@ function CommitGraphSvg({
             const current = queue.shift() as string;
             const currentLevel = levelById[current];
             const children = childrenMap[current] ?? [];
-            // Sort children by date for stability
             children.sort((a, b) => {
                 const da = new Date(idToCommit[a].committer.date).getTime();
                 const db = new Date(idToCommit[b].committer.date).getTime();
@@ -292,18 +296,15 @@ function CommitGraphSvg({
             }
         }
 
-        // Constants for layout
         const levelHeight = 4*R + 20;
         const branchSpacing = 120; // Horizontal spacing between branches
         const startX = width / 2 - R; // center X
         const startY = height / 2;    // base Y
 
-        // Compute X positions per node using hierarchical layout
         const xById: Record<string, number> = {};
         const branchLanes: Map<string, number> = new Map(); // branch -> lane number
         const branchPositions: Map<string, number> = new Map(); // branch -> base X position
 
-        // Step 1: Identify all branches and assign lanes
         const allBranches = new Set<string>();
         sortedCommits.forEach(commit => allBranches.add(commit.branch));
         
@@ -311,23 +312,17 @@ function CommitGraphSvg({
         const mainBranch = branchList.find(b => b === 'main' || b === 'master') || branchList[0];
         const otherBranches = branchList.filter(b => b !== mainBranch);
 
-        // Assign main branch to lane 0
         branchLanes.set(mainBranch, 0);
         branchPositions.set(mainBranch, startX);
 
-        // Assign other branches to symmetric lanes
         otherBranches.forEach((branch, index) => {
             const lane = Math.floor(index / 2) + 1;
             const laneNumber = index % 2 === 0 ? lane : -lane;
             branchLanes.set(branch, laneNumber);
             branchPositions.set(branch, startX + laneNumber * branchSpacing);
         });
-
-
-        // Step 2: Place commits using hierarchical positioning
         const maxLevel = Object.values(levelById).reduce((m, v) => Math.max(m, v), 0);
 
-        // Place roots at their branch positions
         roots.forEach((rootId) => {
             const commit = idToCommit[rootId];
             const branch = commit.branch;
@@ -335,13 +330,11 @@ function CommitGraphSvg({
             xById[rootId] = branchX;
         });
 
-        // Process each level from top to bottom
         for (let lvl = 1; lvl <= maxLevel; lvl++) {
             const nodesAtLevel = sortedCommits
                 .filter(c => levelById[c.id] === lvl)
                 .map(c => c.id);
 
-            // Group nodes by their parent
             const nodesByParent: Record<string, string[]> = {};
             for (const id of nodesAtLevel) {
                 const parentId = idToCommit[id].parents[0];
@@ -350,21 +343,18 @@ function CommitGraphSvg({
                 nodesByParent[parentId].push(id);
             }
 
-            // Position each group of siblings
             for (const parentId of Object.keys(nodesByParent)) {
                 const siblings = nodesByParent[parentId];
                 const parentCommit = idToCommit[parentId];
                 const parentBranch = parentCommit.branch;
                 const parentX = xById[parentId] || startX;
 
-                // Sort siblings by commit time for consistent ordering
                 siblings.sort((a, b) => {
                     const da = new Date(idToCommit[a].committer.date).getTime();
                     const db = new Date(idToCommit[b].committer.date).getTime();
                     return da - db;
                 });
 
-                // Group siblings by branch
                 const siblingsByBranch: Record<string, string[]> = {};
                 siblings.forEach(childId => {
                     const commit = idToCommit[childId];
@@ -375,18 +365,15 @@ function CommitGraphSvg({
                     siblingsByBranch[branch].push(childId);
                 });
 
-                // Position each branch's commits
                 Object.entries(siblingsByBranch).forEach(([branchName, branchSiblings]) => {
                     const branchX = branchPositions.get(branchName) || startX;
                     
                     branchSiblings.forEach((childId) => {
-                        // All commits in a branch follow the same vertical line
                         xById[childId] = branchX;
                     });
                 });
             }
 
-            // Handle any unplaced nodes
             const unplaced = nodesAtLevel.filter(id => xById[id] === undefined);
             if (unplaced.length > 0) {
                 unplaced.forEach((id, idx) => {
@@ -398,7 +385,6 @@ function CommitGraphSvg({
             }
         }
 
-        // Step 3: Collision avoidance - ensure minimum spacing between commits at same level
         const minGap = R * 2 + 20; // circle diameter + margin
         for (let lvl = 0; lvl <= maxLevel; lvl++) {
             const idsAtLevel = sortedCommits
@@ -408,10 +394,8 @@ function CommitGraphSvg({
             
             if (idsAtLevel.length <= 1) continue;
             
-            // Sort by X position
             idsAtLevel.sort((a, b) => (xById[a] as number) - (xById[b] as number));
             
-            // Resolve collisions by shifting nodes
             for (let i = 1; i < idsAtLevel.length; i++) {
                 const prevId = idsAtLevel[i - 1];
                 const currId = idsAtLevel[i];
@@ -426,7 +410,6 @@ function CommitGraphSvg({
             }
         }
 
-        // Group commits by branch for later highlighting
         branchCommits.current = {};
         sortedCommits.forEach(commit => {
             if (!branchCommits.current[commit.branch]) {
@@ -435,7 +418,6 @@ function CommitGraphSvg({
             branchCommits.current[commit.branch].push(commit);
         });
 
-        // Build final nodes
         const nodes: CommitNode[] = sortedCommits.map(c => {
             const level = levelById[c.id] ?? 0;
             const x = xById[c.id] ?? startX;
@@ -452,7 +434,6 @@ function CommitGraphSvg({
         return nodes;
     }
 
-    // Convert screen coordinates to graph coordinates
     const screenToGraph = useCallback((screenX: number, screenY: number) => {
         return {
             x: (screenX - pan.x) / zoom,
@@ -460,7 +441,6 @@ function CommitGraphSvg({
         };
     }, [pan.x, pan.y, zoom]);
 
-    // Handle mouse down on commit node
     const handleNodeMouseDown = useCallback((e: React.MouseEvent, nodeId: string) => {
         e.preventDefault();
         e.stopPropagation();
@@ -475,12 +455,8 @@ function CommitGraphSvg({
         const node = commitNodes.find(n => n.commit.id === nodeId);
         if (!node) return;
 
-        // Calculate offset from node center to mouse position
-        // This is the distance from node center to where we clicked
         const offsetX = node.x - graphPos.x;
         const offsetY = node.y - graphPos.y;
-        
-
         setDragState({
             isDragging: true,
             draggedNodeId: nodeId,
@@ -490,7 +466,6 @@ function CommitGraphSvg({
         });
     }, [commitNodes, screenToGraph, pan, zoom]);
 
-    // Handle double click on commit node
     const handleNodeDoubleClick = useCallback((e: React.MouseEvent, nodeId: string) => {
         e.preventDefault();
         e.stopPropagation();
@@ -501,12 +476,10 @@ function CommitGraphSvg({
         onCommitDoubleClick?.(node.commit);
     }, [commitNodes, onCommitDoubleClick]);
 
-    // Get all nodes that should follow the dragged node (subsequent nodes in the branch)
     const getNodesToDrag = useCallback((draggedNodeId: string) => {
         const draggedNode = commitNodes.find(n => n.commit.id === draggedNodeId);
         if (!draggedNode) return [];
 
-        // Find all nodes that are descendants of the dragged node
         const nodesToDrag = [draggedNodeId];
         const visited = new Set<string>();
         const queue = [draggedNodeId];
@@ -516,7 +489,6 @@ function CommitGraphSvg({
             if (visited.has(currentNodeId)) continue;
             visited.add(currentNodeId);
 
-            // Find all children of current node
             const children = commitNodes.filter(node => 
                 node.commit.parents.includes(currentNodeId)
             );
@@ -532,7 +504,6 @@ function CommitGraphSvg({
         return nodesToDrag;
     }, [commitNodes]);
 
-    // Handle mouse move during drag
     const handleMouseMove = useCallback((e: MouseEvent) => {
         if (!dragState.isDragging || !dragState.draggedNodeId) return;
 
@@ -543,52 +514,38 @@ function CommitGraphSvg({
         const screenY = e.clientY - rect.top;
         const graphPos = screenToGraph(screenX, screenY);
 
-        // Calculate new position for the dragged node (following cursor exactly)
-        // New position = mouse position + offset (to maintain relative position)
         const newX = graphPos.x + dragState.dragOffset.x;
         const newY = graphPos.y + dragState.dragOffset.y;
 
-        // Get all nodes that should follow the dragged node
         const nodesToDrag = getNodesToDrag(dragState.draggedNodeId);
 
-        // Update mouse position in drag state
         setDragState(prev => ({
             ...prev,
             currentMousePosition: { x: screenX, y: screenY }
         }));
 
-        // Update positions of all nodes in the chain simultaneously
         setCommitNodes(prevNodes => {
-            // Find the current position of the dragged node
             const currentDraggedNode = prevNodes.find(n => n.commit.id === dragState.draggedNodeId);
             if (!currentDraggedNode) return prevNodes;
 
-            // Calculate delta from current position to new position
             const deltaX = newX - currentDraggedNode.x;
             const deltaY = newY - currentDraggedNode.y;
-
-
-            // Update all nodes in the chain at once
             const updatedNodes = prevNodes.map(node => 
                 nodesToDrag.includes(node.commit.id)
                     ? { ...node, x: node.x + deltaX, y: node.y + deltaY }
                     : node
             );
-            
-            
             return updatedNodes;
         });
     }, [dragState, screenToGraph, getNodesToDrag]);
 
-    // Handle mouse up to end drag
     const handleMouseUp = useCallback(() => {
         if (dragState.isDragging) {
-            // Save current positions to localStorage
             const currentPositions: Record<string, { x: number; y: number }> = {};
             commitNodes.forEach(node => {
                 currentPositions[node.commit.id] = { x: node.x, y: node.y };
             });
-            saveNodePositions(currentPositions);
+            saveNodePositions(currentPositions, dataSource);
 
             setDragState({
                 isDragging: false,
@@ -599,17 +556,12 @@ function CommitGraphSvg({
             });
         }
     }, [dragState.isDragging, commitNodes]);
-
-
-    // Function to reset view (zoom and pan) to center the graph
     const resetView = useCallback(() => {
         if (commitNodes.length === 0) return;
 
-        // Find main branch commits
         const mainBranchCommits = commitNodes.filter(node => node.branch === 'main');
         
         if (mainBranchCommits.length > 0) {
-            // Calculate the center of main branch commits only
             const minX = Math.min(...mainBranchCommits.map(n => n.x));
             const maxX = Math.max(...mainBranchCommits.map(n => n.x));
             const minY = Math.min(...mainBranchCommits.map(n => n.y));
@@ -618,14 +570,11 @@ function CommitGraphSvg({
             const centerX = (minX + maxX) / 2;
             const centerY = (minY + maxY) / 2;
             
-            // Calculate the pan offset to center the main branch in the viewport
             const targetPanX = width / 2 - centerX;
             const targetPanY = height / 2 - centerY;
             
-            // Call the parent's reset view function with calculated values
             onResetView?.(targetPanX, targetPanY);
         } else {
-            // Fallback: center all commits if no main branch found
             const minX = Math.min(...commitNodes.map(n => n.x));
             const maxX = Math.max(...commitNodes.map(n => n.x));
             const minY = Math.min(...commitNodes.map(n => n.y));
@@ -641,15 +590,13 @@ function CommitGraphSvg({
         }
     }, [commitNodes, width, height, onResetView]);
 
-    // Expose functions to parent component
     useEffect(() => {
         if (onResetView) {
-            // This allows parent to call resetView
-            (window as any).resetCommitGraphView = resetView;
+            const windowKey = dataSource === 'goal' ? 'resetGoalCommitGraphView' : 'resetCommitGraphView';
+            (window as any)[windowKey] = resetView;
         }
-    }, [resetView, onResetView]);
+    }, [resetView, onResetView, dataSource]);
 
-    // Add global mouse event listeners
     useEffect(() => {
         if (dragState.isDragging) {
             document.addEventListener('mousemove', handleMouseMove);
@@ -671,27 +618,21 @@ function CommitGraphSvg({
         };
     }, [dragState.isDragging, handleMouseMove, handleMouseUp]);
 
-    // Calculate total graph dimensions
     const minX = Math.min(...commitNodes.map(n => n.x)) - 200;
     const maxX = Math.max(...commitNodes.map(n => n.x)) + 200;
     const maxY = Math.max(...commitNodes.map(n => n.y)) + 200;
 
-    // Calculate viewport bounds for grid coverage
     const viewportMinX = (-pan.x) / zoom;
     const viewportMaxX = (width - pan.x) / zoom;
     const viewportMinY = (-pan.y) / zoom;
     const viewportMaxY = (height - pan.y) / zoom;
 
-    // Ensure grid covers the full viewport
     const gridMinX = Math.min(viewportMinX, minX);
     const gridMaxX = Math.max(viewportMaxX, maxX);
     const gridMinY = Math.min(viewportMinY, 0);
     const gridMaxY = Math.max(viewportMaxY, maxY);
     const gridWidth = gridMaxX - gridMinX;
     const gridHeight = gridMaxY - gridMinY;
-
-    // No loading or error states for client-only cache
-
     if (commitNodes.length === 0) {
         return (
             <div 
@@ -720,13 +661,13 @@ function CommitGraphSvg({
             {...svgProps}
         >
             <defs>
-                {/* Gradient for commit circles */}
+                {}
                 <radialGradient id="commitGradient" cx="50%" cy="30%">
                     <stop offset="0%" stopColor="#ffffff" stopOpacity="0.3" />
                     <stop offset="100%" stopColor="#000000" stopOpacity="0.1" />
                 </radialGradient>
 
-                {/* Arrow marker */}
+                {}
                 <marker
                     id="arrowhead"
                     markerWidth="10"
@@ -741,12 +682,12 @@ function CommitGraphSvg({
                     />
                 </marker>
 
-                {/* Shadow filter */}
+                {}
                 <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
                     <feDropShadow dx="2" dy="2" stdDeviation="2" floodColor="#000000" floodOpacity="0.3" />
                 </filter>
             </defs>
-            {/* Background grid */}
+            {}
             <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
                 <defs>
                     <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
@@ -756,7 +697,7 @@ function CommitGraphSvg({
                 <rect x={gridMinX} y={gridMinY} width={gridWidth} height={gridHeight} fill="url(#grid)" />
             </g>
             <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`} >
-                {/* Draw connection lines - no transition during drag for better sync */}
+                {}
                 {commitNodes.map((commitNode) => {
                     const parentNodes = commitNode.commit.parents.map(parentId =>
                         commitNodes.find(commitNode => commitNode.commit.id === parentId)

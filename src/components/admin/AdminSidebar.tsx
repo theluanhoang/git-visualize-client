@@ -53,7 +53,7 @@ export function AdminSidebar({
 
   return (
     <>
-      {/* Mobile sidebar */}
+      {}
       <div className={cn(
         "fixed inset-0 z-50 lg:hidden",
         sidebarOpen ? "block" : "hidden"
@@ -93,7 +93,7 @@ export function AdminSidebar({
         </div>
       </div>
 
-      {/* Desktop sidebar */}
+      {}
       <div className={cn(
         "hidden lg:fixed lg:inset-y-0 lg:flex lg:flex-col transition-all duration-300",
         sidebarCollapsed ? "lg:w-16" : "lg:w-64"
@@ -141,7 +141,7 @@ export function AdminSidebar({
             })}
           </nav>
           
-          {/* Quick Actions */}
+          {}
           {!sidebarCollapsed && (
             <div className="px-1 lg:px-2 py-4 border-t border-border">
             <h3 className="px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">

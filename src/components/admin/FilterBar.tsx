@@ -21,12 +21,10 @@ export interface FilterBarProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
   searchPlaceholder?: string;
-  // Single filter (backward compatibility)
   filterValue?: string;
   onFilterChange?: (value: string) => void;
   filterOptions?: FilterOption[];
   filterLabel?: string;
-  // Multiple filters (new feature)
   filters?: FilterConfig[];
   showSortButton?: boolean;
   onSortClick?: () => void;
@@ -37,18 +35,15 @@ export function FilterBar({
   searchTerm,
   onSearchChange,
   searchPlaceholder = "Tìm kiếm...",
-  // Single filter props (backward compatibility)
   filterValue,
   onFilterChange,
   filterOptions = [],
   filterLabel,
-  // Multiple filters props (new feature)
   filters,
   showSortButton = false,
   onSortClick,
   sortButtonText = "Sắp xếp"
 }: FilterBarProps) {
-  // Determine which filter mode to use
   const useMultipleFilters = filters && filters.length > 0;
   const useSingleFilter = !useMultipleFilters && filterOptions.length > 0 && onFilterChange;
 
@@ -66,7 +61,7 @@ export function FilterBar({
             />
           </div>
           
-          {/* Multiple filters mode */}
+          {}
           {useMultipleFilters && filters.map((filter) => (
             <Select key={filter.id} value={filter.value} onValueChange={filter.onChange}>
               <SelectTrigger className="w-full sm:w-48">
@@ -82,7 +77,7 @@ export function FilterBar({
             </Select>
           ))}
           
-          {/* Single filter mode (backward compatibility) */}
+          {}
           {useSingleFilter && (
             <Select value={filterValue} onValueChange={onFilterChange}>
               <SelectTrigger className="w-full sm:w-48">

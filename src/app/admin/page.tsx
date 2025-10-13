@@ -22,16 +22,12 @@ import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-// Mock data - trong thực tế sẽ fetch từ API
 const stats = {
   totalLessons: 24,
   totalUsers: 156,
   totalViews: 2847,
   recentActivity: 8
 };
-
-// Fetched recent lessons from backend
-
 const recentUsers = [
   { id: 1, name: 'Nguyễn Văn A', email: 'nguyenvana@example.com', joinedAt: '2024-01-15', lessonsCompleted: 5 },
   { id: 2, name: 'Trần Thị B', email: 'tranthib@example.com', joinedAt: '2024-01-14', lessonsCompleted: 3 },
@@ -47,7 +43,6 @@ export default function AdminDashboard() {
   const { data: recentLessonsData } = useQuery({
     queryKey: ['admin-recent-lessons'],
     queryFn: async () => {
-      // Get latest 10 lessons, sorted by createdAt DESC by backend, limit capped in service
       const res = await LessonsService.getAll({ limit: 10, offset: 0 });
       return res.data.map((l: any) => ({
         id: l.id,
@@ -109,8 +104,8 @@ export default function AdminDashboard() {
       label: 'Thao tác', 
       render: (value: any, row: any) => (
         <ActionButtons 
-          onView={() => console.log('View user', row.id)}
-          onEdit={() => console.log('Edit user', row.id)}
+          onView={() => {}}
+          onEdit={() => {}}
         />
       )
     },
@@ -131,7 +126,7 @@ export default function AdminDashboard() {
         }
       />
 
-      {/* Stats Grid */}
+      {}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Tổng bài học"
@@ -159,9 +154,9 @@ export default function AdminDashboard() {
         />
       </div>
 
-      {/* Content Grid */}
+      {}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Recent Lessons */}
+        {}
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-foreground">Bài học gần đây</h3>
@@ -178,7 +173,7 @@ export default function AdminDashboard() {
           />
         </Card>
 
-        {/* Recent Users */}
+        {}
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-foreground">Người dùng mới</h3>
@@ -196,7 +191,7 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
-      {/* Quick Actions */}
+      {}
       <Card className="p-6">
         <h3 className="text-lg font-medium text-foreground mb-4">Thao tác nhanh</h3>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

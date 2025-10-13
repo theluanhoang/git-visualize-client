@@ -113,7 +113,7 @@ export default function LessonsPage() {
         }
       />
 
-      {/* Stats */}
+      {}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Tổng bài học"
@@ -141,7 +141,7 @@ export default function LessonsPage() {
         />
       </div>
 
-      {/* Filters */}
+      {}
       <FilterBar
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
@@ -150,10 +150,10 @@ export default function LessonsPage() {
         onFilterChange={setStatusFilter}
         filterOptions={statusOptions}
         showSortButton={true}
-        onSortClick={() => console.log('Sort clicked')}
+        onSortClick={() => {}}
       />
 
-      {/* Lessons List */}
+      {}
       <AdminTable 
         columns={lessonColumns}
         data={filteredLessons}
@@ -182,7 +182,7 @@ export default function LessonsPage() {
         onClose={() => setConfirmOpen(false)}
       />
 
-      {/* Empty State */}
+      {}
       {filteredLessons.length === 0 && (
         <EmptyState
           icon={BookOpen}

@@ -13,7 +13,6 @@ export { SettingsSection } from './SettingsSection';
 export { UserCard } from './UserCard';
 export { UserList } from './UserList';
 
-// Analytics Components
 export * from './analytics-components';
 
 export type { NavigationItem, QuickAction, StatCardProps, TableColumn, TableProps, PageHeaderProps } from './types';

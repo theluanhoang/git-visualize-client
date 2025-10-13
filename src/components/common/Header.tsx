@@ -18,7 +18,7 @@ function Header() {
         <header className="sticky top-0 z-50 bg-[color-mix(in_srgb,var(--surface),#000_4%)] backdrop-blur-sm border-b border-[var(--border)] shadow-sm">
             <div className="container mx-auto px-4">
                 <div className="flex items-center justify-between h-16">
-                    {/* Logo */}
+                    {}
                     <div className="flex items-center gap-3 min-w-0">
                         <div className="p-2 rounded-lg bg-gradient-to-br from-[var(--primary-50)] to-[var(--primary-100)] shadow-sm">
                             <GitFork className="text-[var(--primary-600)]" size={24} />
@@ -28,7 +28,7 @@ function Header() {
                         </Link>
                     </div>
 
-                    {/* Desktop Navigation */}
+                    {}
                     <nav className="hidden sm:flex items-center gap-2" aria-label="Main navigation">
                         <Link 
                             href="/" 
@@ -57,7 +57,7 @@ function Header() {
                         <ThemeToggle />
                     </nav>
 
-                    {/* Mobile toggles */}
+                    {}
                     <div className="sm:hidden flex items-center gap-2">
                         <ThemeToggle />
                         <button
@@ -73,7 +73,7 @@ function Header() {
                 </div>
             </div>
 
-            {/* Mobile Navigation Panel */}
+            {}
             <div id="mobile-nav" className={`sm:hidden ${open ? 'block' : 'hidden'} border-t border-[var(--border)] bg-[var(--surface)]`}>
                 <div className="container mx-auto px-4 py-3">
                     <div className="flex flex-col gap-1" role="menu" aria-label="Mobile navigation">

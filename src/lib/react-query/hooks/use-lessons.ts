@@ -2,10 +2,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { LessonFormData, LessonUpdateData } from '@/lib/schemas/lesson';
 import { LessonsService } from '@/services/lessons';
 
-// Mock API functions - replace with actual API calls
 const lessonsApi = {
   getAll: async () => {
-    // Mock data
     return [
       {
         id: 1,
@@ -20,12 +18,10 @@ const lessonsApi = {
         sections: 4,
         estimatedTime: '30 phút'
       },
-      // ... more mock data
     ];
   },
   
   getById: async (id: number) => {
-    // Mock data
     return {
       id,
       title: 'Git Basics - Introduction',
@@ -55,21 +51,21 @@ const lessonsApi = {
   }
 };
 
-export const useLessons = () => {
+export const useLessons = (params: {
+  limit?: number;
+  offset?: number;
+  id?: number;
+  slug?: string;
+  status?: 'draft' | 'published' | 'archived';
+  q?: string;
+  includePractices?: boolean;
+} = {}) => {
   return useQuery({
-    queryKey: ['lessons'],
+    queryKey: ['lessons', params],
     queryFn: async () => {
-      const res = await LessonsService.getAll();
+      const res = await LessonsService.getAll(params);
       return res.data;
     },
-  });
-};
-
-export const useLesson = (id: number) => {
-  return useQuery({
-    queryKey: ['lessons', id],
-    queryFn: () => lessonsApi.getById(id),
-    enabled: !!id,
   });
 };
 

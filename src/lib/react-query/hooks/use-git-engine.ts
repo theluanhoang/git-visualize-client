@@ -1,11 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
 import api from '@/lib/api/axios';
 import { IRepositoryState, GitCommandResponse } from '@/types/git';
 
-// Storage key for terminal responses
 const TERMINAL_RESPONSES_KEY = 'git-terminal-responses';
 
-// Utility functions for terminal persistence
 const saveTerminalResponses = (responses: GitCommandResponse[]) => {
   try {
     localStorage.setItem(TERMINAL_RESPONSES_KEY, JSON.stringify(responses));
@@ -31,17 +30,18 @@ export const useExecuteGitCommand = () => {
   return useMutation<GitCommandResponse, unknown, string>({
     mutationFn: (command: string) => gitEngineApi.executeGitCommand(command),
     onSuccess: (data, command) => {
-      // Add to terminal responses cache
       const oldResponses = queryClient.getQueryData<GitCommandResponse[]>(['terminal-responses']) || [];
       const newResponses = [...oldResponses, { ...data, command }];
       
       queryClient.setQueryData<GitCommandResponse[]>(['terminal-responses'], newResponses);
       
-      // Persist to localStorage
+      if (data.repositoryState) {
+        queryClient.setQueryData(['git', 'state'], data.repositoryState);
+      }
+      
       saveTerminalResponses(newResponses);
     },
     onError: (error, command) => {
-      // Add error to terminal responses cache
       const errorResponse: GitCommandResponse = {
         success: false,
         output: error instanceof Error ? error.message : 'Unknown error',
@@ -53,7 +53,6 @@ export const useExecuteGitCommand = () => {
       
       queryClient.setQueryData<GitCommandResponse[]>(['terminal-responses'], newResponses);
       
-      // Persist to localStorage
       saveTerminalResponses(newResponses);
     },
   });
@@ -66,7 +65,6 @@ export const useRepositoryState = () => {
   });
 };
 
-// Initialize terminal responses from localStorage immediately
 const initializeTerminalResponses = () => {
   try {
     const savedResponses = JSON.parse(localStorage.getItem(TERMINAL_RESPONSES_KEY) || '[]');
@@ -77,28 +75,56 @@ const initializeTerminalResponses = () => {
   }
 };
 
-// Hook to get terminal responses from cache with persistence
 export const useTerminalResponses = () => {
   const queryClient = useQueryClient();
   
-  return useQuery<GitCommandResponse[]>({
-    queryKey: ['terminal-responses'],
-    queryFn: () => {
-      // Load from localStorage on first load
+  const [data, setData] = useState<GitCommandResponse[]>([]);
+  
+  useEffect(() => {
+    const savedResponses = JSON.parse(localStorage.getItem(TERMINAL_RESPONSES_KEY) || '[]');
+    
+    setData(savedResponses);
+    
+    queryClient.setQueryData(['terminal-responses'], savedResponses);
+  }, [queryClient]);
+  
+  useEffect(() => {
+    const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
+      if (event.query.queryKey[0] === 'terminal-responses') {
+        const newData = queryClient.getQueryData<GitCommandResponse[]>(['terminal-responses']) || [];
+        setData(newData);
+      }
+    });
+    
+    return unsubscribe;
+  }, [queryClient]);
+  
+  return {
+    data,
+    isLoading: false,
+    error: null,
+    refetch: () => {
       const savedResponses = JSON.parse(localStorage.getItem(TERMINAL_RESPONSES_KEY) || '[]');
-      
-      // Set initial data in cache
       queryClient.setQueryData(['terminal-responses'], savedResponses);
-      
-      return savedResponses;
+      setData(savedResponses);
+    }
+  };
+};
+
+export const useGoalTerminalResponses = () => {
+  const queryClient = useQueryClient();
+  
+  return useQuery<GitCommandResponse[]>({
+    queryKey: ['goal-terminal-responses'],
+    queryFn: () => {
+      return [];
     },
-    initialData: initializeTerminalResponses(), // Initialize with saved data immediately
-    staleTime: Infinity, // Never consider stale since it's persisted
+    initialData: [], // Start with empty data
+    staleTime: Infinity, // Never consider stale
     gcTime: Infinity, // Never garbage collect
   });
 };
 
-// Initialize app data on startup
 export const initializeAppData = () => {
   const savedResponses = JSON.parse(localStorage.getItem(TERMINAL_RESPONSES_KEY) || '[]');
   return savedResponses;
@@ -110,21 +136,16 @@ export const useGitEngine = () => {
   const queryClient = useQueryClient();
   
   const clearAllData = () => {
-    // Clear localStorage first
     localStorage.removeItem(TERMINAL_RESPONSES_KEY);
     localStorage.removeItem('git-repository-state');
     localStorage.removeItem('git-commit-graph-node-positions');
     
-    // Clear query cache
     queryClient.setQueryData(['terminal-responses'], []);
     queryClient.setQueryData(['git', 'state'], null);
     
-    // Invalidate and refetch queries to force re-render
     queryClient.invalidateQueries({ queryKey: ['terminal-responses'] });
     queryClient.invalidateQueries({ queryKey: ['git', 'state'] });
   };
   
   return { responses, runCommand, isRunning, clearAllData };
 };
-
-

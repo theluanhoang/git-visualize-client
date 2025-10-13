@@ -74,7 +74,7 @@ export default function Carousel({ slides, intervalMs = 5000, fullBleed = false,
         ))}
       </div>
 
-      {/* Modern Navigation Buttons */}
+      {}
       <button
         onClick={prev}
         aria-label="Previous slide"
@@ -90,7 +90,7 @@ export default function Carousel({ slides, intervalMs = 5000, fullBleed = false,
         <ChevronRight className="w-5 h-5" />
       </button>
 
-      {/* Modern Dots with Git Orange */}
+      {}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2">
         {slides.map((_, i) => (
           <button

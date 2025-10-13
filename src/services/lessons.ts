@@ -35,6 +35,7 @@ export const LessonsService = {
     slug?: string;
     status?: 'draft' | 'published' | 'archived';
     q?: string;
+    includePractices?: boolean;
   }) {
     const query: any = {};
     if (params?.limit != null) query.limit = Math.min(100, Math.max(1, params.limit));
@@ -43,6 +44,7 @@ export const LessonsService = {
     if (params?.slug) query.slug = params.slug;
     if (params?.status) query.status = toBackendStatus(params.status);
     if (params?.q) query.q = params.q;
+    if (params?.includePractices) query.includePractices = params.includePractices;
 
     const res = await api.get('/api/v1/lesson', { params: query });
     const { data, total, limit, offset } = res.data as {
@@ -51,7 +53,6 @@ export const LessonsService = {
       limit: number;
       offset: number;
     };
-    // map status
     const mapped = data.map((l) => ({
       ...l,
       status: fromBackendStatus(l.status),
@@ -60,6 +61,13 @@ export const LessonsService = {
   },
   async getBySlug(slug: string) {
     const res = await api.get('/api/v1/lesson', { params: { slug } });
+    const { data } = res.data as { data: Array<any> };
+    if (!data?.length) return null;
+    const lesson = data[0];
+    return { ...lesson, status: fromBackendStatus(lesson.status) } as any;
+  },
+  async getBySlugWithPractices(slug: string) {
+    const res = await api.get('/api/v1/lesson', { params: { slug, includePractices: true } });
     const { data } = res.data as { data: Array<any> };
     if (!data?.length) return null;
     const lesson = data[0];
@@ -99,5 +107,3 @@ export const LessonsService = {
 };
 
 export default LessonsService;
-
-

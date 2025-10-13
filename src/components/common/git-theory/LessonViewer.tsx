@@ -1,4 +1,3 @@
-// LessonViewer.tsx - Trang hiển thị bài học (Client)
 'use client';
 
 import CharacterCount from '@tiptap/extension-character-count';
@@ -18,7 +17,6 @@ import TaskItem from '@tiptap/extension-task-item';
 import { CustomCodeBlock } from '../rich-editor/extensions/custom-codeblock';
 import Highlight from '@tiptap/extension-highlight';
 import { InlineCodeDecorations } from '../rich-editor/extensions/inline-code-decorations';
-// Import tất cả extensions giống RichTextEditor
 
 interface LessonViewerProps {
     content: any; // JSON content từ DB
@@ -95,21 +93,17 @@ export default function LessonViewer({ content }: LessonViewerProps) {
         shouldRerenderOnTransaction: false,
     });
 
-    // Keep preview in sync when `content` JSON changes
     useEffect(() => {
         if (!editor || !content) return;
-        // Skip if same to avoid unnecessary flushes
         try {
             const current = editor.getJSON();
             if (JSON.stringify(current) === JSON.stringify(content)) return;
         } catch {}
-        // Defer to microtask to avoid flushSync during render
         Promise.resolve().then(() => {
             if (editor && content) editor.commands.setContent(content);
         });
     }, [editor, content]);
 
-    // Light inline-code token coloring without affecting code blocks
     useEffect(() => {
         if (!editor) return;
         function decorate() {
@@ -117,7 +111,6 @@ export default function LessonViewer({ content }: LessonViewerProps) {
             if (!root) return;
             const nodes = root.querySelectorAll(':not(pre) > code');
             nodes.forEach((node) => {
-                // Skip if already decorated
                 if ((node as HTMLElement).dataset.__decorated === '1') return;
                 const text = node.textContent || '';
                 const parts = text.split(/(\s+)/);
@@ -135,7 +128,6 @@ export default function LessonViewer({ content }: LessonViewerProps) {
                 (node as HTMLElement).dataset.__decorated = '1';
             });
         }
-        // decorate initially and on every transaction
         decorate();
         const handler = () => decorate();
         editor.on('transaction', handler);

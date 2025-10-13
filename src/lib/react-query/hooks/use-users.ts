@@ -1,10 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { UserFormData, UserUpdateData, UserCreateData } from '@/lib/schemas/user';
 
-// Mock API functions - replace with actual API calls
 const usersApi = {
   getAll: async () => {
-    // Mock data
     const users = [
       {
         id: 1,
@@ -81,7 +79,6 @@ const usersApi = {
   },
   
   getById: async (id: number) => {
-    // Mock data
     return {
       id,
       name: 'Nguyễn Văn A',
@@ -98,29 +95,21 @@ const usersApi = {
   },
   
   create: async (data: UserCreateData) => {
-    // Mock API call
-    console.log('Creating user:', data);
     await new Promise(resolve => setTimeout(resolve, 1000));
     return { id: Date.now(), ...data };
   },
   
   update: async (id: number, data: UserUpdateData) => {
-    // Mock API call
-    console.log('Updating user:', id, data);
     await new Promise(resolve => setTimeout(resolve, 1000));
     return { id, ...data };
   },
   
   delete: async (id: number) => {
-    // Mock API call
-    console.log('Deleting user:', id);
     await new Promise(resolve => setTimeout(resolve, 1000));
     return { success: true };
   },
   
   toggleStatus: async (id: number, status: 'active' | 'inactive' | 'banned') => {
-    // Mock API call
-    console.log('Toggling user status:', id, status);
     await new Promise(resolve => setTimeout(resolve, 1000));
     return { id, status };
   }

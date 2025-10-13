@@ -10,14 +10,10 @@ type Props = {
 	lesson: Lesson;
 };
 
-// Simple markdown parser for basic formatting
 const parseMarkdown = (text: string) => {
 	return text
-		// Bold text
 		.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-		// Inline code with enhanced styling
 		.replace(/`([^`]+)`/g, (match, code) => {
-			// Check if it's a Git command
 			if (code.includes('git') || code.includes('sudo') || code.includes('brew') || 
 				code.includes('echo') || code.includes('mkdir') || code.includes('cd') ||
 				code.includes('apt') || code.includes('yum') || code.includes('pacman')) {
@@ -26,42 +22,34 @@ const parseMarkdown = (text: string) => {
 				const highlightedParts = parts.map((part: string, i: number) => {
 					if (part.trim() === '') return part;
 					
-					// Git command (green)
 					if (part === 'git') {
 						return `<span class="text-green-600 font-semibold">${part}</span>`;
 					}
 					
-					// Options/flags (green)
 					if (part.startsWith('-') || part.startsWith('--')) {
 						return `<span class="text-green-600">${part}</span>`;
 					}
 					
-					// Placeholders/arguments (red)
 					if (part.includes('<') && part.includes('>')) {
 						return `<span class="text-red-600">${part}</span>`;
 					}
 					
-					// Quoted strings (red)
 					if (part.startsWith('"') && part.endsWith('"')) {
 						return `<span class="text-red-600">${part}</span>`;
 					}
 					
-					// File names and paths (blue)
 					if (part.includes('.') && !part.includes('git')) {
 						return `<span class="text-blue-600">${part}</span>`;
 					}
 					
-					// Regular text
 					return `<span class="text-gray-800">${part}</span>`;
 				}).join('');
 				
 				return `<code class="bg-gray-50 text-gray-800 px-2 py-1 rounded-md text-sm font-mono border border-gray-200 inline-block mx-1">${highlightedParts}</code>`;
 			}
 			
-			// Regular inline code
 			return `<code class="bg-gray-100 text-gray-800 px-1.5 py-0.5 rounded text-sm font-mono border border-gray-200">${code}</code>`;
 		})
-		// Line breaks
 		.replace(/\n/g, '<br>');
 };
 

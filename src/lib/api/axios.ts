@@ -9,11 +9,4 @@ export const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
-
-// Optional: request/response interceptors placeholder for auth, errors, etc.
-// api.interceptors.request.use((config) => config);
-// api.interceptors.response.use((res) => res, (err) => Promise.reject(err));
-
 export default api;
-
-

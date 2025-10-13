@@ -1,5 +1,3 @@
-// File: extensions/FontSize.ts
-// Custom font size extension for Tiptap
 
 import { Extension } from '@tiptap/core'
 

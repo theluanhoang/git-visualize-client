@@ -2,11 +2,28 @@ import { Dot, GitCommitHorizontal, Minus, Plus, Trash2 } from 'lucide-react'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import CommitGraphSvg from './svgs/CommitGraphSvg'
 import { useGitEngine } from '@/lib/react-query/hooks/use-git-engine';
+import { useQueryClient } from '@tanstack/react-query';
 import ConfirmDialog from './ConfirmDialog';
 import CommitDetailsDialog from './CommitDetailsDialog';
-import { ICommit } from '@/types/git';
+import { ICommit, IRepositoryState, GitCommandResponse } from '@/types/git';
 
-function CommitGraph() {
+interface CommitGraphProps {
+    dataSource?: 'practice' | 'goal';
+    customResponses?: GitCommandResponse[];
+    goalRepositoryState?: IRepositoryState;
+    showClearButton?: boolean;
+    title?: string;
+    className?: string;
+}
+
+function CommitGraph({ 
+    dataSource = 'practice',
+    customResponses,
+    goalRepositoryState,
+    showClearButton = true,
+    title = 'Commit Graph',
+    className = ''
+}: CommitGraphProps) {
     const [containerSize, setContainerSize] = useState({ width: 1504, height: 400 });
     const [zoom, setZoom] = useState(1);
     const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -15,16 +32,33 @@ function CommitGraph() {
     const [hasCommits, setHasCommits] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
     
-    // Dialog states
     const [showClearAllDialog, setShowClearAllDialog] = useState(false);
     const [isClearing, setIsClearing] = useState(false);
     const [showCommitDetailsDialog, setShowCommitDetailsDialog] = useState(false);
     const [selectedCommit, setSelectedCommit] = useState<ICommit | null>(null);
     
-    // Get clearAllData function from git engine
     const { clearAllData } = useGitEngine();
+    const queryClient = useQueryClient();
 
-    // Function to reset view (zoom and pan)
+    useEffect(() => {
+        if (dataSource === 'goal' && goalRepositoryState) {
+            const mockResponses = [
+                {
+                    repositoryState: goalRepositoryState,
+                    command: 'git status',
+                    success: true,
+                    output: 'Repository state loaded for goal visualization'
+                }
+            ];
+
+            queryClient.setQueryData(['goal-terminal-responses'], mockResponses);
+
+            return () => {
+                queryClient.setQueryData(['goal-terminal-responses'], []);
+            };
+        }
+    }, [goalRepositoryState, queryClient, dataSource]);
+
     const handleResetView = useCallback((targetPanX?: number, targetPanY?: number) => {
         setZoom(1);
         if (targetPanX !== undefined && targetPanY !== undefined) {
@@ -34,18 +68,15 @@ function CommitGraph() {
         }
     }, []);
 
-    // Handle commits change from CommitGraphSvg
     const handleCommitsChange = useCallback((hasCommits: boolean) => {
         setHasCommits(hasCommits);
     }, []);
 
-    // Handle commit double click
     const handleCommitDoubleClick = useCallback((commit: ICommit) => {
         setSelectedCommit(commit);
         setShowCommitDetailsDialog(true);
     }, []);
 
-    // Handle close commit details dialog
     const handleCloseCommitDetails = useCallback(() => {
         setShowCommitDetailsDialog(false);
         setSelectedCommit(null);
@@ -65,7 +96,6 @@ function CommitGraph() {
     }, [containerRef])
 
     const handleWheel = useCallback((e: WheelEvent) => {
-        // Block zoom when no commits
         if (!hasCommits) {
             e.preventDefault();
             e.stopPropagation();
@@ -105,7 +135,6 @@ function CommitGraph() {
     }, [handleWheel]);
 
     const handleMouseDown = useCallback((e: React.MouseEvent) => {
-        // Block drag when no commits
         if (!hasCommits) {
             e.preventDefault();
             e.stopPropagation();
@@ -138,11 +167,9 @@ function CommitGraph() {
     }, []);
 
     const handleReset = () => {
-        // Use the reset view function from CommitGraphSvg to center the graph
         if ((window as any).resetCommitGraphView) {
             (window as any).resetCommitGraphView();
         } else {
-            // Fallback to simple reset if CommitGraphSvg is not ready
             setZoom(1);
             setPan({ x: 0, y: 0 });
         }
@@ -183,8 +210,6 @@ function CommitGraph() {
             return newZoom;
         });
     };
-
-
     const handleClearAllData = () => {
         setShowClearAllDialog(true);
     };
@@ -192,7 +217,6 @@ function CommitGraph() {
     const handleConfirmClearAll = async () => {
         setIsClearing(true);
         try {
-            // Clear all data first
             clearAllData();
             
             setShowClearAllDialog(false);
@@ -206,11 +230,11 @@ function CommitGraph() {
     };
 
     return (
-        <div className="rounded-lg shadow-sm border border-[var(--border)] bg-[var(--surface)]">
+        <div className={`rounded-lg shadow-sm border border-[var(--border)] bg-[var(--surface)] ${className}`}>
             <div className="px-4 py-3 border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--surface),#000_4%)] ">
                 <span className="flex items-center gap-2 text-foreground">
                     <GitCommitHorizontal />
-                    <h1 className="font-bold text-xl">Commit Graph</h1>
+                    <h1 className="font-bold text-xl">{title}</h1>
                 </span>
                 <ul className="flex items-center text-[14px] text-muted-foreground">
                     <li>Scroll to zoom</li>
@@ -224,23 +248,25 @@ function CommitGraph() {
             </div>
             <div className="p-4">
                 <div ref={containerRef} className="min-h-[400px] border border-[var(--border)] rounded-lg relative bg-[color-mix(in_srgb,var(--surface),#000_4%)] shadow-inner">
-                    {/* Introduction */}
+                    {}
                     <ul className="absolute z-10 flex items-center text-[12px] border px-2 rounded-sm border-[var(--border)] bg-background/85 backdrop-blur-sm top-2 left-2 text-muted-foreground ">
                         <li>Scroll to zoom</li>
                         <li><Dot /></li>
                         <li>Drag to pan</li>
                     </ul>
-                    {/* Controls */}
+                    {}
                     <div className="absolute z-10 flex items-center top-2 right-2 gap-2">
                         <button className="bg-background border border-[var(--border)] rounded-sm cursor-pointer p-1 text-muted-foreground text-sm hover:bg-muted" onClick={handleMinus}><Minus size={16} /></button>
                         <button className="bg-background border border-[var(--border)] rounded-sm cursor-pointer p-1 text-muted-foreground text-sm hover:bg-muted" onClick={handlePlus}><Plus size={16} /></button>
                         <button className="bg-background border border-[var(--border)] rounded-sm cursor-pointer p-1 text-muted-foreground text-sm hover:bg-muted" onClick={handleReset}>Reset</button>
-                        <button className="bg-background border border-[var(--border)] rounded-sm cursor-pointer p-1 text-muted-foreground text-sm hover:bg-muted hover:text-red-500" onClick={handleClearAllData} title="Clear all data (terminal + graph)">
-                            <Trash2 size={16} />
-                        </button>
+                        {showClearButton && (
+                            <button className="bg-background border border-[var(--border)] rounded-sm cursor-pointer p-1 text-muted-foreground text-sm hover:bg-muted hover:text-red-500" onClick={handleClearAllData} title="Clear all data (terminal + graph)">
+                                <Trash2 size={16} />
+                            </button>
+                        )}
                         <input disabled className="bg-background border border-[var(--border)] rounded-sm p-1 text-muted-foreground text-sm outline-none max-w-12" value={`${Math.floor(zoom * 100)}%`} />
                     </div>
-                    {/* SVG Component */}
+                    {}
                     <CommitGraphSvg 
                         width={containerSize.width} 
                         height={containerSize.height} 
@@ -253,11 +279,13 @@ function CommitGraph() {
                         onResetView={handleResetView}
                         onCommitsChange={handleCommitsChange}
                         onCommitDoubleClick={handleCommitDoubleClick}
+                        dataSource={dataSource}
+                        customResponses={customResponses}
                     />
                 </div>
             </div>
             
-            {/* Clear All Data Confirmation Dialog */}
+            {}
             <ConfirmDialog
                 open={showClearAllDialog}
                 title="Xóa toàn bộ dữ liệu"
@@ -269,7 +297,7 @@ function CommitGraph() {
                 onClose={handleCancelClearAll}
             />
             
-            {/* Commit Details Dialog */}
+            {}
             <CommitDetailsDialog
                 open={showCommitDetailsDialog}
                 commit={selectedCommit}

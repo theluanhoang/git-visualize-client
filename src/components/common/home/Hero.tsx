@@ -16,9 +16,9 @@ export default function Hero() {
         slides={slides}
         intervalMs={4500}
       />
-      {/* Dark overlay (behind controls) */}
+      {}
       <div className="pointer-events-none absolute inset-0 bg-black/50 z-10" />
-      {/* Centered content overlay (above controls) */}
+      {}
       <div className="absolute inset-0 flex items-center z-20">
         <div className="container mx-auto px-3 sm:px-4 lg:px-6">
           <div className="max-w-3xl text-white">

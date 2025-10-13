@@ -38,7 +38,6 @@ export function SettingsSection({ title, fields, layout = 'single', actions }: S
     }
     
     if (layout === 'mixed') {
-      // Group fields by type for mixed layout
       const toggleFields = fields.filter(f => f.type === 'toggle');
       const otherFields = fields.filter(f => f.type !== 'toggle');
       

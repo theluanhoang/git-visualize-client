@@ -20,12 +20,10 @@ export const CustomLink = Link.extend({
               const { selection } = state;
               const { $from } = selection;
               
-              // Kiểm tra xem cursor có link mark không
               const linkMark = state.schema.marks.link;
               const hasLink = linkMark.isInSet($from.marks());
               
               if (hasLink) {
-                // Tạo transaction để xóa link mark
                 const tr = state.tr;
                 tr.removeStoredMark(linkMark);
                 view.dispatch(tr);

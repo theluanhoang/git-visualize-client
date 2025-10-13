@@ -10,7 +10,6 @@ import {
 import { PageHeader, AdminTable, ActionButtons, StatusBadge, DateDisplay, StatCard, FilterBar, EmptyState, UserList } from '@/components/admin';
 import { useUsers, useDeleteUser, useToggleUserStatus } from '@/lib/react-query/hooks/use-users';
 
-// Mock data - trong thực tế sẽ fetch từ API
 const users = [
   {
     id: 1,
@@ -134,8 +133,6 @@ export default function UsersPage() {
       console.error('Error toggling user status:', error);
     }
   };
-
-
   return (
     <div className="space-y-6">
       <PageHeader 
@@ -143,7 +140,7 @@ export default function UsersPage() {
         description="Quản lý tất cả người dùng trong hệ thống"
       />
 
-      {/* Stats */}
+      {}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Tổng người dùng"
@@ -171,7 +168,7 @@ export default function UsersPage() {
         />
       </div>
 
-      {/* Filters */}
+      {}
       <FilterBar
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
@@ -193,20 +190,20 @@ export default function UsersPage() {
           }
         ]}
         showSortButton={true}
-        onSortClick={() => console.log('Sort clicked')}
+        onSortClick={() => {}}
       />
 
-      {/* Users List */}
+      {}
       <UserList
         users={filteredUsers}
-        onView={(user) => console.log('View user', user.id)}
-        onEdit={(user) => console.log('Edit user', user.id)}
+        onView={(user) => {}}
+        onEdit={(user) => {}}
         onDelete={(user) => handleDeleteUser(user.id)}
         onToggleStatus={handleToggleUserStatus}
-        onSendEmail={(user) => console.log('Send email', user.id)}
+        onSendEmail={(user) => {}}
       />
 
-      {/* Empty State */}
+      {}
       {filteredUsers.length === 0 && (
         <EmptyState
           icon={UserCheck}
