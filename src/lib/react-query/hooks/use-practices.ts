@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { PracticesService, GetPracticesQuery } from '@/services/practices';
+import { IRepositoryState } from '@/types/git';
 
 export const usePractices = (query: GetPracticesQuery = {}) => {
   return useQuery({
@@ -29,5 +30,12 @@ export const useIncrementCompletions = () => {
       queryClient.invalidateQueries({ queryKey: ['practices'] });
       queryClient.invalidateQueries({ queryKey: ['practices', id] });
     },
+  });
+};
+
+export const useValidatePractice = () => {
+  return useMutation({
+    mutationFn: ({ practiceId, userRepositoryState }: { practiceId: string; userRepositoryState: IRepositoryState }) =>
+      PracticesService.validatePractice(practiceId, userRepositoryState),
   });
 };

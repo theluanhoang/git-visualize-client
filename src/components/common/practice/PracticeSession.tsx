@@ -9,6 +9,9 @@ import PracticeHintModal from './PracticeHintModal';
 import Terminal from '@/components/common/terminal/Terminal';
 import CommitGraph from '@/components/common/CommitGraph';
 import { useGitEngine } from '@/lib/react-query/hooks/use-git-engine';
+import { useRepositoryState } from '@/lib/react-query/hooks/use-git-engine';
+import { useValidatePractice } from '@/lib/react-query/hooks/use-practices';
+import { IRepositoryState } from '@/types/git';
 import { useFeedback } from '@/hooks/use-feedback';
 
 interface PracticeSessionProps {
@@ -25,6 +28,8 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
 
   const { clearAllData } = useGitEngine();
+  const { data: repoState } = useRepositoryState();
+  const { mutate: validatePractice, isPending: isValidating } = useValidatePractice();
 
 
   const {
@@ -83,6 +88,28 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
     setShowHint(false);
   };
 
+  const handleValidate = () => {
+    if (!repoState) {
+      // Show minimal feedback when no state available
+      showSuccess('Nothing to validate', 'Initialize the repository and try again.');
+      return;
+    }
+    validatePractice(
+      { practiceId: practice.id, userRepositoryState: repoState as IRepositoryState },
+      {
+        onSuccess: (res) => {
+          if (res.isCorrect) {
+            showSuccess('Perfect!', `Score: ${res.score}. ${res.message}`);
+          } else {
+            // Summarize first few differences
+            const summary = res.differences.slice(0, 3).map(d => `- [${d.type}] ${d.field}: expected ${String(d.expected)}, got ${String(d.actual)}`).join('\n');
+            showSuccess('Validation Result', `${res.feedback}\n\n${summary}${res.differences.length > 3 ? '\n...' : ''}`);
+          }
+        },
+      }
+    );
+  };
+
   const handleToggleHint = () => {
     setShowHint(!showHint);
     if (!showHint) {
@@ -97,23 +124,7 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
     }
   };
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!completedSteps.has(currentStep) && Math.random() > 0.7) {
-        setCompletedSteps(prev => new Set([...prev, currentStep]));
-        showSuccess(
-          '✅ Step Completed!',
-          'Great job! You completed this step correctly.',
-          {
-            label: 'Next Step',
-            onClick: handleNextStep
-          }
-        );
-      }
-    }, 2000);
-
-    return () => clearTimeout(timer);
-  }, [currentStep, completedSteps]);
+  // Removed auto step completion feedback on mount
 
   return (
     <div className="flex h-screen bg-background">
@@ -127,6 +138,13 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
                 <p className="text-sm text-muted-foreground">{practice.scenario}</p>
               </div>
               <div className="flex items-center gap-2">
+                <button
+                  onClick={handleValidate}
+                  disabled={isValidating}
+                  className="px-4 py-2 text-sm border border-[var(--border)] rounded-md hover:bg-muted disabled:opacity-60"
+                >
+                  {isValidating ? 'Validating...' : 'Validate Result'}
+                </button>
                 <button
                   onClick={() => setShowHintModal(true)}
                   className="px-4 py-2 text-sm border border-yellow-200 bg-yellow-50 text-yellow-700 rounded-md hover:bg-yellow-100 flex items-center gap-2"

@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { CheckCircle, Circle, Clock, Target, Lightbulb, AlertCircle } from 'lucide-react';
 import { Practice } from '@/services/practices';
 
@@ -35,8 +34,6 @@ export default function PracticeSidebar({
 }: PracticeSidebarProps) {
   const [showExpectedCommands, setShowExpectedCommands] = useState(false);
 
-  const progress = practice.instructions ? (currentStep / practice.instructions.length) * 100 : 0;
-  const currentInstruction = practice.instructions?.[currentStep - 1];
   const expectedCommands = practice.expectedCommands || [];
 
   return (
@@ -60,39 +57,6 @@ export default function PracticeSidebar({
             </div>
           </CardContent>
         </Card>
-
-        {}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm">Progress</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Step {currentStep} of {practice.instructions?.length || 0}</span>
-                <span>{Math.round(progress)}%</span>
-              </div>
-              <Progress value={progress} className="h-2" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {}
-        {currentInstruction && (
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Target className="h-4 w-4" />
-                Current Step
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <p className="text-sm">{currentInstruction.content}</p>
-            </CardContent>
-          </Card>
-        )}
-
-        {}
         {practice.hints && practice.hints.length > 0 && (
           <Card>
             <CardHeader className="pb-3">
@@ -163,55 +127,15 @@ export default function PracticeSidebar({
 
         {}
         <div className="space-y-2">
-          {!isCompleted ? (
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onPrevStep}
-                disabled={currentStep <= 1}
-                className="flex-1"
-              >
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onNextStep}
-                disabled={currentStep >= (practice.instructions?.length || 0)}
-                className="flex-1"
-              >
-                Next
-              </Button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 text-green-600">
-              <CheckCircle className="h-5 w-5" />
-              <span className="text-sm font-medium">Practice Completed!</span>
-            </div>
-          )}
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={onReset}
+            className="w-full !bg-red-500 !text-white hover:!bg-red-600"
+          >
+            Reset Graph
+          </Button>
 
-          <div className="flex gap-2">
-            <Button
-              variant="default"
-              size="sm"
-              onClick={onComplete}
-              disabled={isCompleted}
-              className="flex-1"
-            >
-              {isCompleted ? 'Completed' : 'Mark Complete'}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onReset}
-              className="flex-1"
-            >
-              Reset
-            </Button>
-          </div>
-
-          {}
           <Button
             variant="outline"
             size="sm"

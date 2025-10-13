@@ -130,6 +130,7 @@
 }
 
 /* Dark mode overrides */
+.dark,
 html[data-theme="dark"] {
   --background: #0b0e14;
   /* near black with slight blue */

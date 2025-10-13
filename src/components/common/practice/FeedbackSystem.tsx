@@ -33,34 +33,35 @@ export default function FeedbackSystem({ feedback, onClose }: FeedbackSystemProp
   const getIcon = () => {
     switch (feedback?.type) {
       case 'success':
-        return <CheckCircle className="h-6 w-6 text-green-500" />;
+        return <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />;
       case 'error':
-        return <XCircle className="h-6 w-6 text-red-500" />;
+        return <XCircle className="h-6 w-6 text-red-600 dark:text-red-400" />;
       case 'warning':
-        return <AlertCircle className="h-6 w-6 text-yellow-500" />;
+        return <AlertCircle className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />;
       case 'hint':
-        return <Lightbulb className="h-6 w-6 text-blue-500" />;
+        return <Lightbulb className="h-6 w-6 text-blue-600 dark:text-blue-400" />;
       case 'congratulations':
-        return <Trophy className="h-6 w-6 text-yellow-500" />;
+        return <Trophy className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />;
       default:
         return null;
     }
   };
 
   const getBackgroundColor = () => {
+    // Base uses CSS variables; additionally provide dark: variants for extra control
     switch (feedback?.type) {
       case 'success':
-        return 'bg-green-50 border-green-200';
+        return 'bg-[var(--surface)] border-[var(--border)] dark:bg-green-950/40 dark:border-green-700/40';
       case 'error':
-        return 'bg-red-50 border-red-200';
+        return 'bg-[var(--surface)] border-[var(--border)] dark:bg-red-950/40 dark:border-red-700/40';
       case 'warning':
-        return 'bg-yellow-50 border-yellow-200';
+        return 'bg-[var(--surface)] border-[var(--border)] dark:bg-yellow-950/30 dark:border-yellow-700/40';
       case 'hint':
-        return 'bg-blue-50 border-blue-200';
+        return 'bg-[var(--surface)] border-[var(--border)] dark:bg-blue-950/40 dark:border-blue-700/40';
       case 'congratulations':
-        return 'bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-200';
+        return 'bg-[var(--surface)] border-[var(--border)] dark:bg-amber-950/30 dark:border-amber-700/40';
       default:
-        return 'bg-gray-50 border-gray-200';
+        return 'bg-[var(--surface)] border-[var(--border)]';
     }
   };
 
@@ -70,25 +71,28 @@ export default function FeedbackSystem({ feedback, onClose }: FeedbackSystemProp
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          initial={{ opacity: 0, y: 50, scale: 0.9 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 50, scale: 0.9 }}
-          transition={{ duration: 0.3, ease: 'easeOut' }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15, ease: 'easeOut' }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
         >
-          <div className="absolute inset-0 bg-black/20" onClick={onClose} />
+          <div className="absolute inset-0 bg-black/20 dark:bg-black/70 transition-none" onClick={onClose} />
           <motion.div
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            exit={{ scale: 0.8 }}
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            transition={{ duration: 0.15, ease: 'easeOut' }}
             className="relative w-full max-w-md"
           >
-            <Card className={`${getBackgroundColor()} shadow-lg`}>
+            <Card className={`${getBackgroundColor()} shadow-xl rounded-lg border backdrop-blur-sm text-foreground`}>
               <CardContent className="p-6">
                 <div className="flex items-start gap-4">
                   {getIcon()}
                   <div className="flex-1">
-                    <h3 className="font-semibold text-lg mb-2">{feedback.title}</h3>
+                    <h3 className="font-semibold text-lg mb-2 text-foreground">{feedback.title}</h3>
                     <p className="text-sm text-muted-foreground mb-4">{feedback.message}</p>
                     {feedback.action && (
                       <Button
@@ -104,7 +108,7 @@ export default function FeedbackSystem({ feedback, onClose }: FeedbackSystemProp
                     variant="ghost"
                     size="sm"
                     onClick={onClose}
-                    className="h-6 w-6 p-0"
+                    className="h-6 w-6 p-0 text-foreground/70 hover:text-foreground"
                   >
                     ×
                   </Button>

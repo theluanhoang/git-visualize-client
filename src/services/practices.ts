@@ -115,4 +115,20 @@ export class PracticesService {
   static async incrementCompletions(id: string): Promise<void> {
     await api.post(`/api/v1/practices/${id}/complete`);
   }
+
+  // Validate user's repository state against goal state
+  static async validatePractice(practiceId: string, userRepositoryState: IRepositoryState) {
+    const res = await api.post('/api/v1/git/validate-practice', {
+      practiceId,
+      userRepositoryState,
+    });
+    return res.data as {
+      success: boolean;
+      isCorrect: boolean;
+      score: number;
+      feedback: string;
+      differences: Array<{ type: 'commit' | 'branch' | 'tag' | 'head'; field: string; expected: unknown; actual: unknown; description: string }>;
+      message: string;
+    };
+  }
 }

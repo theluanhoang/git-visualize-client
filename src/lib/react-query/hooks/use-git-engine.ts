@@ -14,8 +14,8 @@ const saveTerminalResponses = (responses: GitCommandResponse[]) => {
 };
 
 export const gitEngineApi = {
-  executeGitCommand: async (command: string) => {
-    const res = await api.post<GitCommandResponse>('/api/v1/git/execute', { command });
+  executeGitCommand: async (command: string, repositoryState?: IRepositoryState | null) => {
+    const res = await api.post<GitCommandResponse>('/api/v1/git/execute', { command, repositoryState });
     return res.data;
   },
   getRepositoryState: async () => {
@@ -28,7 +28,10 @@ export const useExecuteGitCommand = () => {
   const queryClient = useQueryClient();
   
   return useMutation<GitCommandResponse, unknown, string>({
-    mutationFn: (command: string) => gitEngineApi.executeGitCommand(command),
+    mutationFn: (command: string) => {
+      const currentState = queryClient.getQueryData<IRepositoryState | null>(['git', 'state']);
+      return gitEngineApi.executeGitCommand(command, currentState ?? null);
+    },
     onSuccess: (data, command) => {
       const oldResponses = queryClient.getQueryData<GitCommandResponse[]>(['terminal-responses']) || [];
       const newResponses = [...oldResponses, { ...data, command }];
