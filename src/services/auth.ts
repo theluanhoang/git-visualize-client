@@ -1,7 +1,25 @@
 import api from '@/lib/api/axios';
 
-export interface AuthUser { id: string; email: string; role: 'USER' | 'ADMIN' }
+export interface AuthUser { 
+  id: string; 
+  email?: string; 
+  firstName?: string;
+  lastName?: string;
+  avatar?: string;
+  role: 'USER' | 'ADMIN' 
+}
 export interface AuthTokens { accessToken: string; refreshToken: string }
+
+export interface OAuthSessionInfo {
+  id: string;
+  sessionType: 'PASSWORD' | 'OAUTH';
+  oauthProvider?: 'GOOGLE' | 'GITHUB' | 'FACEBOOK';
+  userAgent?: string;
+  ip?: string;
+  createdAt: string;
+  expiresAt: string;
+  isActive: boolean;
+}
 
 export const authApi = {
   register: async (email: string, password: string) => {
@@ -14,6 +32,10 @@ export const authApi = {
   },
   refresh: async (userId: string, refreshToken: string) => {
     const res = await api.post<AuthTokens>(`/api/v1/auth/refresh`, { userId, refreshToken });
+    return res.data;
+  },
+  getCurrentUser: async () => {
+    const res = await api.get<AuthUser>(`/api/v1/users/me`);
     return res.data;
   },
 };
@@ -44,6 +66,36 @@ export const authStorage = {
       localStorage.removeItem('auth:refresh');
       localStorage.removeItem('auth:user');
     }
+  },
+  
+  saveOAuthSession(sessionInfo: OAuthSessionInfo) {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('auth:oauth-session', JSON.stringify(sessionInfo));
+    }
+  },
+
+  loadOAuthSession(): OAuthSessionInfo | null {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+    const sessionStr = localStorage.getItem('auth:oauth-session');
+    return sessionStr ? JSON.parse(sessionStr) : null;
+  },
+
+  clearOAuthSession() {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('auth:oauth-session');
+    }
+  },
+  
+  isOAuthUser(): boolean {
+    const session = this.loadOAuthSession();
+    return session?.sessionType === 'OAUTH' && session?.isActive === true;
+  },
+  
+  getOAuthProvider(): string | null {
+    const session = this.loadOAuthSession();
+    return session?.oauthProvider || null;
   }
 }
 

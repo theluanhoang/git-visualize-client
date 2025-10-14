@@ -11,6 +11,7 @@ import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Eye, EyeOff, GitFork } from 'lucide-react'
 import CodeImageBackground from '@/components/common/CodeImageBackground'
+import { OAuthButtons } from '@/components/auth/OAuthButtons'
 
 export default function RegisterPage() {
   const [ok, setOk] = useState<string | null>(null)
@@ -75,6 +76,12 @@ export default function RegisterPage() {
                 {isPending ? 'Creating account...' : 'Create account'}
               </Button>
             </form>
+            
+            <OAuthButtons 
+              isLoading={isPending} 
+              disabled={isPending}
+              className="mt-6"
+            />
           </CardContent>
         </Card>
         <p className="mt-4 text-center text-sm text-muted-foreground">

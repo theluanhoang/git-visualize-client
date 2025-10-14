@@ -9,4 +9,19 @@ export const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+api.interceptors.request.use((config) => {
+  try {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('auth:access');
+      if (token && !config.headers?.Authorization) {
+        config.headers = config.headers || {};
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    }
+  } catch (_) {
+    // noop
+  }
+  return config;
+});
 export default api;

@@ -3,13 +3,29 @@
 import React from 'react';
 import Link from 'next/link';
 import { useLessons } from '@/lib/react-query/hooks/use-lessons';
+import { useRouter } from 'next/navigation';
 
 export default function GitTheoryPage() {
+  const router = useRouter();
   const { data, isLoading, error } = useLessons({
     limit: 100,
     offset: 0,
     status: 'published'
   });
+
+  React.useEffect(() => {
+    if (data && data.length > 0) {
+      const sorted = [...data].sort((a: any, b: any) => {
+        const aTime = a.createdAt ? new Date(a.createdAt).getTime() : a.id ?? 0;
+        const bTime = b.createdAt ? new Date(b.createdAt).getTime() : b.id ?? 0;
+        return aTime - bTime;
+      });
+      const first = sorted[0];
+      if (first?.slug) {
+        router.replace(`/git-theory/${first.slug}`);
+      }
+    }
+  }, [data, router]);
 
   if (isLoading) return <div className="p-4">Đang tải bài học...</div>;
   if (error) return <div className="p-4 text-red-500">Không tải được danh sách bài học.</div>;

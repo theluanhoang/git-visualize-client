@@ -1,6 +1,25 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
 import api from '@/lib/api/axios'
 import { authApi, authStorage, AuthUser } from '@/services/auth'
+
+export const useCurrentUser = () => {
+  const stored = authStorage.load()
+  const query = useQuery({
+    queryKey: ['auth', 'user'],
+    queryFn: authApi.getCurrentUser,
+    enabled: !!stored.tokens,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    retry: 0,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    initialData: stored.user ?? undefined,
+    initialDataUpdatedAt: stored.user ? Date.now() : undefined,
+  })
+
+  return query
+};
 
 export const useLogin = () => {
   const qc = useQueryClient()
@@ -11,6 +30,7 @@ export const useLogin = () => {
       api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`
       qc.setQueryData(['auth','user'], user)
     },
+    onError: () => {}
   })
 }
 

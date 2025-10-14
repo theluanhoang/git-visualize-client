@@ -1,16 +1,18 @@
 'use client';
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { GitFork, Menu, X } from 'lucide-react'
 import React from 'react'
 import ThemeToggle from '@/components/common/ThemeToggle'
 import { Button } from '@/components/ui/button'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useLogout } from '@/lib/react-query/hooks/use-auth'
+import { useLogout, useCurrentUser } from '@/lib/react-query/hooks/use-auth'
 import { authStorage } from '@/services/auth'
 
 function Header() {
     const [open, setOpen] = React.useState(false)
+    const router = useRouter()
 
     React.useEffect(() => {
         const handler = () => setOpen(false)
@@ -19,17 +21,7 @@ function Header() {
     }, [])
 
     const queryClient = useQueryClient()
-    const { data: user } = useQuery({
-        queryKey: ['auth','user'],
-        queryFn: async () => (queryClient.getQueryData(['auth','user']) as any) ?? null,
-        initialData: authStorage.load().user ?? null,
-        staleTime: Infinity,
-        gcTime: Infinity,
-        enabled: false,
-        refetchOnMount: false,
-        refetchOnWindowFocus: false,
-        refetchOnReconnect: false,
-    })
+    const { data: user, isLoading } = useCurrentUser()
     const isAuthed = !!user
     const logout = useLogout()
 
@@ -39,6 +31,11 @@ function Header() {
             queryClient.setQueryData(['auth','user'], stored.user)
         }
     }, [queryClient])
+
+    const displayName: string | undefined = React.useMemo(() => {
+        const name = [user?.firstName, user?.lastName].filter(Boolean).join(' ')
+        return user?.email ?? (name.length > 0 ? name : undefined)
+    }, [user?.email, user?.firstName, user?.lastName])
 
     return (
         <header className="sticky top-0 z-50 bg-[color-mix(in_srgb,var(--surface),#000_4%)] backdrop-blur-sm border-b border-[var(--border)] shadow-sm">
@@ -71,13 +68,7 @@ function Header() {
                         >
                             Practice
                         </Link>
-                        <Link 
-                            href="/editor" 
-                            className="px-3 py-2 rounded-md text-sm font-medium text-[var(--foreground)]/85 hover:text-[var(--primary-600)] hover:bg-[var(--primary-50)] transition-colors"
-                        >
-                            Editor
-                        </Link>
-                        <ThemeToggle />
+                        
                         <div className="flex items-center gap-2 ml-2">
                             {!isAuthed ? (
                                 <>
@@ -96,17 +87,16 @@ function Header() {
                                 </>
                             ) : (
                                 <>
-                                    {user?.email && (
-                                        <span className="px-2 text-sm text-[var(--foreground)]/70 truncate max-w-[12rem]" title={user.email}>
-                                            {user.email}
-                                        </span>
-                                    )}
-                                    <Button variant="outline" size="sm" onClick={() => logout()}>
+                                    <span className="px-2 text-sm text-[var(--foreground)]/70 truncate max-w-[12rem]" title={displayName}>
+                                        {displayName ?? 'User'}
+                                    </span>
+                                    <Button variant="outline" size="sm" onClick={() => { logout(); router.replace('/') }}>
                                         Logout
                                     </Button>
                                 </>
                             )}
                         </div>
+                        <ThemeToggle />
                     </nav>
                     <div className="sm:hidden flex items-center gap-2">
                         <ThemeToggle />
