@@ -4,6 +4,7 @@ import "./globals.css";
 import { QueryProvider } from "@/lib/react-query/query-provider";
 import { ThemeProvider } from "next-themes";
 import Header from "@/components/common/Header";
+import { Toaster } from 'sonner'
 import Footer from "@/components/common/Footer";
 
 const geistSans = Geist({
@@ -37,6 +38,7 @@ export default function RootLayout({
                 {children}
             <Footer />
           </QueryProvider>
+          <Toaster richColors position="bottom-right" />
         </ThemeProvider>
       </body>
     </html>
