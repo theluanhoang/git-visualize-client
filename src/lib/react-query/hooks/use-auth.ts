@@ -50,4 +50,14 @@ export const useLogout = () => {
   }
 }
 
+export const useUpdateProfile = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: Partial<Pick<AuthUser, 'firstName'|'lastName'|'avatar'>>) => authApi.updateCurrentUser(payload),
+    onSuccess: (user) => {
+      qc.setQueryData(['auth','user'], user)
+    }
+  })
+}
+
 

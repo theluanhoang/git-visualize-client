@@ -38,6 +38,10 @@ export const authApi = {
     const res = await api.get<AuthUser>(`/api/v1/users/me`);
     return res.data;
   },
+  updateCurrentUser: async (payload: Partial<Pick<AuthUser, 'firstName'|'lastName'|'avatar'>>) => {
+    const res = await api.put<AuthUser>(`/api/v1/users/me`, payload);
+    return res.data;
+  },
 };
 
 export const authStorage = {
