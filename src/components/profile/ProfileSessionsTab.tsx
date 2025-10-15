@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react'
+import React, { useState, useMemo } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import SessionItem from '@/components/profile/SessionItem'
+import Pagination from '@/components/common/Pagination'
 
 interface BaseSession {
   id: string
@@ -21,50 +22,107 @@ interface Props {
 }
 
 export default function ProfileSessionsTab({ activeSessions, oauthSessions, onUnlink }: Props) {
-  const activeOrMock = (activeSessions && activeSessions.length > 0)
-    ? activeSessions
-    : [
-        { id: 'm1', sessionType: 'PASSWORD', userAgent: 'Chrome on macOS', ip: '192.168.1.10', createdAt: new Date().toISOString(), expiresAt: new Date(Date.now()+86400000).toISOString() },
-        { id: 'm2', sessionType: 'PASSWORD', userAgent: 'Safari on iOS', ip: '10.0.0.2', createdAt: new Date(Date.now()-3600_000).toISOString(), expiresAt: new Date(Date.now()-60000).toISOString() },
-      ]
+  const [activePage, setActivePage] = useState(1)
+  const [oauthPage, setOAuthPage] = useState(1)
+  const itemsPerPage = 5
+  const maxPages = 3
 
-  const oauthOrMock = (oauthSessions && oauthSessions.length > 0)
-    ? oauthSessions
-    : [
-        { id: 'om1', oauthProvider: 'GOOGLE', userAgent: 'Chrome on Windows', ip: '172.16.0.5', createdAt: new Date().toISOString(), expiresAt: new Date(Date.now()+2*86400000).toISOString() },
-        { id: 'om2', oauthProvider: 'GITHUB', userAgent: 'Firefox on Linux', ip: '172.16.0.6', createdAt: new Date(Date.now()-7200_000).toISOString(), expiresAt: new Date(Date.now()-300000).toISOString() },
-        { id: 'om3', oauthProvider: 'FACEBOOK', userAgent: 'Safari on iOS', ip: '10.1.1.8', createdAt: new Date().toISOString(), expiresAt: new Date(Date.now()+3600_000).toISOString() },
-      ]
+  const activeSessionsData = useMemo(() => {
+    if (!activeSessions || activeSessions.length === 0) {
+      return []
+    }
+    
+    return activeSessions
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, maxPages * itemsPerPage)
+  }, [activeSessions])
+
+  const oauthSessionsData = useMemo(() => {
+    if (!oauthSessions || oauthSessions.length === 0) {
+      return []
+    }
+    
+    return oauthSessions
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, maxPages * itemsPerPage)
+  }, [oauthSessions])
+
+  const activeTotalPages = Math.ceil(activeSessionsData.length / itemsPerPage)
+  const oauthTotalPages = Math.ceil(oauthSessionsData.length / itemsPerPage)
+
+  const activePaginatedData = useMemo(() => {
+    const startIndex = (activePage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    return activeSessionsData.slice(startIndex, endIndex)
+  }, [activeSessionsData, activePage, itemsPerPage])
+
+  const oauthPaginatedData = useMemo(() => {
+    const startIndex = (oauthPage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    return oauthSessionsData.slice(startIndex, endIndex)
+  }, [oauthSessionsData, oauthPage, itemsPerPage])
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <Card>
-        <CardContent className="p-4 space-y-4">
-          <h2 className="text-lg font-medium">Active Sessions</h2>
-          <div className="space-y-2">
-            {activeOrMock.map((s) => (
-              <SessionItem key={s.id} session={s} />
-            ))}
-            {!activeSessions && (
-              <div className="text-xs text-muted-foreground">Showing mock data (no sessions fetched).</div>
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardContent className="p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-medium">Active Sessions</h2>
+              <span className="text-sm text-muted-foreground">
+                {activeSessionsData.length} total
+              </span>
+            </div>
+            <div className="space-y-2">
+              {activePaginatedData.map((s) => (
+                <SessionItem key={s.id} session={s} />
+              ))}
+              {activeSessionsData.length === 0 && (
+                <div className="text-xs text-muted-foreground">No active sessions found.</div>
+              )}
+            </div>
+            {activeTotalPages > 1 && (
+              <Pagination
+                currentPage={activePage}
+                totalPages={activeTotalPages}
+                onPageChange={setActivePage}
+                itemsPerPage={itemsPerPage}
+                totalItems={activeSessionsData.length}
+                showInfo={false}
+              />
             )}
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      <Card>
-        <CardContent className="p-4 space-y-4">
-          <h2 className="text-lg font-medium">OAuth Sessions</h2>
-          <div className="space-y-2">
-            {oauthOrMock.map((s) => (
-              <SessionItem key={s.id} session={s} onUnlink={(provider) => onUnlink(provider)} />
-            ))}
-            {!oauthSessions && (
-              <div className="text-xs text-muted-foreground">Showing mock data (no OAuth sessions fetched).</div>
+        <Card>
+          <CardContent className="p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-medium">OAuth Sessions</h2>
+              <span className="text-sm text-muted-foreground">
+                {oauthSessionsData.length} total
+              </span>
+            </div>
+            <div className="space-y-2">
+              {oauthPaginatedData.map((s) => (
+                <SessionItem key={s.id} session={s} onUnlink={(provider) => onUnlink(provider)} />
+              ))}
+              {oauthSessionsData.length === 0 && (
+                <div className="text-xs text-muted-foreground">No OAuth sessions found.</div>
+              )}
+            </div>
+            {oauthTotalPages > 1 && (
+              <Pagination
+                currentPage={oauthPage}
+                totalPages={oauthTotalPages}
+                onPageChange={setOAuthPage}
+                itemsPerPage={itemsPerPage}
+                totalItems={oauthSessionsData.length}
+                showInfo={false}
+              />
             )}
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }
