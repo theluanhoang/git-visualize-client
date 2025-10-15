@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { oauthService, OAuthProvider, SessionInfo, DeviceInfoResponse } from '@/services/oauth';
+import { oauthService, OAuthProvider } from '@/services/oauth';
 import { authStorage } from '@/services/auth';
 import { toast } from 'sonner';
 

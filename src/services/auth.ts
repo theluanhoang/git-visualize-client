@@ -42,6 +42,10 @@ export const authApi = {
     const res = await api.put<AuthUser>(`/api/v1/users/me`, payload);
     return res.data;
   },
+  logout: async () => {
+    const res = await api.post(`/api/v1/auth/logout`);
+    return res.data;
+  },
 };
 
 export const authStorage = {

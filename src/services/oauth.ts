@@ -52,32 +52,32 @@ export interface DeviceInfoResponse {
 }
 
 class OAuthService {
-  private readonly baseUrl = process.env.NEXT_PUBLIC_API_URL + '/api/v1' || 'http://localhost:8000/api/v1';
+  private readonly baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 
 
   initiateOAuth(provider: OAuthProvider): void {
-    const oauthUrl = `${this.baseUrl}/auth/oauth/${provider}`;
+    const oauthUrl = `${this.baseUrl}/api/v1/auth/oauth/${provider}`;
     window.location.href = oauthUrl;
   }
 
 
   async getActiveSessions(): Promise<{ sessions: SessionInfo[]; total: number }> {
-    const response = await api.get('/auth/sessions/active');
+    const response = await api.get('/api/v1/auth/sessions/active');
     return response.data;
   }
 
   async getOAuthSessions(): Promise<{ sessions: SessionInfo[]; total: number }> {
-    const response = await api.get('/auth/sessions/oauth');
+    const response = await api.get('/api/v1/auth/sessions/oauth');
     return response.data;
   }
 
   async getCurrentDeviceInfo(): Promise<DeviceInfoResponse> {
-    const response = await api.get('/auth/sessions/device-info');
+    const response = await api.get('/api/v1/auth/sessions/device-info');
     return response.data;
   }
 
   async unlinkProvider(provider: string): Promise<{ message: string }> {
-    const response = await api.post(`/auth/oauth/unlink/${provider}`);
+    const response = await api.post(`/api/v1/auth/oauth/unlink/${provider}`);
     return response.data;
   }
 
@@ -88,9 +88,9 @@ class OAuthService {
   }> {
     try {
       const [googleStatus, githubStatus, facebookStatus] = await Promise.allSettled([
-        api.get('/auth/oauth/google'),
-        api.get('/auth/oauth/github'),
-        api.get('/auth/oauth/facebook'),
+        api.get('/api/v1/auth/oauth/google'),
+        api.get('/api/v1/auth/oauth/github'),
+        api.get('/api/v1/auth/oauth/facebook'),
       ]);
 
       return {

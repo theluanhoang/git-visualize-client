@@ -6,6 +6,7 @@ import { ThemeProvider } from "next-themes";
 import Header from "@/components/common/Header";
 import { Toaster } from 'sonner'
 import Footer from "@/components/common/Footer";
+import { SessionExpiredDialog } from "@/components/auth/SessionExpiredDialog";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,6 +36,7 @@ export default function RootLayout({
             <Header />
             <main className="flex-1">{children}</main>
             <Footer />
+            <SessionExpiredDialog />
           </QueryProvider>
           <Toaster richColors position="bottom-right" />
         </ThemeProvider>
