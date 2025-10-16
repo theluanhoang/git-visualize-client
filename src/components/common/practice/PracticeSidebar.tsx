@@ -4,8 +4,9 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Circle, Clock, Target, Lightbulb, AlertCircle } from 'lucide-react';
+import { Circle, Clock, Lightbulb, AlertCircle, RefreshCw, RotateCcw, Eye, Copy, Check } from 'lucide-react';
 import { Practice } from '@/services/practices';
+import { toast } from 'sonner';
 
 interface PracticeSidebarProps {
   practice: Practice;
@@ -18,6 +19,9 @@ interface PracticeSidebarProps {
   showHint: boolean;
   onToggleHint: () => void;
   onShowHintModal: () => void;
+  onSync?: () => void;
+  onViewGoal?: () => void;
+  isViewingGoal?: boolean;
 }
 
 export default function PracticeSidebar({
@@ -30,9 +34,13 @@ export default function PracticeSidebar({
   isCompleted,
   showHint,
   onToggleHint,
-  onShowHintModal
+  onShowHintModal,
+  onSync,
+  onViewGoal,
+  isViewingGoal
 }: PracticeSidebarProps) {
   const [showExpectedCommands, setShowExpectedCommands] = useState(false);
+  const [copiedCommandId, setCopiedCommandId] = useState<string | null>(null);
 
   const expectedCommands = practice.expectedCommands || [];
 
@@ -78,8 +86,8 @@ export default function PracticeSidebar({
                 <div className="space-y-2">
                   {practice.hints.map((hint, index) => (
                     <div key={hint.id} className="flex items-start gap-2 text-sm">
-                      <Circle className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                      <span>{hint.content}</span>
+                      <Circle className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+                      <span className="flex-1 break-words leading-relaxed min-w-0">{hint.content}</span>
                     </div>
                   ))}
                 </div>
@@ -108,15 +116,35 @@ export default function PracticeSidebar({
             {showExpectedCommands && (
               <CardContent className="pt-0">
                 <div className="space-y-2">
-                  {expectedCommands.map((cmd, index) => (
+                  {expectedCommands.map((cmd) => (
                     <div key={cmd.id} className="flex items-center gap-2 text-sm">
-                      <span className="text-muted-foreground">{cmd.order}.</span>
-                      <code className="bg-muted px-2 py-1 rounded text-xs font-mono">
+                      <span className="text-muted-foreground shrink-0 w-5 text-right">{cmd.order}.</span>
+                      <code className="bg-muted px-2 py-1 rounded text-xs font-mono break-all flex-1">
                         {cmd.command}
                       </code>
-                      {cmd.isRequired && (
-                        <Badge variant="outline" className="text-xs">Required</Badge>
-                      )}
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const t = toast.loading('Đang sao chép…', { position: 'top-right' });
+                          try {
+                            await navigator.clipboard.writeText(cmd.command);
+                            toast.success('Đã sao chép lệnh', { id: t, position: 'top-right' });
+                            setCopiedCommandId(cmd.id);
+                            setTimeout(() => setCopiedCommandId(null), 1500);
+                          } catch (e) {
+                            toast.error('Sao chép thất bại', { id: t, position: 'top-right' });
+                          }
+                        }}
+                        className="inline-flex items-center justify-center rounded border border-[var(--border)] bg-background hover:bg-muted p-1 text-muted-foreground"
+                        title="Copy command"
+                        aria-label={copiedCommandId === cmd.id ? `Copied command ${cmd.order}` : `Copy command ${cmd.order}`}
+                      >
+                        {copiedCommandId === cmd.id ? (
+                          <Check className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -128,13 +156,51 @@ export default function PracticeSidebar({
         {}
         <div className="space-y-2">
           <Button
-            variant="destructive"
             size="sm"
-            onClick={onReset}
-            className="w-full !bg-red-500 !text-white hover:!bg-red-600"
+            onClick={async () => {
+              const t = toast.loading('Đang xóa dữ liệu…', { position: 'top-right' });
+              try {
+                await onReset();
+                toast.success('Đã xóa toàn bộ dữ liệu practice hiện tại', { id: t, position: 'top-right' });
+              } catch (e) {
+                toast.error('Xóa dữ liệu thất bại', { id: t, position: 'top-right' });
+              }
+            }}
+            className="w-full bg-red-50 text-red-700 border border-red-200 hover:bg-red-100"
           >
+            <RotateCcw className="h-4 w-4 mr-2" />
             Reset Graph
           </Button>
+
+          {onSync && (
+            <Button
+              size="sm"
+              onClick={async () => {
+                const t = toast.loading('Đang đồng bộ dữ liệu…', { position: 'top-right' });
+                try {
+                  await onSync();
+                  toast.success('Đồng bộ thành công từ backend', { id: t, position: 'top-right' });
+                } catch (e) {
+                  toast.error('Đồng bộ thất bại', { id: t, position: 'top-right' });
+                }
+              }}
+              className="w-full bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Sync Data
+            </Button>
+          )}
+
+          {onViewGoal && practice.goalRepositoryState && (
+            <Button
+              size="sm"
+              onClick={onViewGoal}
+              className="w-full bg-green-50 text-green-700 border border-green-200 hover:bg-green-100"
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              {isViewingGoal ? 'Hide Goal' : 'View Goal'}
+            </Button>
+          )}
 
           <Button
             variant="outline"

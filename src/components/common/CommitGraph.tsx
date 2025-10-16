@@ -219,7 +219,7 @@ function CommitGraph({
     const handleConfirmClearAll = async () => {
         setIsClearing(true);
         try {
-            clearAllData();
+            await clearAllData();
             
             setShowClearAllDialog(false);
         } finally {
@@ -260,12 +260,7 @@ function CommitGraph({
                     <div className="absolute z-10 flex items-center top-2 right-2 gap-2">
                         <button className="bg-background border border-[var(--border)] rounded-sm cursor-pointer p-1 text-muted-foreground text-sm hover:bg-muted" onClick={handleMinus}><Minus size={16} /></button>
                         <button className="bg-background border border-[var(--border)] rounded-sm cursor-pointer p-1 text-muted-foreground text-sm hover:bg-muted" onClick={handlePlus}><Plus size={16} /></button>
-                        <button className="bg-background border border-[var(--border)] rounded-sm cursor-pointer p-1 text-muted-foreground text-sm hover:bg-muted" onClick={handleReset}>Reset</button>
-                        {showClearButton && (
-                            <button className="bg-background border border-[var(--border)] rounded-sm cursor-pointer p-1 text-muted-foreground text-sm hover:bg-muted hover:text-red-500" onClick={handleClearAllData} title="Clear all data (terminal + graph)">
-                                <Trash2 size={16} />
-                            </button>
-                        )}
+                        <button className="bg-background border border-[var(--border)] rounded-sm cursor-pointer p-1 text-muted-foreground text-sm hover:bg-muted hover:text-red-500" onClick={handleReset} title="Xóa toàn bộ dữ liệu (terminal + graph)">Reset</button>
                         <input disabled className="bg-background border border-[var(--border)] rounded-sm p-1 text-muted-foreground text-sm outline-none max-w-12" value={`${Math.floor(zoom * 100)}%`} />
                     </div>
                     {}

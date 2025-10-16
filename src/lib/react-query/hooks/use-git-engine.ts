@@ -158,17 +158,44 @@ export const useGitEngine = (practiceId?: string) => {
   const { data: responses = [] } = useTerminalResponses(practiceId);
   const queryClient = useQueryClient();
   
-  const clearAllData = () => {
-    localStorage.removeItem(terminalKeyFor(practiceId));
-    localStorage.removeItem('git-repository-state');
-    localStorage.removeItem('git-commit-graph-node-positions');
-    
+  const syncFromServer = async () => {
+    if (!practiceId) return;
+    const server = await PracticeRepoStateService.get(practiceId);
+    queryClient.setQueryData(['git', 'state', practiceId], server.state);
+    queryClient.setQueryData(['git', 'state-version', practiceId], server.version || 0);
+    const mockResponses: GitCommandResponse[] = server.state ? [
+      {
+        repositoryState: server.state,
+        command: 'sync-from-server',
+        success: true,
+        output: 'Synchronized repository state from server'
+      }
+    ] : [];
+    queryClient.setQueryData(['terminal-responses', practiceId], mockResponses);
+    try { localStorage.setItem(`git-terminal-responses:${practiceId}`, JSON.stringify(mockResponses)); } catch {}
+  };
+
+  const clearAllData = async () => {
+    if (practiceId) {
+      try {
+        await PracticeRepoStateService.remove(practiceId);
+      } catch (e) {
+        console.warn('Practice repo state remove failed (continuing):', e);
+      }
+    }
+
+    try { localStorage.removeItem(terminalKeyFor(practiceId)); } catch {}
+    try { localStorage.removeItem(practiceId ? `git-commit-graph-node-positions:${practiceId}` : 'git-commit-graph-node-positions'); } catch {}
+    try { localStorage.removeItem('git-repository-state'); } catch {}
+
     queryClient.setQueryData(['terminal-responses', practiceId ?? 'global'], []);
     queryClient.setQueryData(['git', 'state', practiceId ?? 'global'], null);
-    
+    if (practiceId) {
+      queryClient.setQueryData(['git', 'state-version', practiceId], 0);
+    }
     queryClient.invalidateQueries({ queryKey: ['terminal-responses', practiceId ?? 'global'] });
     queryClient.invalidateQueries({ queryKey: ['git', 'state', practiceId ?? 'global'] });
   };
   
-  return { responses, runCommand, isRunning, clearAllData };
+  return { responses, runCommand, isRunning, clearAllData, syncFromServer };
 };

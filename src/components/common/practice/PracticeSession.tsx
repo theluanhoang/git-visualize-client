@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Lightbulb } from 'lucide-react';
 import { Practice } from '@/services/practices';
 import PracticeSidebar from './PracticeSidebar';
@@ -26,8 +26,9 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
   const [showHint, setShowHint] = useState(false);
   const [showHintModal, setShowHintModal] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
+  const [isViewingGoal, setIsViewingGoal] = useState(false);
 
-  const { clearAllData } = useGitEngine(practice.id);
+  const { clearAllData, syncFromServer } = useGitEngine(practice.id);
   const { data: repoState } = useRepositoryState(practice.id);
   const { mutate: validatePractice, isPending: isValidating } = useValidatePractice();
 
@@ -72,12 +73,12 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
     }
   };
 
-  const handleReset = () => {
+  const handleReset = async () => {
     setCurrentStep(1);
     setIsCompleted(false);
     setCompletedSteps(new Set());
     setShowHint(false);
-    clearAllData();
+    await clearAllData();
   };
 
   const handleStartFresh = () => {
@@ -88,9 +89,12 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
     setShowHint(false);
   };
 
+  const handleViewGoal = () => {
+    setIsViewingGoal(prev => !prev);
+  };
+
   const handleValidate = () => {
     if (!repoState) {
-      // Show minimal feedback when no state available
       showSuccess('Nothing to validate', 'Initialize the repository and try again.');
       return;
     }
@@ -101,7 +105,6 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
           if (res.isCorrect) {
             showSuccess('Perfect!', `Score: ${res.score}. ${res.message}`);
           } else {
-            // Summarize first few differences
             const summary = res.differences.slice(0, 3).map(d => `- [${d.type}] ${d.field}: expected ${String(d.expected)}, got ${String(d.actual)}`).join('\n');
             showSuccess('Validation Result', `${res.feedback}\n\n${summary}${res.differences.length > 3 ? '\n...' : ''}`);
           }
@@ -112,19 +115,7 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
 
   const handleToggleHint = () => {
     setShowHint(!showHint);
-    if (!showHint) {
-      showHintFeedback(
-        '💡 Hint',
-        'Here are some helpful hints to guide you through this step.',
-        {
-          label: 'Got it!',
-          onClick: () => setShowHint(false)
-        }
-      );
-    }
   };
-
-  // Removed auto step completion feedback on mount
 
   return (
     <div className="flex h-screen bg-background">
@@ -165,7 +156,11 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
         {}
         <div className="flex-1 flex flex-col gap-4 p-4">
           <div className="flex-1">
-            <CommitGraph practiceId={practice.id} />
+            {isViewingGoal && practice.goalRepositoryState ? (
+              <CommitGraph dataSource="goal" goalRepositoryState={practice.goalRepositoryState as IRepositoryState} showClearButton={false} title="Goal Graph" />
+            ) : (
+              <CommitGraph practiceId={practice.id} title="Practice Graph" />
+            )}
           </div>
           <div className="flex-1">
             <Terminal practiceId={practice.id} />
@@ -185,6 +180,9 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
         showHint={showHint}
         onToggleHint={handleToggleHint}
         onShowHintModal={() => setShowHintModal(true)}
+        onSync={syncFromServer}
+        onViewGoal={practice.goalRepositoryState ? handleViewGoal : undefined}
+        isViewingGoal={isViewingGoal}
       />
 
       {}
