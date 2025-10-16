@@ -2,9 +2,9 @@ import React, { useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form';
 import { useGitEngine } from '@/lib/react-query/hooks/use-git-engine';
 
-function Terminal() {
+function Terminal({ practiceId }: { practiceId?: string }) {
     const outputRef = useRef<HTMLDivElement>(null);
-    const { responses, runCommand } = useGitEngine();
+    const { responses, runCommand } = useGitEngine(practiceId);
 
     const { register, handleSubmit, reset } = useForm<{ command: string }>();
 

@@ -95,22 +95,18 @@ const usersApi = {
   },
   
   create: async (data: UserCreateData) => {
-    await new Promise(resolve => setTimeout(resolve, 1000));
     return { id: Date.now(), ...data };
   },
   
   update: async (id: number, data: UserUpdateData) => {
-    await new Promise(resolve => setTimeout(resolve, 1000));
     return { id, ...data };
   },
   
   delete: async (id: number) => {
-    await new Promise(resolve => setTimeout(resolve, 1000));
     return { success: true };
   },
   
   toggleStatus: async (id: number, status: 'active' | 'inactive' | 'banned') => {
-    await new Promise(resolve => setTimeout(resolve, 1000));
     return { id, status };
   }
 };

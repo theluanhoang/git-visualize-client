@@ -44,7 +44,6 @@ export default function AvatarUploader({
     reader.onload = () => {
       onChange(reader.result as string)
       setProgress(100)
-      setTimeout(() => setProgress(0), 400)
     }
     reader.readAsDataURL(file)
   }

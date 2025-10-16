@@ -53,7 +53,6 @@ const settingsApi = {
   },
   
   update: async (data: Settings) => {
-    await new Promise(resolve => setTimeout(resolve, 1000));
     return data;
   }
 };
@@ -62,7 +61,7 @@ export const useSettings = () => {
   return useQuery({
     queryKey: ['settings'],
     queryFn: settingsApi.get,
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 10 * 60 * 1000,
   });
 };
 

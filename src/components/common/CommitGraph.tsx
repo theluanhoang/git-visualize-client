@@ -14,6 +14,7 @@ interface CommitGraphProps {
     showClearButton?: boolean;
     title?: string;
     className?: string;
+    practiceId?: string;
 }
 
 function CommitGraph({ 
@@ -22,7 +23,8 @@ function CommitGraph({
     goalRepositoryState,
     showClearButton = true,
     title = 'Commit Graph',
-    className = ''
+    className = '',
+    practiceId
 }: CommitGraphProps) {
     const [containerSize, setContainerSize] = useState({ width: 1504, height: 400 });
     const [zoom, setZoom] = useState(1);
@@ -37,7 +39,7 @@ function CommitGraph({
     const [showCommitDetailsDialog, setShowCommitDetailsDialog] = useState(false);
     const [selectedCommit, setSelectedCommit] = useState<ICommit | null>(null);
     
-    const { clearAllData } = useGitEngine();
+    const { clearAllData } = useGitEngine(practiceId);
     const queryClient = useQueryClient();
 
     useEffect(() => {
@@ -272,6 +274,7 @@ function CommitGraph({
                         height={containerSize.height} 
                         pan={pan} 
                         zoom={zoom}
+                        practiceId={practiceId}
                         onMouseDown={handleMouseDown}
                         onMouseMove={handleMouseMove}
                         onMouseUp={handleMouseUp}

@@ -27,8 +27,8 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
   const [showHintModal, setShowHintModal] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
 
-  const { clearAllData } = useGitEngine();
-  const { data: repoState } = useRepositoryState();
+  const { clearAllData } = useGitEngine(practice.id);
+  const { data: repoState } = useRepositoryState(practice.id);
   const { mutate: validatePractice, isPending: isValidating } = useValidatePractice();
 
 
@@ -165,10 +165,10 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
         {}
         <div className="flex-1 flex flex-col gap-4 p-4">
           <div className="flex-1">
-            <CommitGraph />
+            <CommitGraph practiceId={practice.id} />
           </div>
           <div className="flex-1">
-            <Terminal />
+            <Terminal practiceId={practice.id} />
           </div>
         </div>
       </div>

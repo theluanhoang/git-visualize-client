@@ -54,10 +54,7 @@ export default function OAuthCallbackPage() {
         console.error('OAuth callback error:', error);
         setStatus('error');
         setMessage(error instanceof Error ? error.message : 'Authentication failed');
-        
-        setTimeout(() => {
-          router.push('/auth/login');
-        }, 3000);
+        router.push('/auth/login');
       }
     };
 

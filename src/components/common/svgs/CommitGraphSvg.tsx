@@ -4,21 +4,23 @@ import { useTerminalResponses, useGoalTerminalResponses } from '@/lib/react-quer
 import { ICommit, IHead, GitCommandResponse } from '@/types/git';
 import { useQueryClient } from '@tanstack/react-query';
 
-const getNodePositionsKey = (dataSource: 'practice' | 'goal') => 
-    dataSource === 'goal' ? 'git-goal-commit-graph-node-positions' : 'git-commit-graph-node-positions';
+const getNodePositionsKey = (dataSource: 'practice' | 'goal', practiceId?: string) => 
+    dataSource === 'goal' 
+        ? 'git-goal-commit-graph-node-positions'
+        : (practiceId ? `git-commit-graph-node-positions:${practiceId}` : 'git-commit-graph-node-positions');
 
-const saveNodePositions = (positions: Record<string, { x: number; y: number }>, dataSource: 'practice' | 'goal') => {
+const saveNodePositions = (positions: Record<string, { x: number; y: number }>, dataSource: 'practice' | 'goal', practiceId?: string) => {
     try {
-        const key = getNodePositionsKey(dataSource);
+        const key = getNodePositionsKey(dataSource, practiceId);
         localStorage.setItem(key, JSON.stringify(positions));
     } catch (error) {
         console.warn('Failed to save node positions:', error);
     }
 };
 
-const loadNodePositions = (dataSource: 'practice' | 'goal'): Record<string, { x: number; y: number }> => {
+const loadNodePositions = (dataSource: 'practice' | 'goal', practiceId?: string): Record<string, { x: number; y: number }> => {
     try {
-        const key = getNodePositionsKey(dataSource);
+        const key = getNodePositionsKey(dataSource, practiceId);
         const saved = localStorage.getItem(key);
         const positions = saved ? JSON.parse(saved) : {};
         return positions;
@@ -28,9 +30,9 @@ const loadNodePositions = (dataSource: 'practice' | 'goal'): Record<string, { x:
     }
 };
 
-const clearNodePositions = (dataSource: 'practice' | 'goal') => {
+const clearNodePositions = (dataSource: 'practice' | 'goal', practiceId?: string) => {
     try {
-        const key = getNodePositionsKey(dataSource);
+        const key = getNodePositionsKey(dataSource, practiceId);
         localStorage.removeItem(key);
     } catch (error) {
         console.warn('Failed to clear node positions:', error);
@@ -63,6 +65,7 @@ interface CommitGraphSvgProps extends React.SVGProps<SVGSVGElement> {
     onCommitDoubleClick?: (commit: ICommit) => void;
     dataSource?: 'practice' | 'goal';
     customResponses?: GitCommandResponse[];
+    practiceId?: string;
 }
 
 const R = 30;
@@ -77,6 +80,7 @@ function CommitGraphSvg({
     onCommitDoubleClick,
     dataSource = 'practice',
     customResponses,
+    practiceId,
     ...svgProps
 }: CommitGraphSvgProps) {
     const [head, setHead] = useState<IHead>(null);
@@ -90,7 +94,7 @@ function CommitGraphSvg({
     });
     const [hasAutoCentered, setHasAutoCentered] = useState(false);
     
-    const { data: practiceResponses = [] } = useTerminalResponses();
+    const { data: practiceResponses = [] } = useTerminalResponses(practiceId);
     const { data: goalResponses = [] } = useGoalTerminalResponses();
     
     const responses = customResponses || (dataSource === 'goal' ? goalResponses : practiceResponses);
@@ -100,39 +104,38 @@ function CommitGraphSvg({
     const queryClient = useQueryClient();
 
     useEffect(() => {
-        const storageKey = dataSource === 'goal' ? 'git-goal-terminal-responses' : 'git-terminal-responses';
+        const storageKey = dataSource === 'goal' ? 'git-goal-terminal-responses' : (practiceId ? `git-terminal-responses:${practiceId}` : 'git-terminal-responses');
         const queryKey = dataSource === 'goal' ? ['goal-terminal-responses'] : ['terminal-responses'];
         
         const rawData = localStorage.getItem(storageKey);
         const savedResponses = JSON.parse(rawData || '[]');
         
         if (savedResponses.length > 0) {
-            queryClient.setQueryData(queryKey, savedResponses);
+            queryClient.setQueryData(dataSource === 'goal' ? ['goal-terminal-responses'] : ['terminal-responses', practiceId ?? 'global'], savedResponses);
         }
-    }, [queryClient, dataSource]);
+    }, [queryClient, dataSource, practiceId]);
 
     useEffect(() => {
         if (responses.length === 0) {
-            const storageKey = dataSource === 'goal' ? 'git-goal-terminal-responses' : 'git-terminal-responses';
-            const queryKey = dataSource === 'goal' ? ['goal-terminal-responses'] : ['terminal-responses'];
+            const storageKey = dataSource === 'goal' ? 'git-goal-terminal-responses' : (practiceId ? `git-terminal-responses:${practiceId}` : 'git-terminal-responses');
             const savedResponses = JSON.parse(localStorage.getItem(storageKey) || '[]');
             if (savedResponses.length > 0) {
-                queryClient.setQueryData(queryKey, savedResponses);
+                queryClient.setQueryData(dataSource === 'goal' ? ['goal-terminal-responses'] : ['terminal-responses', practiceId ?? 'global'], savedResponses);
             }
         }
-    }, [responses.length, queryClient, dataSource]);
+    }, [responses.length, queryClient, dataSource, practiceId]);
     useEffect(() => {
         if (responses.length === 0) {
-            const storageKey = dataSource === 'goal' ? 'git-goal-terminal-responses' : 'git-terminal-responses';
+            const storageKey = dataSource === 'goal' ? 'git-goal-terminal-responses' : (practiceId ? `git-terminal-responses:${practiceId}` : 'git-terminal-responses');
             const savedResponses = JSON.parse(localStorage.getItem(storageKey) || '[]');
             
             if (savedResponses.length > 0) {
-                return; // Don't clear if there's saved data
+                return;
             }
             
             setCommitNodes([]);
             setHead(null);
-            setHasAutoCentered(false); // Reset auto-center flag
+            setHasAutoCentered(false);
             return;
         }
 
@@ -140,7 +143,7 @@ function CommitGraphSvg({
         branchCommits.current = {};
         const commitNodes = calculateTreeLayout();
 
-        const savedPositions = loadNodePositions(dataSource);
+        const savedPositions = loadNodePositions(dataSource, practiceId);
         let commitNodesWithSavedPositions = commitNodes.map(node => {
             const savedPos = savedPositions[node.commit.id];
             if (savedPos) {
@@ -158,41 +161,37 @@ function CommitGraphSvg({
 
     useEffect(() => {
         if (commitNodes.length > 0 && onResetView && !hasAutoCentered) {
-            const timer = setTimeout(() => {
-                const mainBranchCommits = commitNodes.filter(node => node.branch === 'main');
-                
-                if (mainBranchCommits.length > 0) {
-                    const minX = Math.min(...mainBranchCommits.map(n => n.x));
-                    const maxX = Math.max(...mainBranchCommits.map(n => n.x));
-                    const minY = Math.min(...mainBranchCommits.map(n => n.y));
-                    const maxY = Math.max(...mainBranchCommits.map(n => n.y));
-                    
-                    const centerX = (minX + maxX) / 2;
-                    const centerY = (minY + maxY) / 2;
-                    
-                    const targetPanX = width / 2 - centerX;
-                    const targetPanY = height / 2 - centerY;
-                    
-                    onResetView(targetPanX, targetPanY);
-                } else {
-                    const minX = Math.min(...commitNodes.map(n => n.x));
-                    const maxX = Math.max(...commitNodes.map(n => n.x));
-                    const minY = Math.min(...commitNodes.map(n => n.y));
-                    const maxY = Math.max(...commitNodes.map(n => n.y));
-                    
-                    const centerX = (minX + maxX) / 2;
-                    const centerY = (minY + maxY) / 2;
-                    
-                    const targetPanX = width / 2 - centerX;
-                    const targetPanY = height / 2 - centerY;
-                    
-                    onResetView(targetPanX, targetPanY);
-                }
-                
-                setHasAutoCentered(true);
-            }, 100);
+            const mainBranchCommits = commitNodes.filter(node => node.branch === 'main');
 
-            return () => clearTimeout(timer);
+            if (mainBranchCommits.length > 0) {
+                const minX = Math.min(...mainBranchCommits.map(n => n.x));
+                const maxX = Math.max(...mainBranchCommits.map(n => n.x));
+                const minY = Math.min(...mainBranchCommits.map(n => n.y));
+                const maxY = Math.max(...mainBranchCommits.map(n => n.y));
+
+                const centerX = (minX + maxX) / 2;
+                const centerY = (minY + maxY) / 2;
+
+                const targetPanX = width / 2 - centerX;
+                const targetPanY = height / 2 - centerY;
+
+                onResetView(targetPanX, targetPanY);
+            } else {
+                const minX = Math.min(...commitNodes.map(n => n.x));
+                const maxX = Math.max(...commitNodes.map(n => n.x));
+                const minY = Math.min(...commitNodes.map(n => n.y));
+                const maxY = Math.max(...commitNodes.map(n => n.y));
+
+                const centerX = (minX + maxX) / 2;
+                const centerY = (minY + maxY) / 2;
+
+                const targetPanX = width / 2 - centerX;
+                const targetPanY = height / 2 - centerY;
+
+                onResetView(targetPanX, targetPanY);
+            }
+
+            setHasAutoCentered(true);
         }
     }, [commitNodes.length, onResetView, width, height, commitNodes, hasAutoCentered]);
 
@@ -545,7 +544,7 @@ function CommitGraphSvg({
             commitNodes.forEach(node => {
                 currentPositions[node.commit.id] = { x: node.x, y: node.y };
             });
-            saveNodePositions(currentPositions, dataSource);
+            saveNodePositions(currentPositions, dataSource, practiceId);
 
             setDragState({
                 isDragging: false,
