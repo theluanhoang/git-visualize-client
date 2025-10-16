@@ -22,6 +22,8 @@ interface PracticeSidebarProps {
   onSync?: () => void;
   onViewGoal?: () => void;
   isViewingGoal?: boolean;
+  onValidate?: () => void;
+  isValidating?: boolean;
 }
 
 export default function PracticeSidebar({
@@ -37,7 +39,9 @@ export default function PracticeSidebar({
   onShowHintModal,
   onSync,
   onViewGoal,
-  isViewingGoal
+  isViewingGoal,
+  onValidate,
+  isValidating
 }: PracticeSidebarProps) {
   const [showExpectedCommands, setShowExpectedCommands] = useState(false);
   const [copiedCommandId, setCopiedCommandId] = useState<string | null>(null);
@@ -199,6 +203,17 @@ export default function PracticeSidebar({
             >
               <Eye className="h-4 w-4 mr-2" />
               {isViewingGoal ? 'Hide Goal' : 'View Goal'}
+            </Button>
+          )}
+
+          {onValidate && (
+            <Button
+              size="sm"
+              onClick={onValidate}
+              disabled={!!isValidating}
+              className="w-full bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 disabled:opacity-60"
+            >
+              {isValidating ? 'Validating…' : 'Validate Result'}
             </Button>
           )}
 

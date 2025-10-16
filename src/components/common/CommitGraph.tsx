@@ -1,9 +1,8 @@
-import { Dot, GitCommitHorizontal, Minus, Plus, Trash2 } from 'lucide-react'
+import { Dot, GitCommitHorizontal, Minus, Plus } from 'lucide-react'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import CommitGraphSvg from './svgs/CommitGraphSvg'
 import { useGitEngine } from '@/lib/react-query/hooks/use-git-engine';
 import { useQueryClient } from '@tanstack/react-query';
-import ConfirmDialog from './ConfirmDialog';
 import CommitDetailsDialog from './CommitDetailsDialog';
 import { ICommit, IRepositoryState, GitCommandResponse } from '@/types/git';
 
@@ -34,8 +33,6 @@ function CommitGraph({
     const [hasCommits, setHasCommits] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
     
-    const [showClearAllDialog, setShowClearAllDialog] = useState(false);
-    const [isClearing, setIsClearing] = useState(false);
     const [showCommitDetailsDialog, setShowCommitDetailsDialog] = useState(false);
     const [selectedCommit, setSelectedCommit] = useState<ICommit | null>(null);
     
@@ -168,14 +165,15 @@ function CommitGraph({
         setIsDragging(false);
     }, []);
 
-    const handleReset = () => {
-        if ((window as any).resetCommitGraphView) {
-            (window as any).resetCommitGraphView();
+    const handleReset = useCallback(() => {
+        const key = dataSource === 'goal' ? 'resetGoalCommitGraphView' : 'resetCommitGraphView';
+        if ((window as any)[key]) {
+            (window as any)[key]();
         } else {
             setZoom(1);
             setPan({ x: 0, y: 0 });
         }
-    };
+    }, [dataSource]);
 
     const handlePlus = () => {
         if (!containerRef.current) return;
@@ -212,24 +210,7 @@ function CommitGraph({
             return newZoom;
         });
     };
-    const handleClearAllData = () => {
-        setShowClearAllDialog(true);
-    };
-
-    const handleConfirmClearAll = async () => {
-        setIsClearing(true);
-        try {
-            await clearAllData();
-            
-            setShowClearAllDialog(false);
-        } finally {
-            setIsClearing(false);
-        }
-    };
-
-    const handleCancelClearAll = () => {
-        setShowClearAllDialog(false);
-    };
+    // Clear-all is handled in the sidebar; reset here is view-only
 
     return (
         <div className={`rounded-lg shadow-sm border border-[var(--border)] bg-[var(--surface)] ${className}`}>
@@ -260,7 +241,7 @@ function CommitGraph({
                     <div className="absolute z-10 flex items-center top-2 right-2 gap-2">
                         <button className="bg-background border border-[var(--border)] rounded-sm cursor-pointer p-1 text-muted-foreground text-sm hover:bg-muted" onClick={handleMinus}><Minus size={16} /></button>
                         <button className="bg-background border border-[var(--border)] rounded-sm cursor-pointer p-1 text-muted-foreground text-sm hover:bg-muted" onClick={handlePlus}><Plus size={16} /></button>
-                        <button className="bg-background border border-[var(--border)] rounded-sm cursor-pointer p-1 text-muted-foreground text-sm hover:bg-muted hover:text-red-500" onClick={handleReset} title="Xóa toàn bộ dữ liệu (terminal + graph)">Reset</button>
+                        <button className="bg-background border border-[var(--border)] rounded-sm cursor-pointer p-1 text-muted-foreground text-sm hover:bg-muted" onClick={handleReset} title="Reset view">Reset</button>
                         <input disabled className="bg-background border border-[var(--border)] rounded-sm p-1 text-muted-foreground text-sm outline-none max-w-12" value={`${Math.floor(zoom * 100)}%`} />
                     </div>
                     {}
@@ -284,16 +265,7 @@ function CommitGraph({
             </div>
             
             {}
-            <ConfirmDialog
-                open={showClearAllDialog}
-                title="Xóa toàn bộ dữ liệu"
-                description="Bạn có chắc chắn muốn xóa toàn bộ dữ liệu? Hành động này sẽ reset terminal, commit graph và tất cả vị trí đã lưu. Không thể hoàn tác."
-                confirmText="Xóa tất cả"
-                cancelText="Hủy"
-                loading={isClearing}
-                onConfirm={handleConfirmClearAll}
-                onClose={handleCancelClearAll}
-            />
+            {/* Clear-all dialog removed; handled in sidebar */}
             
             {}
             <CommitDetailsDialog

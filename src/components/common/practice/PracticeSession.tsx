@@ -26,7 +26,7 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
   const [showHint, setShowHint] = useState(false);
   const [showHintModal, setShowHintModal] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
-  const [isViewingGoal, setIsViewingGoal] = useState(false);
+  const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
 
   const { clearAllData, syncFromServer } = useGitEngine(practice.id);
   const { data: repoState } = useRepositoryState(practice.id);
@@ -90,7 +90,7 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
   };
 
   const handleViewGoal = () => {
-    setIsViewingGoal(prev => !prev);
+    setIsGoalModalOpen(true);
   };
 
   const handleValidate = () => {
@@ -130,20 +130,6 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
               </div>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={handleValidate}
-                  disabled={isValidating}
-                  className="px-4 py-2 text-sm border border-[var(--border)] rounded-md hover:bg-muted disabled:opacity-60"
-                >
-                  {isValidating ? 'Validating...' : 'Validate Result'}
-                </button>
-                <button
-                  onClick={() => setShowHintModal(true)}
-                  className="px-4 py-2 text-sm border border-yellow-200 bg-yellow-50 text-yellow-700 rounded-md hover:bg-yellow-100 flex items-center gap-2"
-                >
-                  <Lightbulb className="h-4 w-4" />
-                  Need Help?
-                </button>
-                <button
                   onClick={onExit}
                   className="px-4 py-2 text-sm border border-border rounded-md hover:bg-muted"
                 >
@@ -156,11 +142,7 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
         {}
         <div className="flex-1 flex flex-col gap-4 p-4">
           <div className="flex-1">
-            {isViewingGoal && practice.goalRepositoryState ? (
-              <CommitGraph dataSource="goal" goalRepositoryState={practice.goalRepositoryState as IRepositoryState} showClearButton={false} title="Goal Graph" />
-            ) : (
-              <CommitGraph practiceId={practice.id} title="Practice Graph" />
-            )}
+            <CommitGraph practiceId={practice.id} title="Practice Graph" />
           </div>
           <div className="flex-1">
             <Terminal practiceId={practice.id} />
@@ -182,7 +164,8 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
         onShowHintModal={() => setShowHintModal(true)}
         onSync={syncFromServer}
         onViewGoal={practice.goalRepositoryState ? handleViewGoal : undefined}
-        isViewingGoal={isViewingGoal}
+        onValidate={handleValidate}
+        isValidating={isValidating}
       />
 
       {}
@@ -194,6 +177,23 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
         onClose={() => setShowHintModal(false)}
         practice={practice}
       />
+
+      {isGoalModalOpen && practice.goalRepositoryState && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setIsGoalModalOpen(false)} />
+          <div className="relative w-full max-w-5xl bg-background border border-[var(--border)] rounded-lg shadow-xl">
+            <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--border)]">
+              <h2 className="text-lg font-semibold">Goal Graph</h2>
+              <button onClick={() => setIsGoalModalOpen(false)} className="px-2 py-1 text-sm border rounded hover:bg-muted">Close</button>
+            </div>
+            <div className="p-4" style={{ height: '70vh' }}>
+              <div className="h-full">
+                <CommitGraph dataSource="goal" goalRepositoryState={practice.goalRepositoryState as IRepositoryState} showClearButton={false} title="Goal Graph" />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
