@@ -8,6 +8,7 @@ import ValidationCelebrationDemo from '@/components/common/animations/Validation
 import ErrorFeedbackDemo from '@/components/common/animations/ErrorFeedbackDemo';
 import ValidationErrorDemo from '@/components/common/animations/ValidationErrorDemo';
 import InitialGuidanceDemo from '@/components/common/animations/InitialGuidanceDemo';
+import PrivateRouteDemo from '@/components/auth/PrivateRouteDemo';
 import { Trophy, Star, Zap, Sparkles } from 'lucide-react';
 
 export default function CelebrationDemoPage() {
@@ -191,6 +192,16 @@ export default function CelebrationDemoPage() {
           </CardHeader>
           <CardContent>
             <InitialGuidanceDemo />
+          </CardContent>
+        </Card>
+
+        {/* Private Route Demo */}
+        <Card className="mt-8">
+          <CardHeader>
+            <CardTitle className="text-center">🔒 Private Route System Demo</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <PrivateRouteDemo />
           </CardContent>
         </Card>
 

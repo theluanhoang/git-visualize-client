@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import Image from 'next/image'
 import ProfileOverviewTab from '@/components/profile/ProfileOverviewTab'
 import ProfileSessionsTab from '@/components/profile/ProfileSessionsTab'
-import { AuthGuard } from '@/components/auth/AuthGuard'
+import { PrivateRoute } from '@/components/auth/PrivateRoute'
 
 export default function ProfilePage() {
   const { data: user } = useCurrentUser()
@@ -31,7 +31,7 @@ export default function ProfilePage() {
 
 
   return (
-    <AuthGuard>
+    <PrivateRoute showAccessDenied={false}>
       <div className="container mx-auto p-4 space-y-6">
         <div className="flex items-center gap-4">
           <div className="relative h-20 w-20 overflow-hidden rounded-full border border-[var(--border)] bg-[var(--surface)]">
@@ -79,7 +79,7 @@ export default function ProfilePage() {
           />
         )}
       </div>
-    </AuthGuard>
+    </PrivateRoute>
   )
 }
 

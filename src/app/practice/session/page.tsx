@@ -9,6 +9,7 @@ import PracticeHeader from "@/components/common/practice/PracticeHeader";
 import { GoalModal } from "@/components/common/practice/GoalModal";
 import { GoalButton } from "@/components/common/practice/GoalButton";
 import { Practice } from '@/services/practices';
+import { PrivateRoute } from '@/components/auth/PrivateRoute';
 
 export default function PracticeSessionPage() {
   const searchParams = useSearchParams();
@@ -94,8 +95,9 @@ export default function PracticeSessionPage() {
   }
 
   return (
-    <div className="">
-      <main className="container mx-auto mt-10 px-4">
+    <PrivateRoute showAccessDenied={false}>
+      <div className="">
+        <main className="container mx-auto mt-10 px-4">
         <PracticeHeader 
           lessonTitle={lesson?.title}
           lessonDescription={lesson?.description}
@@ -124,7 +126,8 @@ export default function PracticeSessionPage() {
             practiceTitle={selectedPractice.title}
           />
         )}
-      </main>
-    </div>
+        </main>
+      </div>
+    </PrivateRoute>
   );
 }
