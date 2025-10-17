@@ -7,6 +7,7 @@ import Header from "@/components/common/Header";
 import { Toaster } from 'sonner'
 import Footer from "@/components/common/Footer";
 import { SessionExpiredDialog } from "@/components/auth/SessionExpiredDialog";
+import { CelebrationProvider } from "@/components/common/animations";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,10 +34,12 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <QueryProvider>
-            <Header />
-            <main className="flex-1">{children}</main>
-            <Footer />
-            <SessionExpiredDialog />
+            <CelebrationProvider>
+              <Header />
+              <main className="flex-1">{children}</main>
+              <Footer />
+              <SessionExpiredDialog />
+            </CelebrationProvider>
           </QueryProvider>
           <Toaster richColors position="bottom-right" />
         </ThemeProvider>

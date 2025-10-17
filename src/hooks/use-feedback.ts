@@ -53,6 +53,17 @@ export const useFeedback = () => {
         autoHide: false
       });
     };
+
+    const showEpicSuccess = (title: string, message: string, action?: Feedback['action']) => {
+      showFeedback({
+        type: 'congratulations',
+        title,
+        message,
+        action,
+        autoHide: false,
+        isEpic: true 
+      });
+    };
   
     return {
       feedback,
@@ -61,6 +72,7 @@ export const useFeedback = () => {
       showSuccess,
       showError,
       showHint,
-      showCongratulations
+      showCongratulations,
+      showEpicSuccess
     };
   };

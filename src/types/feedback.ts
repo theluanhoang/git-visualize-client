@@ -10,4 +10,5 @@ export interface Feedback {
   };
   autoHide?: boolean;
   duration?: number;
+  isEpic?: boolean;
 }

@@ -13,6 +13,7 @@ import { useRepositoryState } from '@/lib/react-query/hooks/use-git-engine';
 import { useValidatePractice } from '@/lib/react-query/hooks/use-practices';
 import { IRepositoryState } from '@/types/git';
 import { useFeedback } from '@/hooks/use-feedback';
+import { useValidationCelebration } from '@/hooks/use-validation-celebration';
 
 interface PracticeSessionProps {
   practice: Practice;
@@ -38,8 +39,11 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
     showSuccess,
     showHint: showHintFeedback,
     showCongratulations,
+    showEpicSuccess,
     hideFeedback
   } = useFeedback();
+
+  const { triggerValidationCelebration } = useValidationCelebration();
 
   const checkStepCompletion = () => {
     return completedSteps.has(currentStep);
@@ -62,11 +66,11 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
   const handleComplete = () => {
     if (!isCompleted) {
       setIsCompleted(true);
-      showCongratulations(
-        '🎉 Congratulations!',
-        `You have successfully completed "${practice.title}". Great job!`,
+      showEpicSuccess(
+        '🎉 Chúc Mừng! Tuyệt Vời!',
+        `Bạn đã hoàn thành hoàn hảo "${practice.title}". Tiếp tục phát huy nhé!`,
         {
-          label: 'Continue Learning',
+          label: 'Tiếp tục học tập',
           onClick: onComplete
         }
       );
@@ -103,10 +107,15 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
       {
         onSuccess: (res) => {
           if (res.isCorrect) {
-            showSuccess('Perfect!', `Score: ${res.score}. ${res.message}`);
+            triggerValidationCelebration({
+              isCorrect: res.isCorrect,
+              score: res.score,
+              message: res.message,
+              feedback: res.feedback
+            });
           } else {
             const summary = res.differences.slice(0, 3).map(d => `- [${d.type}] ${d.field}: expected ${String(d.expected)}, got ${String(d.actual)}`).join('\n');
-            showSuccess('Validation Result', `${res.feedback}\n\n${summary}${res.differences.length > 3 ? '\n...' : ''}`);
+            showSuccess('Kết quả kiểm tra', `${res.feedback}\n\n${summary}${res.differences.length > 3 ? '\n...' : ''}`);
           }
         },
       }

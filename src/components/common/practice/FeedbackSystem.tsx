@@ -6,6 +6,7 @@ import { CheckCircle, XCircle, AlertCircle, Lightbulb, Trophy } from 'lucide-rea
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Feedback } from '@/types/feedback';
+import { useCelebrationContext } from '@/components/common/animations';
 
 interface FeedbackSystemProps {
   feedback: Feedback | null;
@@ -14,21 +15,34 @@ interface FeedbackSystemProps {
 
 export default function FeedbackSystem({ feedback, onClose }: FeedbackSystemProps) {
   const [isVisible, setIsVisible] = useState(false);
+  const celebration = useCelebrationContext();
 
   useEffect(() => {
     if (feedback) {
       setIsVisible(true);
       
+      if (feedback.type === 'congratulations' && (feedback as any).isEpic) {
+        celebration.triggerEpicCelebration(
+          feedback.title,
+          feedback.message,
+          feedback.action ? {
+            label: feedback.action.label,
+            onClick: feedback.action.onClick
+          } : undefined
+        );
+        return;
+      }
+      
       if (feedback.autoHide !== false) {
         const timer = setTimeout(() => {
           setIsVisible(false);
-          setTimeout(onClose, 300); // Wait for animation to complete
+          setTimeout(onClose, 300);
         }, feedback.duration || 3000);
         
         return () => clearTimeout(timer);
       }
     }
-  }, [feedback, onClose]);
+  }, [feedback, onClose, celebration]);
 
   const getIcon = () => {
     switch (feedback?.type) {
@@ -48,7 +62,6 @@ export default function FeedbackSystem({ feedback, onClose }: FeedbackSystemProp
   };
 
   const getBackgroundColor = () => {
-    // Base uses CSS variables; additionally provide dark: variants for extra control
     switch (feedback?.type) {
       case 'success':
         return 'bg-[var(--surface)] border-[var(--border)] dark:bg-green-950/40 dark:border-green-700/40';
