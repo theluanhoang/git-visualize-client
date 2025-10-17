@@ -45,6 +45,7 @@ export const useCurrentUser = () => {
 
 export const useLogin = () => {
   const qc = useQueryClient()
+  const router = useRouter()
   
   return useMutation({
     mutationFn: ({ email, password }: { email: string; password: string }) => authApi.login(email, password),
@@ -53,6 +54,12 @@ export const useLogin = () => {
       api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`
       qc.setQueryData(['auth', 'user'], user)
       qc.invalidateQueries({ queryKey: ['auth'] })
+      
+      if (user.role === 'ADMIN') {
+        router.push('/admin')
+      } else {
+        router.push('/')
+      }
     },
     onError: (error: unknown) => {
       console.error('Login failed:', error)

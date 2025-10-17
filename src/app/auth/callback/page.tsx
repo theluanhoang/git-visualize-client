@@ -48,7 +48,12 @@ export default function OAuthCallbackPage() {
 
         setStatus('success');
         setMessage(isNewUser ? 'Account created successfully! Welcome!' : 'Login successful!');
-        router.replace('/');
+        
+        if (userInfo.role === 'ADMIN') {
+          router.replace('/admin');
+        } else {
+          router.replace('/');
+        }
 
       } catch (error) {
         console.error('OAuth callback error:', error);

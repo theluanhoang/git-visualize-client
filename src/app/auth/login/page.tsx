@@ -26,7 +26,6 @@ export default function LoginPage() {
   const onSubmit = async (values: FormValues) => {
     try {
       await login(values)
-      location.href = '/'
     } catch (err: any) {
       const message = err?.response?.data?.message || 'Login failed'
       toast('Login failed', { description: message })

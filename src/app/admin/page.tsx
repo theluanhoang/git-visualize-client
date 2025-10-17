@@ -21,6 +21,8 @@ import { useDeleteLesson } from '@/lib/react-query/hooks/use-lessons';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useIsAuthenticated } from '@/lib/react-query/hooks/use-auth';
+import AdminWelcomeBanner from '@/components/admin/AdminWelcomeBanner';
 
 const stats = {
   totalLessons: 24,
@@ -39,6 +41,7 @@ export default function AdminDashboard() {
   const deleteLessonMutation = useDeleteLesson();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
+  const { user } = useIsAuthenticated();
 
   const { data: recentLessonsData } = useQuery({
     queryKey: ['admin-recent-lessons'],
@@ -113,9 +116,11 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
+      <AdminWelcomeBanner userName={user?.firstName} />
+      
       <PageHeader 
-        title="Dashboard"
-        description="Tổng quan về hệ thống quản lý bài học"
+        title={`Chào mừng, ${user?.firstName || 'Admin'}! 👋`}
+        description="Bảng điều khiển quản trị hệ thống Git Learning Platform"
         actions={
           <Link href="/admin/lessons/new">
             <Button className="flex items-center gap-2">
