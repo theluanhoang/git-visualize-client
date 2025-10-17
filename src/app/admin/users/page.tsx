@@ -8,6 +8,7 @@ import {
   Shield
 } from 'lucide-react';
 import { PageHeader, AdminTable, ActionButtons, StatusBadge, DateDisplay, StatCard, FilterBar, EmptyState, UserList } from '@/components/admin';
+import AdminUserDetailsDialog from '@/components/admin/AdminUserDetailsDialog';
 import { useUsers as useUsersQuery, useDeleteUser, useUpdateUserStatus } from '@/lib/react-query/hooks/use-analytics';
 
 // options map to backend values
@@ -30,6 +31,7 @@ export default function UsersPage() {
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState('createdAt');
+  const [viewUser, setViewUser] = useState<any | null>(null);
 
   const { data, isLoading } = useUsersQuery({
     page: 1,
@@ -44,12 +46,21 @@ export default function UsersPage() {
     id: u.id,
     name: u.name,
     email: u.email,
-    role: u.role === 'ADMIN' ? 'admin' : 'user',
-    status: u.status,
+    role: (u.role === 'ADMIN' ? 'admin' : 'student') as 'admin' | 'student' | 'instructor',
+    status: (u.status as 'active' | 'inactive' | 'banned'),
     joinedAt: u.joinedAt,
+    lastActive: u.joinedAt || '',
+    lessonsCompleted: 0,
+    totalTimeSpent: '-',
+    progress: 0,
+    achievements: 0,
+    totalSessions: (u as any).totalSessions,
+    activeSessions: (u as any).activeSessions,
+    oauthSessions: (u as any).oauthSessions,
+    lastLoginAt: (u as any).lastLoginAt as any,
   }));
 
-  const filteredUsers = users; // server already filters
+  const filteredUsers = users; 
 
   const deleteUserMutation = useDeleteUser();
   const toggleUserStatusMutation = useUpdateUserStatus();
@@ -94,8 +105,8 @@ export default function UsersPage() {
           color="text-green-500"
         />
       <StatCard
-        title="Người dùng"
-        value={users.filter(u => u.role === 'user').length}
+        title="Học viên"
+        value={users.filter(u => u.role === 'student').length}
         icon={BookOpen}
         color="text-purple-500"
       />
@@ -135,7 +146,7 @@ export default function UsersPage() {
       {}
       <UserList
         users={filteredUsers}
-        onView={(user) => {}}
+        onView={(user) => setViewUser(user)}
         onEdit={(user) => {}}
         onDelete={(user) => handleDeleteUser(user.id)}
         onToggleStatus={handleToggleUserStatus}
@@ -154,6 +165,12 @@ export default function UsersPage() {
           }
         />
       )}
+
+      <AdminUserDetailsDialog
+        open={!!viewUser}
+        onClose={() => setViewUser(null)}
+        user={viewUser}
+      />
     </div>
   );
 }

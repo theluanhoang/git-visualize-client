@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 export interface User {
-  id: number;
+  id: string;
   name: string;
   email: string;
   avatar?: string | null;
@@ -51,6 +51,18 @@ export function UserCard({
   onToggleStatus, 
   onSendEmail 
 }: UserCardProps) {
+  const formatDateTime = (iso?: string) => {
+    if (!iso) return '-';
+    const d = new Date(iso);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const hh = pad(d.getHours());
+    const mm = pad(d.getMinutes());
+    const ss = pad(d.getSeconds());
+    const dd = pad(d.getDate());
+    const mo = pad(d.getMonth() + 1);
+    const yyyy = d.getFullYear();
+    return `${hh}:${mm}:${ss} ${dd}/${mo}/${yyyy}`;
+  };
   const getRoleBadge = (role: string) => {
     const styles = {
       student: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
@@ -112,11 +124,11 @@ export function UserCard({
             <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-1">
                 <Calendar className="h-4 w-4" />
-                <span>Tham gia: {user.joinedAt}</span>
+                <span>Tham gia: {formatDateTime(user.joinedAt)}</span>
               </div>
               <div className="flex items-center gap-1">
                 <TrendingUp className="h-4 w-4" />
-                <span>Hoạt động cuối: {user.lastActive}</span>
+                <span>Hoạt động cuối: {formatDateTime(user.lastActive)}</span>
               </div>
               <div className="flex items-center gap-1">
                 <BookOpen className="h-4 w-4" />
