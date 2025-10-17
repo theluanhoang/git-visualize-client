@@ -1,4 +1,5 @@
-import { UserCard, User } from './UserCard';
+import { User } from '@/types/user';
+import { UserCard } from './UserCard';
 
 export interface UserListProps {
   users: User[];

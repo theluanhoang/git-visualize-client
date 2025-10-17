@@ -9,9 +9,9 @@ import {
 } from 'lucide-react';
 import { PageHeader, AdminTable, ActionButtons, StatusBadge, DateDisplay, StatCard, FilterBar, EmptyState, UserList } from '@/components/admin';
 import AdminUserDetailsDialog from '@/components/admin/AdminUserDetailsDialog';
+import AdminUserEditDialog from '@/components/admin/AdminUserEditDialog';
 import { useUsers as useUsersQuery, useDeleteUser, useUpdateUserStatus } from '@/lib/react-query/hooks/use-analytics';
-
-// options map to backend values
+import type { User } from '@/types/user';
 
 const roleOptions = [
   { value: 'all', label: 'Tất cả vai trò' },
@@ -31,7 +31,8 @@ export default function UsersPage() {
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState('createdAt');
-  const [viewUser, setViewUser] = useState<any | null>(null);
+  const [viewUser, setViewUser] = useState<User | null>(null);
+  const [editUser, setEditUser] = useState<User | null>(null);
 
   const { data, isLoading } = useUsersQuery({
     page: 1,
@@ -42,22 +43,24 @@ export default function UsersPage() {
     sortBy,
     sortOrder: 'DESC'
   });
-  const users = (data?.users ?? []).map(u => ({
+  const users: User[] = (
+    (data?.users) ?? []
+  ).map((u) => ({
     id: u.id,
     name: u.name,
     email: u.email,
-    role: (u.role === 'ADMIN' ? 'admin' : 'student') as 'admin' | 'student' | 'instructor',
-    status: (u.status as 'active' | 'inactive' | 'banned'),
+    role: u.role,
+    status: u.status as any,
     joinedAt: u.joinedAt,
-    lastActive: u.joinedAt || '',
-    lessonsCompleted: 0,
-    totalTimeSpent: '-',
-    progress: 0,
-    achievements: 0,
-    totalSessions: (u as any).totalSessions,
-    activeSessions: (u as any).activeSessions,
-    oauthSessions: (u as any).oauthSessions,
-    lastLoginAt: (u as any).lastLoginAt as any,
+    lastActive: u.lastActive ?? (u.joinedAt || ''),
+    lessonsCompleted: u.lessonsCompleted ?? 0,
+    totalTimeSpent: u.totalTimeSpent ?? '-',
+    progress: u.progress ?? 0,
+    achievements: u.achievements ?? 0,
+    totalSessions: u.totalSessions,
+    activeSessions: u.activeSessions,
+    oauthSessions: u.oauthSessions,
+    lastLoginAt: u.lastLoginAt ?? null,
   }));
 
   const filteredUsers = users; 
@@ -75,7 +78,7 @@ export default function UsersPage() {
     }
   };
 
-  const handleToggleUserStatus = async (user: any) => {
+  const handleToggleUserStatus = async (user: User) => {
     const newStatus = user.status === 'active' ? 'inactive' : 'active';
     try {
       await toggleUserStatusMutation.mutateAsync({ userId: user.id, isActive: newStatus === 'active' });
@@ -105,14 +108,14 @@ export default function UsersPage() {
           color="text-green-500"
         />
       <StatCard
-        title="Học viên"
-        value={users.filter(u => u.role === 'student').length}
+        title="Người dùng"
+        value={users.filter(u => u.role === 'USER').length}
         icon={BookOpen}
         color="text-purple-500"
       />
       <StatCard
         title="Quản trị viên"
-        value={users.filter(u => u.role === 'admin').length}
+        value={users.filter(u => u.role === 'ADMIN').length}
         icon={Shield}
         color="text-orange-500"
       />
@@ -147,7 +150,7 @@ export default function UsersPage() {
       <UserList
         users={filteredUsers}
         onView={(user) => setViewUser(user)}
-        onEdit={(user) => {}}
+        onEdit={(user) => setEditUser(user)}
         onDelete={(user) => handleDeleteUser(user.id)}
         onToggleStatus={handleToggleUserStatus}
         onSendEmail={(user) => {}}
@@ -170,6 +173,15 @@ export default function UsersPage() {
         open={!!viewUser}
         onClose={() => setViewUser(null)}
         user={viewUser}
+      />
+
+      <AdminUserEditDialog
+        open={!!editUser}
+        onClose={() => setEditUser(null)}
+        user={editUser}
+        onSaveStatus={async (userId, isActive) => {
+          await toggleUserStatusMutation.mutateAsync({ userId, isActive });
+        }}
       />
     </div>
   );

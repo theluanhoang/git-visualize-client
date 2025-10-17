@@ -1,5 +1,6 @@
 import { LessonsService } from './lessons';
 import api from '@/lib/api/axios';
+import type { User } from '@/types/user';
 
 export interface DashboardStats {
   totalLessons: number;
@@ -8,15 +9,7 @@ export interface DashboardStats {
   recentActivity: number;
 }
 
-export interface RecentUser {
-  id: string;
-  name: string;
-  email: string;
-  joinedAt: string;
-  lessonsCompleted: number;
-  role: string;
-  status: string;
-}
+export interface RecentUser extends User {}
 
 export interface RecentLesson {
   id: number;
@@ -38,7 +31,7 @@ export interface GetUsersQuery {
 }
 
 export interface UsersResponse {
-  users: RecentUser[];
+  users: User[];
   total: number;
   page: number;
   limit: number;
@@ -52,7 +45,6 @@ export const AnalyticsService = {
       return response.data;
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
-      // Return fallback data
       return {
         totalLessons: 0,
         totalUsers: 0,
@@ -61,8 +53,6 @@ export const AnalyticsService = {
       };
     }
   },
-
-  // removed getRecentUsers — use getUsers with sort and limit
 
   async getRecentLessons(limit: number = 10): Promise<RecentLesson[]> {
     try {

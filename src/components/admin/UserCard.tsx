@@ -19,20 +19,7 @@ import {
   Trash2
 } from 'lucide-react';
 
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  avatar?: string | null;
-  role: 'student' | 'instructor' | 'admin';
-  status: 'active' | 'inactive' | 'banned';
-  joinedAt: string;
-  lastActive: string;
-  lessonsCompleted: number;
-  totalTimeSpent: string;
-  progress: number;
-  achievements: number;
-}
+import type { User } from '@/types/user';
 
 export interface UserCardProps {
   user: User;
