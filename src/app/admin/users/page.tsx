@@ -10,7 +10,8 @@ import {
 import { PageHeader, AdminTable, ActionButtons, StatusBadge, DateDisplay, StatCard, FilterBar, EmptyState, UserList } from '@/components/admin';
 import AdminUserDetailsDialog from '@/components/admin/AdminUserDetailsDialog';
 import AdminUserEditDialog from '@/components/admin/AdminUserEditDialog';
-import { useUsers as useUsersQuery, useDeleteUser, useUpdateUserStatus } from '@/lib/react-query/hooks/use-analytics';
+import AdminUserEmailDialog from '@/components/admin/AdminUserEmailDialog';
+import { useUsers as useUsersQuery, useDeleteUser, useUpdateUserStatus, useSendUserEmail } from '@/lib/react-query/hooks/use-analytics';
 import type { User } from '@/types/user';
 
 const roleOptions = [
@@ -33,6 +34,7 @@ export default function UsersPage() {
   const [sortBy, setSortBy] = useState('createdAt');
   const [viewUser, setViewUser] = useState<User | null>(null);
   const [editUser, setEditUser] = useState<User | null>(null);
+  const [emailUser, setEmailUser] = useState<User | null>(null);
 
   const { data, isLoading } = useUsersQuery({
     page: 1,
@@ -67,6 +69,7 @@ export default function UsersPage() {
 
   const deleteUserMutation = useDeleteUser();
   const toggleUserStatusMutation = useUpdateUserStatus();
+  const sendUserEmailMutation = useSendUserEmail();
 
   const handleDeleteUser = async (id: string) => {
     if (confirm('Bạn có chắc chắn muốn xóa người dùng này?')) {
@@ -153,7 +156,7 @@ export default function UsersPage() {
         onEdit={(user) => setEditUser(user)}
         onDelete={(user) => handleDeleteUser(user.id)}
         onToggleStatus={handleToggleUserStatus}
-        onSendEmail={(user) => {}}
+        onSendEmail={(user) => setEmailUser(user)}
       />
 
       {}
@@ -181,6 +184,24 @@ export default function UsersPage() {
         user={editUser}
         onSaveStatus={async (userId, isActive) => {
           await toggleUserStatusMutation.mutateAsync({ userId, isActive });
+        }}
+      />
+
+      <AdminUserEmailDialog
+        open={!!emailUser}
+        onClose={() => setEmailUser(null)}
+        user={emailUser}
+        onSend={async ({ userId, subject, message, attachments }) => {
+          await sendUserEmailMutation.mutateAsync({
+            userId,
+            subject,
+            message,
+            attachments,
+            onProgress: (percent) => {
+              // TODO: optionally show global toast/progress
+              // console.log('upload', percent);
+            },
+          });
         }}
       />
     </div>

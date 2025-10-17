@@ -41,7 +41,7 @@ export interface UsersResponse {
 export const AnalyticsService = {
   async getDashboardStats(): Promise<DashboardStats> {
     try {
-      const response = await api.get('/api/v1/dashboard/stats');
+      const response = await api.get('/api/v1/admin/dashboard/stats');
       return response.data;
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
@@ -84,7 +84,7 @@ export const AnalyticsService = {
       if (query.sortBy) params.append('sortBy', query.sortBy);
       if (query.sortOrder) params.append('sortOrder', query.sortOrder);
 
-      const response = await api.get(`/api/v1/users?${params.toString()}`);
+      const response = await api.get(`/api/v1/admin/users?${params.toString()}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -100,7 +100,7 @@ export const AnalyticsService = {
 
   async updateUserStatus(userId: string, isActive: boolean): Promise<RecentUser> {
     try {
-      const response = await api.patch(`/api/v1/users/${userId}/status`, { isActive });
+      const response = await api.patch(`/api/v1/admin/users/${userId}/status`, { isActive });
       return response.data;
     } catch (error) {
       console.error('Error updating user status:', error);
@@ -110,9 +110,37 @@ export const AnalyticsService = {
 
   async deleteUser(userId: string): Promise<void> {
     try {
-      await api.delete(`/api/v1/users/${userId}`);
+      await api.delete(`/api/v1/admin/users/${userId}`);
     } catch (error) {
       console.error('Error deleting user:', error);
+      throw error;
+    }
+  },
+
+  async sendUserEmail(
+    userId: string,
+    subject: string,
+    message: string,
+    attachments?: File[],
+    onProgress?: (percent: number, loaded: number, total?: number) => void
+  ): Promise<void> {
+    try {
+      const form = new FormData();
+      form.append('subject', subject);
+      form.append('message', message);
+      (attachments || []).forEach((file) => form.append('attachments', file));
+
+      await api.post(`/api/v1/admin/users/${userId}/email`, form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (evt) => {
+          const total = evt.total || 0;
+          const loaded = evt.loaded;
+          const percent = total ? Math.round((loaded * 100) / total) : 0;
+          onProgress?.(percent, loaded, total);
+        },
+      });
+    } catch (error) {
+      console.error('Error sending email:', error);
       throw error;
     }
   }
