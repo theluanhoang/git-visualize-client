@@ -23,18 +23,8 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useIsAuthenticated } from '@/lib/react-query/hooks/use-auth';
 import AdminWelcomeBanner from '@/components/admin/AdminWelcomeBanner';
+import { useDashboardStats, useRecentUsers, useRecentLessons } from '@/lib/react-query/hooks/use-analytics';
 
-const stats = {
-  totalLessons: 24,
-  totalUsers: 156,
-  totalViews: 2847,
-  recentActivity: 8
-};
-const recentUsers = [
-  { id: 1, name: 'Nguyễn Văn A', email: 'nguyenvana@example.com', joinedAt: '2024-01-15', lessonsCompleted: 5 },
-  { id: 2, name: 'Trần Thị B', email: 'tranthib@example.com', joinedAt: '2024-01-14', lessonsCompleted: 3 },
-  { id: 3, name: 'Lê Văn C', email: 'levanc@example.com', joinedAt: '2024-01-13', lessonsCompleted: 8 },
-];
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -43,20 +33,11 @@ export default function AdminDashboard() {
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
   const { user } = useIsAuthenticated();
 
-  const { data: recentLessonsData } = useQuery({
-    queryKey: ['admin-recent-lessons'],
-    queryFn: async () => {
-      const res = await LessonsService.getAll({ limit: 10, offset: 0 });
-      return res.data.map((l: any) => ({
-        id: l.id,
-        title: l.title,
-        status: l.status,
-        views: l.views ?? 0,
-        lastModified: l.updatedAt ?? l.createdAt,
-        slug: l.slug,
-      }));
-    },
-  });
+  // Fetch real data
+  const { data: stats, isLoading: statsLoading } = useDashboardStats();
+  const { data: recentUsers, isLoading: usersLoading } = useRecentUsers(3);
+  const { data: recentLessonsData, isLoading: lessonsLoading } = useRecentLessons(10);
+
 
   const openConfirmDelete = (id: number) => {
     setPendingDeleteId(id);
@@ -101,6 +82,15 @@ export default function AdminDashboard() {
     { key: 'name', label: 'Tên' },
     { key: 'email', label: 'Email' },
     { key: 'lessonsCompleted', label: 'Bài học hoàn thành' },
+    { key: 'role', label: 'Vai trò', render: (value: string) => (
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+        value === 'admin' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' :
+        value === 'instructor' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+        'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+      }`}>
+        {value === 'admin' ? 'Admin' : value === 'instructor' ? 'Instructor' : 'Student'}
+      </span>
+    )},
     { key: 'joinedAt', label: 'Tham gia', render: (value: string) => <DateDisplay date={value} /> },
     { 
       key: 'actions', 
@@ -135,25 +125,25 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Tổng bài học"
-          value={stats.totalLessons}
+          value={statsLoading ? '...' : stats?.totalLessons || 0}
           icon={BookOpen}
           color="text-blue-500"
         />
         <StatCard
           title="Người dùng"
-          value={stats.totalUsers}
+          value={statsLoading ? '...' : stats?.totalUsers || 0}
           icon={Users}
           color="text-green-500"
         />
         <StatCard
           title="Lượt xem"
-          value={stats.totalViews}
+          value={statsLoading ? '...' : stats?.totalViews || 0}
           icon={Eye}
           color="text-purple-500"
         />
         <StatCard
           title="Hoạt động gần đây"
-          value={stats.recentActivity}
+          value={statsLoading ? '...' : stats?.recentActivity || 0}
           icon={TrendingUp}
           color="text-orange-500"
         />
@@ -173,8 +163,8 @@ export default function AdminDashboard() {
           </div>
           <AdminTable 
             columns={lessonColumns}
-            data={recentLessonsData ?? []}
-            emptyMessage="Chưa có bài học nào"
+            data={lessonsLoading ? [] : recentLessonsData ?? []}
+            emptyMessage={lessonsLoading ? "Đang tải..." : "Chưa có bài học nào"}
           />
         </Card>
 
@@ -190,8 +180,8 @@ export default function AdminDashboard() {
           </div>
           <AdminTable 
             columns={userColumns}
-            data={recentUsers}
-            emptyMessage="Chưa có người dùng nào"
+            data={usersLoading ? [] : (recentUsers?.users ?? [])}
+            emptyMessage={usersLoading ? "Đang tải..." : "Chưa có người dùng nào"}
           />
         </Card>
       </div>

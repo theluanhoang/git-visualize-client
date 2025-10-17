@@ -27,6 +27,18 @@ export function PrivateRoute({
   const { isAuthenticated, user, isLoading } = useIsAuthenticated();
   const router = useRouter();
 
+  const redirectPath = React.useMemo(() => {
+    if (isLoading) return null;
+    if (requireAuth && !isAuthenticated) return redirectTo;
+    if (requireRole && user?.role !== requireRole) return user?.role === 'ADMIN' ? '/admin' : '/';
+    if (!requireAuth && isAuthenticated) return '/';
+    return null;
+  }, [isLoading, requireAuth, isAuthenticated, redirectTo, requireRole, user?.role]);
+
+  React.useEffect(() => {
+    if (redirectPath) router.replace(redirectPath);
+  }, [redirectPath, router]);
+
   if (isLoading) {
     return fallback || (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -38,45 +50,15 @@ export function PrivateRoute({
     );
   }
 
-  if (requireAuth && !isAuthenticated) {
-    React.useEffect(() => {
-      router.replace(redirectTo);
-    }, [router, redirectTo]);
-    
+  if (redirectPath) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Redirecting to login...</p>
+          <p className="text-muted-foreground">Redirecting...</p>
         </div>
       </div>
     );
-  }
-
-  if (requireRole && user?.role !== requireRole) {
-    React.useEffect(() => {
-      if (user?.role === 'ADMIN') {
-        router.replace('/admin');
-      } else {
-        router.replace('/');
-      }
-    }, [router, user]);
-    
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">
-            {user?.role === 'ADMIN' ? 'Redirecting to admin panel...' : 'Redirecting to home...'}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!requireAuth && isAuthenticated) {
-    router.replace('/');
-    return null;
   }
 
   return <>{children}</>;
