@@ -8,3 +8,5 @@ export { default as ValidationCelebrationDemo } from './ValidationCelebrationDem
 export { default as ErrorFeedbackModal } from './ErrorFeedbackModal';
 export { default as ErrorFeedbackDemo } from './ErrorFeedbackDemo';
 export { default as ValidationErrorDemo } from './ValidationErrorDemo';
+export { default as InitialGuidanceModal } from './InitialGuidanceModal';
+export { default as InitialGuidanceDemo } from './InitialGuidanceDemo';

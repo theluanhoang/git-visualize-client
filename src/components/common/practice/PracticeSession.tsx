@@ -16,6 +16,8 @@ import { useFeedback } from '@/hooks/use-feedback';
 import { useValidationCelebration } from '@/hooks/use-validation-celebration';
 import { useErrorFeedback } from '@/hooks/use-error-feedback';
 import ErrorFeedbackModal from '@/components/common/animations/ErrorFeedbackModal';
+import InitialGuidanceModal from '@/components/common/animations/InitialGuidanceModal';
+import { useInitialGuidance } from '@/hooks/use-initial-guidance';
 
 interface PracticeSessionProps {
   practice: Practice;
@@ -47,6 +49,7 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
 
   const { triggerValidationCelebration } = useValidationCelebration();
   const { errorFeedback, showErrorFeedback, closeErrorFeedback } = useErrorFeedback();
+  const { guidanceState, showInitialGuidance, closeInitialGuidance } = useInitialGuidance();
 
   const checkStepCompletion = () => {
     return completedSteps.has(currentStep);
@@ -102,7 +105,12 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
 
   const handleValidate = () => {
     if (!repoState) {
-      showSuccess('Nothing to validate', 'Initialize the repository and try again.');
+      // Hiển thị Initial Guidance Modal thay vì thông báo kỹ thuật
+      showInitialGuidance({
+        practiceTitle: practice.title,
+        firstCommand: 'git init',
+        guidanceMessage: 'Hãy gõ câu lệnh đầu tiên của bạn vào terminal để bắt đầu bài học!'
+      });
       return;
     }
     validatePractice(
@@ -228,6 +236,19 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
           closeErrorFeedback();
           setShowHintModal(true);
         }}
+      />
+
+      {/* Initial Guidance Modal */}
+      <InitialGuidanceModal
+        isOpen={guidanceState.isOpen}
+        onClose={closeInitialGuidance}
+        onStart={() => {
+          closeInitialGuidance();
+          // Focus vào terminal hoặc thực hiện hành động bắt đầu
+        }}
+        practiceTitle={guidanceState.practiceTitle}
+        firstCommand={guidanceState.firstCommand}
+        guidanceMessage={guidanceState.guidanceMessage}
       />
     </div>
   );

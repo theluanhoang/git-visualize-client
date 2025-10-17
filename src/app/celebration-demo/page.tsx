@@ -7,6 +7,7 @@ import { useCelebrationContext } from '@/components/common/animations';
 import ValidationCelebrationDemo from '@/components/common/animations/ValidationCelebrationDemo';
 import ErrorFeedbackDemo from '@/components/common/animations/ErrorFeedbackDemo';
 import ValidationErrorDemo from '@/components/common/animations/ValidationErrorDemo';
+import InitialGuidanceDemo from '@/components/common/animations/InitialGuidanceDemo';
 import { Trophy, Star, Zap, Sparkles } from 'lucide-react';
 
 export default function CelebrationDemoPage() {
@@ -180,6 +181,16 @@ export default function CelebrationDemoPage() {
           </CardHeader>
           <CardContent>
             <ValidationErrorDemo />
+          </CardContent>
+        </Card>
+
+        {/* Initial Guidance Demo */}
+        <Card className="mt-8">
+          <CardHeader>
+            <CardTitle className="text-center">🚀 Initial Guidance Modal Demo</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <InitialGuidanceDemo />
           </CardContent>
         </Card>
 
