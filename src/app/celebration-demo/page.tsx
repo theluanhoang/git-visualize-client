@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCelebrationContext } from '@/components/common/animations';
 import ValidationCelebrationDemo from '@/components/common/animations/ValidationCelebrationDemo';
+import ErrorFeedbackDemo from '@/components/common/animations/ErrorFeedbackDemo';
+import ValidationErrorDemo from '@/components/common/animations/ValidationErrorDemo';
 import { Trophy, Star, Zap, Sparkles } from 'lucide-react';
 
 export default function CelebrationDemoPage() {
@@ -158,6 +160,26 @@ export default function CelebrationDemoPage() {
           </CardHeader>
           <CardContent>
             <ValidationCelebrationDemo />
+          </CardContent>
+        </Card>
+
+        {/* Error Feedback Demo */}
+        <Card className="mt-8">
+          <CardHeader>
+            <CardTitle className="text-center">🚨 Error Feedback Modal Demo</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ErrorFeedbackDemo />
+          </CardContent>
+        </Card>
+
+        {/* Validation Error Demo */}
+        <Card className="mt-8">
+          <CardHeader>
+            <CardTitle className="text-center">🔍 Validation Error Integration Demo</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ValidationErrorDemo />
           </CardContent>
         </Card>
 

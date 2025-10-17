@@ -14,6 +14,8 @@ import { useValidatePractice } from '@/lib/react-query/hooks/use-practices';
 import { IRepositoryState } from '@/types/git';
 import { useFeedback } from '@/hooks/use-feedback';
 import { useValidationCelebration } from '@/hooks/use-validation-celebration';
+import { useErrorFeedback } from '@/hooks/use-error-feedback';
+import ErrorFeedbackModal from '@/components/common/animations/ErrorFeedbackModal';
 
 interface PracticeSessionProps {
   practice: Practice;
@@ -44,6 +46,7 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
   } = useFeedback();
 
   const { triggerValidationCelebration } = useValidationCelebration();
+  const { errorFeedback, showErrorFeedback, closeErrorFeedback } = useErrorFeedback();
 
   const checkStepCompletion = () => {
     return completedSteps.has(currentStep);
@@ -107,6 +110,7 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
       {
         onSuccess: (res) => {
           if (res.isCorrect) {
+            // Kích hoạt celebration khi đúng
             triggerValidationCelebration({
               isCorrect: res.isCorrect,
               score: res.score,
@@ -114,8 +118,14 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
               feedback: res.feedback
             });
           } else {
-            const summary = res.differences.slice(0, 3).map(d => `- [${d.type}] ${d.field}: expected ${String(d.expected)}, got ${String(d.actual)}`).join('\n');
-            showSuccess('Kết quả kiểm tra', `${res.feedback}\n\n${summary}${res.differences.length > 3 ? '\n...' : ''}`);
+            // Hiển thị Error Modal khi sai
+            const errorItems = res.differences.map(d => ({
+              type: d.type,
+              field: d.field,
+              expected: String(d.expected),
+              actual: String(d.actual)
+            }));
+            showErrorFeedback(errorItems);
           }
         },
       }
@@ -203,6 +213,22 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
           </div>
         </div>
       )}
+
+      {/* Error Feedback Modal */}
+      <ErrorFeedbackModal
+        isOpen={errorFeedback.isOpen}
+        onClose={closeErrorFeedback}
+        errorCount={errorFeedback.errorCount}
+        errors={errorFeedback.errors}
+        onRetry={() => {
+          closeErrorFeedback();
+          // Có thể thêm logic retry ở đây nếu cần
+        }}
+        onViewHint={() => {
+          closeErrorFeedback();
+          setShowHintModal(true);
+        }}
+      />
     </div>
   );
 }

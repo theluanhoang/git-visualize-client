@@ -7,6 +7,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Feedback } from '@/types/feedback';
 import { useCelebrationContext } from '@/components/common/animations';
+import ErrorFeedbackModal from '@/components/common/animations/ErrorFeedbackModal';
+import { useErrorFeedback } from '@/hooks/use-error-feedback';
 
 interface FeedbackSystemProps {
   feedback: Feedback | null;
@@ -16,6 +18,28 @@ interface FeedbackSystemProps {
 export default function FeedbackSystem({ feedback, onClose }: FeedbackSystemProps) {
   const [isVisible, setIsVisible] = useState(false);
   const celebration = useCelebrationContext();
+  const { errorFeedback, showErrorFeedback, closeErrorFeedback } = useErrorFeedback();
+
+  // Parse validation differences from message
+  const parseValidationDifferences = (message: string) => {
+    const differences: Array<{type: string, field: string, expected: string | number, actual: string | number}> = [];
+    
+    // Look for patterns like "- [commit] count: expected 2, got 1"
+    const lines = message.split('\n');
+    lines.forEach(line => {
+      const match = line.match(/- \[(\w+)\] (\w+): expected (.+), got (.+)/);
+      if (match) {
+        differences.push({
+          type: match[1],
+          field: match[2],
+          expected: match[3],
+          actual: match[4]
+        });
+      }
+    });
+    
+    return differences;
+  };
 
   useEffect(() => {
     if (feedback) {
@@ -31,6 +55,15 @@ export default function FeedbackSystem({ feedback, onClose }: FeedbackSystemProp
           } : undefined
         );
         return;
+      }
+
+      // Check if this is a validation error that should show error feedback modal
+      if (feedback.type === 'success' && feedback.message.includes('differences')) {
+        const differences = parseValidationDifferences(feedback.message);
+        if (differences.length > 0) {
+          showErrorFeedback(differences);
+          return;
+        }
       }
       
       if (feedback.autoHide !== false) {
@@ -81,6 +114,7 @@ export default function FeedbackSystem({ feedback, onClose }: FeedbackSystemProp
   if (!feedback) return null;
 
   return (
+    <>
     <AnimatePresence>
       {isVisible && (
         <motion.div
@@ -132,5 +166,21 @@ export default function FeedbackSystem({ feedback, onClose }: FeedbackSystemProp
         </motion.div>
       )}
     </AnimatePresence>
+    {/* Error Feedback Modal */}
+    <ErrorFeedbackModal
+      isOpen={errorFeedback.isOpen}
+      onClose={closeErrorFeedback}
+      errorCount={errorFeedback.errorCount}
+      errors={errorFeedback.errors}
+      onRetry={() => {
+        closeErrorFeedback();
+        // Add retry logic here if needed
+      }}
+      onViewHint={() => {
+        closeErrorFeedback();
+        // Add hint logic here if needed
+      }}
+    />
+    </>
   );
 }
