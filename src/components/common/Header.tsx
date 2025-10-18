@@ -61,12 +61,6 @@ function Header() {
                         >
                             Git Theory
                         </Link>
-                        <Link 
-                            href="/practice" 
-                            className="px-3 py-2 rounded-md text-sm font-medium text-[var(--foreground)]/85 hover:text-[var(--primary-600)] hover:bg-[var(--primary-50)] transition-colors"
-                        >
-                            Practice
-                        </Link>
                         {isAdmin && (
                             <Link 
                                 href="/admin" 
