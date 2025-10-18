@@ -2,8 +2,9 @@
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { lessonSchema, LessonFormData } from '@/lib/schemas/lesson';
+import { lessonSchema, LessonFormData, LessonWithPractices } from '@/lib/schemas/lesson';
 import { useCreateLesson, useUpdateLesson } from '@/lib/react-query/hooks/use-lessons';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,21 +14,30 @@ import { Save, Eye, ArrowLeft, Plus, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import RichTextEditor from '@/components/common/rich-editor/RichTextEditor';
 import { PracticeForm } from './PracticeForm';
+import { GoalModal } from '@/components/common/practice/GoalModal';
 import { PracticeFormData } from '@/lib/schemas/practice';
+import { IRepositoryState } from '@/types/git';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 interface LessonFormProps {
-  initialData?: Partial<LessonFormData>;
+  initialData?: Partial<LessonWithPractices>;
   isEdit?: boolean;
-  lessonId?: number;
+  lessonId?: string;
 }
 
 export function LessonForm({ initialData, isEdit = false, lessonId }: LessonFormProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [content, setContent] = useState(initialData?.content || '');
   const [showPracticeForm, setShowPracticeForm] = useState(false);
-  const [practices, setPractices] = useState<PracticeFormData[]>([]);
+  const [practices, setPractices] = useState<PracticeFormData[]>(initialData?.practices || []);
+  const [editPracticeIndex, setEditPracticeIndex] = useState<number | null>(null);
+  const [previewGoal, setPreviewGoal] = useState<IRepositoryState | null>(null);
+  const [showGoalModal, setShowGoalModal] = useState(false);
+  
+  const [serverPractices] = useState<PracticeFormData[]>(initialData?.practices || []);
   
   const {
     register,
@@ -50,6 +60,17 @@ export function LessonForm({ initialData, isEdit = false, lessonId }: LessonForm
   const updateLessonMutation = useUpdateLesson();
 
   useEffect(() => {
+    const handler = (e: CustomEvent<{ goal: IRepositoryState }>) => {
+      const goal = e.detail?.goal;
+      if (!goal) return;
+      setPreviewGoal(goal);
+      setShowGoalModal(true);
+    };
+    window.addEventListener('practice-goal-preview', handler as EventListener);
+    return () => window.removeEventListener('practice-goal-preview', handler as EventListener);
+  }, []);
+
+  useEffect(() => {
     setValue('content', content);
   }, [content, setValue]);
 
@@ -63,8 +84,21 @@ export function LessonForm({ initialData, isEdit = false, lessonId }: LessonForm
   };
 
   const handleSavePractice = (practice: PracticeFormData) => {
-    setPractices(prev => [...prev, practice]);
-    setShowPracticeForm(false);
+    if (isEdit && editPracticeIndex != null) {
+      setPractices(prev => {
+        const next = prev.slice();
+        next[editPracticeIndex] = practice;
+        return next;
+      });
+      setShowPracticeForm(false);
+      setEditPracticeIndex(null);
+      toast.success('Practice updated successfully!');
+    } else {
+      setPractices(prev => [...prev, practice]);
+      setShowPracticeForm(false);
+      setEditPracticeIndex(null);
+      toast.success('Practice added to lesson (will be saved when you save the lesson)');
+    }
   };
 
   const handleCancelPractice = () => {
@@ -74,16 +108,43 @@ export function LessonForm({ initialData, isEdit = false, lessonId }: LessonForm
   const onSubmit = async (data: LessonFormData) => {
     try {
       const formData = { ...data, content };
+      let savedLesson;
       
       if (isEdit && lessonId) {
-        await updateLessonMutation.mutateAsync({ id: lessonId, data: formData });
+        savedLesson = await updateLessonMutation.mutateAsync({ id: lessonId, data: formData });
       } else {
-        await createLessonMutation.mutateAsync(formData);
+        savedLesson = await createLessonMutation.mutateAsync(formData);
+      }
+      
+      if (practices.length > 0) {
+        const lessonIdToUse = savedLesson?.id || lessonId;
+        if (lessonIdToUse) {          
+          const { PracticesService } = await import('@/services/practice');
+          
+          const savedPractices = [];
+          for (const practice of practices) {
+            const savedPractice = await PracticesService.create({
+              ...practice,
+              lessonId: lessonIdToUse
+            });
+            savedPractices.push(savedPractice);
+          }
+          
+          queryClient.invalidateQueries({ queryKey: ['practices'] });
+          queryClient.invalidateQueries({ queryKey: ['lessons'] });
+          
+          toast.success(`Lesson and ${savedPractices.length} practice(s) saved successfully!`);
+          
+          setPractices([]);
+        }
+      } else {
+        toast.success('Lesson saved successfully!');
       }
       
       router.push('/admin/lessons');
     } catch (error) {
       console.error('Error saving lesson:', error);
+      toast.error('Failed to save lesson');
     }
   };
 
@@ -231,14 +292,23 @@ export function LessonForm({ initialData, isEdit = false, lessonId }: LessonForm
                           {practice.estimatedTime} min
                         </p>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setPractices(prev => prev.filter((_, i) => i !== index))}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => { setEditPracticeIndex(index); setShowPracticeForm(true); }}
+                        >
+                          Chỉnh sửa
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setPractices(prev => prev.filter((_, i) => i !== index))}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   ))
                 )}
@@ -253,7 +323,7 @@ export function LessonForm({ initialData, isEdit = false, lessonId }: LessonForm
                   <Label htmlFor="status">Trạng thái</Label>
                   <Select 
                     value={watch('status')} 
-                    onValueChange={(value) => setValue('status', value as any)}
+                    onValueChange={(value: 'draft' | 'published' | 'archived') => setValue('status', value)}
                   >
                     <SelectTrigger className="mt-1">
                       <SelectValue />
@@ -282,10 +352,20 @@ export function LessonForm({ initialData, isEdit = false, lessonId }: LessonForm
             <PracticeForm
               onSave={handleSavePractice}
               onCancel={handleCancelPractice}
+              initialData={editPracticeIndex != null ? practices[editPracticeIndex] : undefined}
+              lessonId={initialData?.id || lessonId || ''}
+              practiceId={editPracticeIndex != null ? (isEdit ? serverPractices[editPracticeIndex]?.id : practices[editPracticeIndex]?.id) : undefined}
             />
           </div>
         </div>
       )}
+
+      <GoalModal
+        isOpen={showGoalModal}
+        onClose={() => setShowGoalModal(false)}
+        goalRepositoryState={previewGoal}
+        practiceTitle={initialData?.title || 'Preview Goal'}
+      />
     </div>
   );
 }

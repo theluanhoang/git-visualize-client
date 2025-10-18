@@ -1,5 +1,19 @@
 import api from '@/lib/api/axios';
-import { LessonFormData, LessonUpdateData } from '@/lib/schemas/lesson';
+import { LessonFormData, LessonUpdateData, LessonWithPractices } from '@/lib/schemas/lesson';
+import { PracticeFormData } from '@/lib/schemas/practice';
+
+interface LessonResponse {
+  id: number;
+  title: string;
+  slug: string;
+  description: string;
+  content: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  views: number;
+  practices?: PracticeFormData[];
+}
 
 const toBackendStatus = (status: string) => {
   switch (status) {
@@ -31,13 +45,13 @@ export const LessonsService = {
   async getAll(params?: {
     limit?: number;
     offset?: number;
-    id?: number;
+    id?: string;
     slug?: string;
     status?: 'draft' | 'published' | 'archived';
     q?: string;
     includePractices?: boolean;
   }) {
-    const query: any = {};
+    const query: Record<string, unknown> = {};
     if (params?.limit != null) query.limit = Math.min(100, Math.max(1, params.limit));
     if (params?.offset != null) query.offset = params.offset;
     if (params?.id != null) query.id = params.id;
@@ -48,7 +62,18 @@ export const LessonsService = {
 
     const res = await api.get('/api/v1/lesson', { params: query });
     const { data, total, limit, offset } = res.data as {
-      data: Array<any>;
+      data: Array<{
+        id: number;
+        title: string;
+        slug: string;
+        description: string;
+        content: string;
+        status: string;
+        createdAt: string;
+        updatedAt: string;
+        views: number;
+        practices?: PracticeFormData[];
+      }>;
       total: number;
       limit: number;
       offset: number;
@@ -61,17 +86,27 @@ export const LessonsService = {
   },
   async getBySlug(slug: string) {
     const res = await api.get('/api/v1/lesson', { params: { slug } });
-    const { data } = res.data as { data: Array<any> };
+    const { data } = res.data as { data: Array<{
+      id: number;
+      title: string;
+      slug: string;
+      description: string;
+      content: string;
+      status: string;
+      createdAt: string;
+      updatedAt: string;
+      views: number;
+    }> };
     if (!data?.length) return null;
     const lesson = data[0];
-    return { ...lesson, status: fromBackendStatus(lesson.status) } as any;
+    return { ...lesson, id: lesson.id.toString(), status: fromBackendStatus(lesson.status) };
   },
-  async getBySlugWithPractices(slug: string) {
+  async getBySlugWithPractices(slug: string): Promise<LessonWithPractices | null> {
     const res = await api.get('/api/v1/lesson', { params: { slug, includePractices: true } });
-    const { data } = res.data as { data: Array<any> };
+    const { data } = res.data as { data: LessonResponse[] };
     if (!data?.length) return null;
     const lesson = data[0];
-    return { ...lesson, status: fromBackendStatus(lesson.status) } as any;
+    return { ...lesson, id: lesson.id.toString(), status: fromBackendStatus(lesson.status) };
   },
   async create(data: LessonFormData) {
     const payload = {
@@ -84,23 +119,23 @@ export const LessonsService = {
     const res = await api.post('/api/v1/lesson', payload);
     return res.data;
   },
-  async update(id: number, data: LessonUpdateData) {
-    const payload: any = { ...data };
+  async update(id: string, data: LessonUpdateData) {
+    const payload: Record<string, unknown> = { ...data };
     if (data.status) payload.status = toBackendStatus(data.status);
     const res = await api.patch(`/api/v1/lesson/${id}`, payload);
     return res.data;
   },
-  async updatePractice(id: number, practice: any) {
+  async updatePractice(id: number, practice: PracticeFormData) {
     const res = await api.patch(`/api/v1/lesson/${id}`, { practice });
     return res.data;
   },
-  async getPracticeBySlug(slug: string) {
+  async getPracticeBySlug(slug: string): Promise<PracticeFormData | null> {
     const res = await api.get('/api/v1/lesson', { params: { slug } });
-    const { data } = res.data as { data: Array<any> };
+    const { data } = res.data as { data: Array<{ practice?: PracticeFormData }> };
     if (!data?.length) return null;
     return data[0]?.practice ?? null;
   },
-  async delete(id: number) {
+  async delete(id: string) {
     const res = await api.delete(`/api/v1/lesson/${id}`);
     return res.data;
   },

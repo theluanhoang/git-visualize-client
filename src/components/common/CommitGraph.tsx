@@ -14,6 +14,7 @@ interface CommitGraphProps {
     title?: string;
     className?: string;
     practiceId?: string;
+    isResetting?: boolean;
 }
 
 function CommitGraph({ 
@@ -23,7 +24,8 @@ function CommitGraph({
     showClearButton = true,
     title = 'Commit Graph',
     className = '',
-    practiceId
+    practiceId,
+    isResetting = false
 }: CommitGraphProps) {
     const [containerSize, setContainerSize] = useState({ width: 1504, height: 400 });
     const [zoom, setZoom] = useState(1);
@@ -40,17 +42,21 @@ function CommitGraph({
     const queryClient = useQueryClient();
 
     useEffect(() => {
-        if (dataSource === 'goal' && goalRepositoryState) {
-            const mockResponses = [
-                {
-                    repositoryState: goalRepositoryState,
-                    command: 'git status',
-                    success: true,
-                    output: 'Repository state loaded for goal visualization'
-                }
-            ];
+        if (dataSource === 'goal') {
+            if (goalRepositoryState) {
+                const mockResponses = [
+                    {
+                        repositoryState: goalRepositoryState,
+                        command: 'git status',
+                        success: true,
+                        output: 'Repository state loaded for goal visualization'
+                    }
+                ];
 
-            queryClient.setQueryData(['goal-terminal-responses'], mockResponses);
+                queryClient.setQueryData(['goal-terminal-responses'], mockResponses);
+            } else {
+                queryClient.setQueryData(['goal-terminal-responses'], []);
+            }
 
             return () => {
                 queryClient.setQueryData(['goal-terminal-responses'], []);
@@ -167,8 +173,9 @@ function CommitGraph({
 
     const handleReset = useCallback(() => {
         const key = dataSource === 'goal' ? 'resetGoalCommitGraphView' : 'resetCommitGraphView';
-        if ((window as any)[key]) {
-            (window as any)[key]();
+        const resetFunction = (window as unknown as { [key: string]: (() => void) | undefined })[key];
+        if (resetFunction) {
+            resetFunction();
         } else {
             setZoom(1);
             setPan({ x: 0, y: 0 });
@@ -210,7 +217,6 @@ function CommitGraph({
             return newZoom;
         });
     };
-    // Clear-all is handled in the sidebar; reset here is view-only
 
     return (
         <div className={`rounded-lg shadow-sm border border-[var(--border)] bg-[var(--surface)] ${className}`}>
@@ -260,12 +266,11 @@ function CommitGraph({
                         onCommitDoubleClick={handleCommitDoubleClick}
                         dataSource={dataSource}
                         customResponses={customResponses}
+                        isResetting={isResetting}
                     />
                 </div>
             </div>
             
-            {}
-            {/* Clear-all dialog removed; handled in sidebar */}
             
             {}
             <CommitDetailsDialog

@@ -45,7 +45,7 @@ export default function FeedbackSystem({ feedback, onClose }: FeedbackSystemProp
     if (feedback) {
       setIsVisible(true);
       
-      if (feedback.type === 'congratulations' && (feedback as any).isEpic) {
+      if (feedback.type === 'congratulations' && feedback.isEpic) {
         celebration.triggerEpicCelebration(
           feedback.title,
           feedback.message,

@@ -29,6 +29,7 @@ export const practiceTagSchema = z.object({
 });
 
 export const practiceSchema = z.object({
+  id: z.string().optional(),
   title: z.string().min(1, 'Practice title is required'),
   scenario: z.string().min(1, 'Practice scenario is required'),
   difficulty: z.number().min(1).max(5),
@@ -40,6 +41,7 @@ export const practiceSchema = z.object({
   expectedCommands: z.array(practiceExpectedCommandSchema).optional(),
   validationRules: z.array(practiceValidationRuleSchema).optional(),
   tags: z.array(practiceTagSchema).optional(),
+  goalRepositoryState: z.any().optional(),
 });
 
 export type PracticeFormData = z.infer<typeof practiceSchema>;

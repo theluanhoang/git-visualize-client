@@ -8,8 +8,8 @@ export interface SettingsSectionProps {
     id: string;
     label: string;
     type?: 'text' | 'email' | 'password' | 'number' | 'color' | 'textarea' | 'select' | 'toggle';
-    value: any;
-    onChange: (value: any) => void;
+    value: unknown;
+    onChange: (value: unknown) => void;
     placeholder?: string;
     options?: Array<{ value: string; label: string }>;
     description?: string;
@@ -24,7 +24,7 @@ export interface SettingsSectionProps {
 }
 
 export function SettingsSection({ title, fields, layout = 'single', actions }: SettingsSectionProps) {
-  const renderField = (field: any, index: number) => (
+  const renderField = (field: SettingsSectionProps['fields'][0], index: number) => (
     <SettingsFormField key={field.id || index} {...field} />
   );
 

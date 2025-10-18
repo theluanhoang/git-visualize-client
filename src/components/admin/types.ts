@@ -28,19 +28,19 @@ export interface StatCardProps {
   description?: string;
 }
 
-export interface TableColumn {
-  key: string;
+export interface TableColumn<T = Record<string, unknown>> {
+  key: keyof T | string;
   label: string;
   sortable?: boolean;
-  render?: (value: any, row: any) => React.ReactNode;
+  render?: (value: unknown, row: T) => React.ReactNode;
 }
 
-export interface TableProps {
-  columns: TableColumn[];
-  data: any[];
+export interface TableProps<T = Record<string, unknown>> {
+  columns: TableColumn<T>[];
+  data: T[];
   loading?: boolean;
   emptyMessage?: string;
-  onRowClick?: (row: any) => void;
+  onRowClick?: (row: T) => void;
 }
 
 export interface PageHeaderProps {

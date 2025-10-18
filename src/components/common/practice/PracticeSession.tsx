@@ -190,7 +190,7 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
         onToggleHint={handleToggleHint}
         onShowHintModal={() => setShowHintModal(true)}
         onSync={syncFromServer}
-        onViewGoal={practice.goalRepositoryState ? handleViewGoal : undefined}
+        onViewGoal={handleViewGoal}
         onValidate={handleValidate}
         isValidating={isValidating}
       />
@@ -215,7 +215,13 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
             </div>
             <div className="p-4" style={{ height: '70vh' }}>
               <div className="h-full">
-                <CommitGraph dataSource="goal" goalRepositoryState={practice.goalRepositoryState as IRepositoryState} showClearButton={false} title="Goal Graph" />
+                <CommitGraph 
+                  key={`goal-${JSON.stringify(practice.goalRepositoryState)}`}
+                  dataSource="goal" 
+                  goalRepositoryState={practice.goalRepositoryState as IRepositoryState} 
+                  showClearButton={false} 
+                  title="Goal Graph" 
+                />
               </div>
             </div>
           </div>

@@ -66,6 +66,7 @@ interface CommitGraphSvgProps extends React.SVGProps<SVGSVGElement> {
     dataSource?: 'practice' | 'goal';
     customResponses?: GitCommandResponse[];
     practiceId?: string;
+    isResetting?: boolean;
 }
 
 const R = 30;
@@ -81,6 +82,7 @@ function CommitGraphSvg({
     dataSource = 'practice',
     customResponses,
     practiceId,
+    isResetting = false,
     ...svgProps
 }: CommitGraphSvgProps) {
     const [head, setHead] = useState<IHead>(null);
@@ -104,6 +106,8 @@ function CommitGraphSvg({
     const queryClient = useQueryClient();
 
     useEffect(() => {
+        if (isResetting) return; 
+        
         const storageKey = dataSource === 'goal' ? 'git-goal-terminal-responses' : (practiceId ? `git-terminal-responses:${practiceId}` : 'git-terminal-responses');
         const queryKey = dataSource === 'goal' ? ['goal-terminal-responses'] : ['terminal-responses'];
         
@@ -113,9 +117,11 @@ function CommitGraphSvg({
         if (savedResponses.length > 0) {
             queryClient.setQueryData(dataSource === 'goal' ? ['goal-terminal-responses'] : ['terminal-responses', practiceId ?? 'global'], savedResponses);
         }
-    }, [queryClient, dataSource, practiceId]);
+    }, [queryClient, dataSource, practiceId, isResetting]);
 
     useEffect(() => {
+        if (isResetting) return;
+        
         if (responses.length === 0) {
             const storageKey = dataSource === 'goal' ? 'git-goal-terminal-responses' : (practiceId ? `git-terminal-responses:${practiceId}` : 'git-terminal-responses');
             const savedResponses = JSON.parse(localStorage.getItem(storageKey) || '[]');
@@ -123,8 +129,15 @@ function CommitGraphSvg({
                 queryClient.setQueryData(dataSource === 'goal' ? ['goal-terminal-responses'] : ['terminal-responses', practiceId ?? 'global'], savedResponses);
             }
         }
-    }, [responses.length, queryClient, dataSource, practiceId]);
+    }, [responses.length, queryClient, dataSource, practiceId, isResetting]);
     useEffect(() => {
+        if (isResetting) {
+            setCommitNodes([]);
+            setHead(null);
+            setHasAutoCentered(false);
+            return;
+        }
+        
         if (responses.length === 0) {
             const storageKey = dataSource === 'goal' ? 'git-goal-terminal-responses' : (practiceId ? `git-terminal-responses:${practiceId}` : 'git-terminal-responses');
             const savedResponses = JSON.parse(localStorage.getItem(storageKey) || '[]');
@@ -216,7 +229,7 @@ function CommitGraphSvg({
 
             const primaryParentId = node.commit.parents[0];
             if (!primaryParentId) {
-                continue; // Root commit, keep original position
+                continue;
             }
 
             const parentNode = nodeMap.get(primaryParentId);
@@ -296,9 +309,9 @@ function CommitGraphSvg({
         }
 
         const levelHeight = 4*R + 20;
-        const branchSpacing = 120; // Horizontal spacing between branches
-        const startX = width / 2 - R; // center X
-        const startY = height / 2;    // base Y
+        const branchSpacing = 120; 
+        const startX = width / 2 - R; 
+        const startY = height / 2;    
 
         const xById: Record<string, number> = {};
         const branchLanes: Map<string, number> = new Map(); // branch -> lane number
@@ -592,7 +605,7 @@ function CommitGraphSvg({
     useEffect(() => {
         if (onResetView) {
             const windowKey = dataSource === 'goal' ? 'resetGoalCommitGraphView' : 'resetCommitGraphView';
-            (window as any)[windowKey] = resetView;
+            (window as unknown as { [key: string]: (() => void) | undefined })[windowKey] = resetView;
         }
     }, [resetView, onResetView, dataSource]);
 

@@ -1,18 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { 
   UserCheck,
   BookOpen,
   TrendingUp,
   Shield
 } from 'lucide-react';
-import { PageHeader, AdminTable, ActionButtons, StatusBadge, DateDisplay, StatCard, FilterBar, EmptyState, UserList } from '@/components/admin';
+import { PageHeader, StatCard, FilterBar, EmptyState, UserList } from '@/components/admin';
 import AdminUserDetailsDialog from '@/components/admin/AdminUserDetailsDialog';
 import AdminUserEditDialog from '@/components/admin/AdminUserEditDialog';
 import AdminUserEmailDialog from '@/components/admin/AdminUserEmailDialog';
 import { useUsers as useUsersQuery, useDeleteUser, useUpdateUserStatus, useSendUserEmail } from '@/lib/react-query/hooks/use-analytics';
-import type { User } from '@/types/user';
+import type { User, UserStatus } from '@/types/user';
 
 const roleOptions = [
   { value: 'all', label: 'Tất cả vai trò' },
@@ -28,6 +29,8 @@ const statusOptions = [
 ];
 
 export default function UsersPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -52,7 +55,7 @@ export default function UsersPage() {
     name: u.name,
     email: u.email,
     role: u.role,
-    status: u.status as any,
+    status: u.status as UserStatus,
     joinedAt: u.joinedAt,
     lastActive: u.lastActive ?? (u.joinedAt || ''),
     lessonsCompleted: u.lessonsCompleted ?? 0,
@@ -66,6 +69,23 @@ export default function UsersPage() {
   }));
 
   const filteredUsers = users; 
+
+  const deepLinkHandledRef = useRef(false);
+  useEffect(() => {
+    if (deepLinkHandledRef.current) return;
+    const emailParam = searchParams.get('email');
+    const openParam = searchParams.get('open');
+    if (!emailParam) return;
+
+    const target = users.find(u => u.email === emailParam);
+    if (!target) return;
+
+    if (openParam === 'view') setViewUser(target);
+    if (openParam === 'edit') setEditUser(target);
+
+    router.replace('/admin/users');
+    deepLinkHandledRef.current = true;
+  }, [searchParams, users, router]);
 
   const deleteUserMutation = useDeleteUser();
   const toggleUserStatusMutation = useUpdateUserStatus();

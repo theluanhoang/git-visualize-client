@@ -120,7 +120,13 @@ export default function PracticeSidebar({
             {showExpectedCommands && (
               <CardContent className="pt-0">
                 <div className="space-y-2">
-                  {expectedCommands.map((cmd) => (
+                  {expectedCommands
+                    .sort((a, b) => {
+                      const orderA = typeof a.order === 'number' ? a.order : parseInt(String(a.order || 0));
+                      const orderB = typeof b.order === 'number' ? b.order : parseInt(String(b.order || 0));
+                      return orderA - orderB;
+                    })
+                    .map((cmd) => (
                     <div key={cmd.id} className="flex items-center gap-2 text-sm">
                       <span className="text-muted-foreground shrink-0 w-5 text-right">{cmd.order}.</span>
                       <code className="bg-muted px-2 py-1 rounded text-xs font-mono break-all flex-1">

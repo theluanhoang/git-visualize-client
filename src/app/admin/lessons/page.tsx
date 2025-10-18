@@ -34,7 +34,7 @@ export default function LessonsPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState('updatedAt');
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const { data: lessons = [], isLoading } = useLessons();
   const deleteLessonMutation = useDeleteLesson();
@@ -46,7 +46,7 @@ export default function LessonsPage() {
     return matchesSearch && matchesStatus;
   });
 
-  const openConfirmDelete = (id: number) => {
+  const openConfirmDelete = (id: string) => {
     setPendingDeleteId(id);
     setConfirmOpen(true);
   };
@@ -54,7 +54,7 @@ export default function LessonsPage() {
   const performDelete = async () => {
     if (pendingDeleteId == null) return;
     try {
-      await deleteLessonMutation.mutateAsync(pendingDeleteId);
+      await deleteLessonMutation.mutateAsync(pendingDeleteId.toString());
       setConfirmOpen(false);
       setPendingDeleteId(null);
     } catch (error) {
@@ -64,14 +64,14 @@ export default function LessonsPage() {
 
   const lessonColumns = [
     { key: 'title', label: 'Tiêu đề' },
-    { key: 'status', label: 'Trạng thái', render: (value: string) => <StatusBadge status={value as any} /> },
+    { key: 'status', label: 'Trạng thái', render: (value: unknown) => <StatusBadge status={value as 'draft' | 'published' | 'archived'} /> },
     { key: 'views', label: 'Lượt xem' },
     { key: 'author', label: 'Tác giả' },
-    { key: 'updatedAt', label: 'Cập nhật cuối', render: (value: string) => <DateDisplay date={value} /> },
+    { key: 'updatedAt', label: 'Cập nhật cuối', render: (value: unknown) => <DateDisplay date={value as string} /> },
     { 
       key: 'actions', 
       label: 'Thao tác', 
-      render: (value: any, row: any) => (
+      render: (value: unknown, row: Record<string, unknown>) => (
         <ActionButtons
           onView={async () => {
             try {
@@ -92,7 +92,7 @@ export default function LessonsPage() {
               console.warn('No slug available to edit', row);
             }
           }}
-          onDelete={() => openConfirmDelete(row.id)}
+          onDelete={() => openConfirmDelete(row.id as string)}
         />
       )
     },

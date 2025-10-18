@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { User } from '@/types/user';
+import { User, UserStatus } from '@/types/user';
 
 interface AdminUserEditDialogProps {
   open: boolean;
@@ -69,7 +69,7 @@ export default function AdminUserEditDialog({ open, onClose, user, onSaveStatus 
           </div>
           <div className="space-y-2">
             <Label>Trạng thái</Label>
-            <Select value={status} onValueChange={(v) => setStatus(v as any)}>
+            <Select value={status} onValueChange={(v: UserStatus) => setStatus(v)}>
               <SelectTrigger>
                 <SelectValue placeholder="Chọn trạng thái" />
               </SelectTrigger>

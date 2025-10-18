@@ -23,6 +23,22 @@ export const gitEngineApi = {
     const res = await api.get<IRepositoryState>('/api/v1/git/state');
     return res.data;
   },
+  buildGoalRepositoryState: async (commands: string[]) => {
+    let currentState: IRepositoryState | null = null;
+    
+    for (const command of commands) {
+      try {
+        const response = await gitEngineApi.executeGitCommand(command, currentState);
+        if (response.repositoryState) {
+          currentState = response.repositoryState;
+        }
+      } catch (error) {
+        console.warn(`Failed to execute command "${command}":`, error);
+      }
+    }
+    
+    return { repositoryState: currentState };
+  }
 };
 
 export const useExecuteGitCommand = (practiceId?: string) => {
@@ -87,16 +103,6 @@ export const useRepositoryState = (practiceId?: string) => {
   });
 };
 
-const initializeTerminalResponses = (practiceId?: string) => {
-  try {
-    const savedResponses = JSON.parse(localStorage.getItem(terminalKeyFor(practiceId)) || '[]');
-    return savedResponses;
-  } catch (error) {
-    console.warn('Failed to initialize terminal responses:', error);
-    return [];
-  }
-};
-
 export const useTerminalResponses = (practiceId?: string) => {
   const queryClient = useQueryClient();
   
@@ -142,15 +148,27 @@ export const useGoalTerminalResponses = () => {
     queryFn: () => {
       return [];
     },
-    initialData: [], // Start with empty data
-    staleTime: Infinity, // Never consider stale
-    gcTime: Infinity, // Never garbage collect
+    initialData: [],
+    staleTime: Infinity, 
+    gcTime: Infinity,
   });
 };
 
 export const initializeAppData = (practiceId?: string) => {
   const savedResponses = JSON.parse(localStorage.getItem(terminalKeyFor(practiceId)) || '[]');
   return savedResponses;
+};
+
+export const useBuildGoalRepositoryState = (commands: string[], enabled: boolean = true) => {
+  return useQuery({
+    queryKey: ['git', 'goal-state', commands],
+    queryFn: () => gitEngineApi.buildGoalRepositoryState(commands),
+    enabled: enabled && commands.length > 0,
+    staleTime: 5 * 60 * 1000, 
+    gcTime: 10 * 60 * 1000, 
+    retry: 1,
+    retryDelay: 1000,
+  });
 };
 
 export const useGitEngine = (practiceId?: string) => {

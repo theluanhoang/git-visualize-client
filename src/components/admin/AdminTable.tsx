@@ -1,7 +1,7 @@
 import { Card } from '@/components/ui/card';
 import { TableProps } from './types';
 
-export function AdminTable({ columns, data, loading = false, emptyMessage = 'Không có dữ liệu', onRowClick }: TableProps) {
+export function AdminTable<T = Record<string, unknown>>({ columns, data, loading = false, emptyMessage = 'Không có dữ liệu', onRowClick }: TableProps<T>) {
   if (loading) {
     return (
       <Card className="p-6">
@@ -34,7 +34,7 @@ export function AdminTable({ columns, data, loading = false, emptyMessage = 'Kh�
             <tr>
               {columns.map((column) => (
                 <th
-                  key={column.key}
+                  key={String(column.key)}
                   className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
                 >
                   {column.label}
@@ -50,8 +50,8 @@ export function AdminTable({ columns, data, loading = false, emptyMessage = 'Kh�
                 onClick={() => onRowClick?.(row)}
               >
                 {columns.map((column) => (
-                  <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                    {column.render ? column.render(row[column.key], row) : row[column.key]}
+                  <td key={String(column.key)} className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                    {column.render ? column.render((row as any)[column.key], row) : (row as any)[column.key]}
                   </td>
                 ))}
               </tr>

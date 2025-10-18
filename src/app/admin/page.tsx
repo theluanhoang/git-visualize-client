@@ -22,8 +22,33 @@ import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useIsAuthenticated } from '@/lib/react-query/hooks/use-auth';
+import { LessonFormData } from '@/lib/schemas/lesson';
 import AdminWelcomeBanner from '@/components/admin/AdminWelcomeBanner';
 import { useDashboardStats, useRecentUsers, useRecentLessons } from '@/lib/react-query/hooks/use-analytics';
+
+type TableColumn<T = Record<string, unknown>> = {
+  key: keyof T | 'actions';
+  label: string;
+  render?: (value: unknown, row: T) => React.ReactNode;
+};
+
+type LessonRow = {
+  id: number;
+  title: string;
+  slug: string;
+  status: string;
+  views: number;
+  lastModified: string;
+};
+
+type UserRow = {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  lastActive?: string;
+  joinedAt: string;
+};
 
 
 export default function AdminDashboard() {
@@ -47,24 +72,24 @@ export default function AdminDashboard() {
   const performDelete = async () => {
     if (pendingDeleteId == null) return;
     try {
-      await deleteLessonMutation.mutateAsync(pendingDeleteId);
+      await deleteLessonMutation.mutateAsync(pendingDeleteId.toString());
       setConfirmOpen(false);
       setPendingDeleteId(null);
     } catch (e) {
       console.error('Failed to delete lesson', e);
     }
   };
-  const lessonColumns = [
-    { key: 'title', label: 'Tiêu đề', render: (value: string) => (
-      <span className="block max-w-[280px] truncate" title={value}>{value}</span>
+  const lessonColumns: TableColumn<LessonRow>[] = [
+    { key: 'title', label: 'Tiêu đề', render: (value: unknown) => (
+      <span className="block max-w-[280px] truncate" title={value as string}>{value as string}</span>
     ) },
-    { key: 'status', label: 'Trạng thái', render: (value: string) => <StatusBadge status={value as any} /> },
+    { key: 'status', label: 'Trạng thái', render: (value: unknown) => <StatusBadge status={value as 'draft' | 'published' | 'archived'} /> },
     { key: 'views', label: 'Lượt xem' },
-    { key: 'lastModified', label: 'Cập nhật cuối', render: (value: string) => <DateDisplay date={value} /> },
+    { key: 'lastModified', label: 'Cập nhật cuối', render: (value: unknown) => <DateDisplay date={value as string} /> },
     { 
       key: 'actions', 
       label: 'Thao tác', 
-      render: (value: any, row: any) => (
+      render: (value: unknown, row: LessonRow) => (
         <ActionButtons 
           onView={() => {
             if (row.slug) window.open(`/git-theory/${row.slug}`, '_blank', 'noopener,noreferrer');
@@ -72,33 +97,39 @@ export default function AdminDashboard() {
           onEdit={() => {
             if (row.slug) window.open(`/admin/lessons/${row.slug}/edit`, '_blank', 'noopener,noreferrer');
           }}
-          onDelete={() => openConfirmDelete(row.id)}
+          onDelete={() => openConfirmDelete(Number(row.id))}
         />
       )
     },
   ];
 
-  const userColumns = [
+  const userColumns: TableColumn<UserRow>[] = [
     { key: 'name', label: 'Tên' },
     { key: 'email', label: 'Email' },
-    { key: 'lessonsCompleted', label: 'Bài học hoàn thành' },
-    { key: 'role', label: 'Vai trò', render: (value: string) => (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-        value === 'admin' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' :
-        value === 'instructor' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
-        'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-      }`}>
-        {value === 'admin' ? 'Admin' : value === 'instructor' ? 'Instructor' : 'Student'}
-      </span>
-    )},
-    { key: 'joinedAt', label: 'Tham gia', render: (value: string) => <DateDisplay date={value} /> },
+    { key: 'role', label: 'Vai trò', render: (value: unknown) => {
+      const role = value as string;
+      return (
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+          role === 'admin' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' :
+          role === 'instructor' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+          'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+        }`}>
+          {role === 'admin' ? 'Admin' : role === 'instructor' ? 'Instructor' : 'Student'}
+        </span>
+      );
+    }},
+    { key: 'lastActive', label: 'Hoạt động cuối', render: (value: unknown) => <DateDisplay date={value as string} /> },
     { 
       key: 'actions', 
       label: 'Thao tác', 
-      render: (value: any, row: any) => (
+      render: (value: unknown, row: UserRow) => (
         <ActionButtons 
-          onView={() => {}}
-          onEdit={() => {}}
+          onView={() => {
+            if (row.email) router.push(`/admin/users?email=${encodeURIComponent(row.email)}&open=view`)
+          }}
+          onEdit={() => {
+            if (row.email) router.push(`/admin/users?email=${encodeURIComponent(row.email)}&open=edit`)
+          }}
         />
       )
     },
@@ -161,7 +192,7 @@ export default function AdminDashboard() {
               </Button>
             </Link>
           </div>
-          <AdminTable 
+          <AdminTable<LessonRow> 
             columns={lessonColumns}
             data={lessonsLoading ? [] : recentLessonsData ?? []}
             emptyMessage={lessonsLoading ? "Đang tải..." : "Chưa có bài học nào"}
@@ -178,7 +209,7 @@ export default function AdminDashboard() {
               </Button>
             </Link>
           </div>
-          <AdminTable 
+          <AdminTable<UserRow>
             columns={userColumns}
             data={usersLoading ? [] : (recentUsers?.users ?? [])}
             emptyMessage={usersLoading ? "Đang tải..." : "Chưa có người dùng nào"}

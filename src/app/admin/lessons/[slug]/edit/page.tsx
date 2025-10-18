@@ -12,7 +12,7 @@ export default function EditLessonPage() {
 
     const { data: lesson, isLoading, error } = useQuery({
         queryKey: ['admin-lesson-edit', slug],
-        queryFn: () => LessonsService.getBySlug(slug),
+        queryFn: () => LessonsService.getBySlugWithPractices(slug),
         enabled: Boolean(slug),
     });
 

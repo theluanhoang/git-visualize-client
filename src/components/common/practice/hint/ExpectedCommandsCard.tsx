@@ -27,7 +27,15 @@ export default function ExpectedCommandsCard({ practice }: ExpectedCommandsCardP
       </CardHeader>
       <CardContent className="pt-0">
         <div className="space-y-3">
-          {practice.expectedCommands.map((cmd, index) => (
+          {practice.expectedCommands
+            .map((cmd, index) => ({ ...cmd, originalIndex: index }))
+            .sort((a, b) => {
+              const orderA = typeof a.order === 'number' ? a.order : parseInt(String(a.order || 0));
+              const orderB = typeof b.order === 'number' ? b.order : parseInt(String(b.order || 0));
+              if (orderA === orderB) return a.originalIndex - b.originalIndex;
+              return orderA - orderB;
+            })
+            .map((cmd, index) => (
             <motion.div
               key={cmd.id}
               initial={{ opacity: 0, y: 10 }}

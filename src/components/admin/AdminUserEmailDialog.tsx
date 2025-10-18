@@ -59,8 +59,9 @@ export default function AdminUserEmailDialog({ open, onClose, user, onSend }: Ad
       setAttachments([]);
       setShowEmojis(false);
       onClose();
-    } catch (err: any) {
-      const serverMsg = err?.response?.data?.message || err?.message || 'Không thể gửi email';
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      const serverMsg = error?.response?.data?.message || error?.message || 'Không thể gửi email';
       toast.error('Gửi email thất bại', { description: serverMsg });
     } finally {
       setSending(false);

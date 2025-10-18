@@ -21,7 +21,7 @@ const lessonsApi = {
     ];
   },
   
-  getById: async (id: number) => {
+  getById: async (id: string) => {
     return {
       id,
       title: 'Git Basics - Introduction',
@@ -42,11 +42,11 @@ const lessonsApi = {
     return LessonsService.create(data);
   },
   
-  update: async (id: number, data: LessonUpdateData) => {
+  update: async (id: string, data: LessonUpdateData) => {
     return LessonsService.update(id, data);
   },
   
-  delete: async (id: number) => {
+  delete: async (id: string) => {
     return LessonsService.delete(id);
   }
 };
@@ -54,7 +54,7 @@ const lessonsApi = {
 export const useLessons = (params: {
   limit?: number;
   offset?: number;
-  id?: number;
+  id?: string;
   slug?: string;
   status?: 'draft' | 'published' | 'archived';
   q?: string;
@@ -84,7 +84,7 @@ export const useUpdateLesson = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: LessonUpdateData }) => 
+    mutationFn: ({ id, data }: { id: string; data: LessonUpdateData }) => 
       lessonsApi.update(id, data),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['lessons'] });

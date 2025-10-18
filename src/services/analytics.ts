@@ -2,6 +2,16 @@ import { LessonsService } from './lessons';
 import api from '@/lib/api/axios';
 import type { User } from '@/types/user';
 
+interface Lesson {
+  id: string | number;
+  title: string;
+  status: string;
+  views: number;
+  updatedAt: string;
+  createdAt: string;
+  slug: string;
+}
+
 export interface DashboardStats {
   totalLessons: number;
   totalUsers: number;
@@ -59,8 +69,8 @@ export const AnalyticsService = {
       const response = await LessonsService.getAll({ limit, offset: 0 });
       const lessons = response.data || [];
       
-      return lessons.map((lesson: any) => ({
-        id: lesson.id,
+      return lessons.map((lesson: Lesson) => ({
+        id: Number(lesson.id),
         title: lesson.title,
         status: lesson.status,
         views: lesson.views || 0,

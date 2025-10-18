@@ -20,7 +20,6 @@ export function GoalModal({ isOpen, onClose, goalRepositoryState, practiceTitle 
     return null;
   }
 
-  const { commits, branches, head } = goalRepositoryState;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -57,6 +56,7 @@ export function GoalModal({ isOpen, onClose, goalRepositoryState, practiceTitle 
             {}
             <div className="mt-4">
               <CommitGraph 
+                key={`goal-${JSON.stringify(goalRepositoryState)}`}
                 dataSource="goal"
                 goalRepositoryState={goalRepositoryState}
                 showClearButton={false}

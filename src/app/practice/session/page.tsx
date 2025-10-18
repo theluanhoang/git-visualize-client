@@ -1,14 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { PracticesService } from '@/services/practices';
 import { useLessons } from '@/lib/react-query/hooks/use-lessons';
+import { usePractice } from '@/lib/react-query/hooks/use-practice';
 import PracticeSession from "@/components/common/practice/PracticeSession";
 import PracticeHeader from "@/components/common/practice/PracticeHeader";
 import { GoalModal } from "@/components/common/practice/GoalModal";
 import { GoalButton } from "@/components/common/practice/GoalButton";
-import { Practice } from '@/services/practices';
 import { PrivateRoute } from '@/components/auth/PrivateRoute';
 
 export default function PracticeSessionPage() {
@@ -17,9 +16,6 @@ export default function PracticeSessionPage() {
   const lessonSlug = searchParams.get('lesson');
   const practiceId = searchParams.get('practice');
   
-  const [selectedPractice, setSelectedPractice] = useState<Practice | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [showGoalModal, setShowGoalModal] = useState(false);
 
   const { data: lessonsData } = useLessons({ 
@@ -27,31 +23,15 @@ export default function PracticeSessionPage() {
     includePractices: false 
   });
   
+  const { 
+    data: selectedPractice, 
+    isLoading, 
+    error 
+  } = usePractice(practiceId || '', {
+    enabled: !!practiceId
+  });
+  
   const lesson = lessonsData?.[0];
-
-  useEffect(() => {
-    const loadPractice = async () => {
-      if (!practiceId) {
-        setError('Practice ID is required');
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        setIsLoading(true);
-        setError(null);
-        const practice = await PracticesService.getPracticeById(practiceId);
-        setSelectedPractice(practice);
-      } catch (err) {
-        console.error('Error loading practice:', err);
-        setError('Failed to load practice session');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadPractice();
-  }, [practiceId]);
 
   const handleCompletePractice = () => {
     router.push(`/practice?lesson=${lessonSlug}`);
@@ -81,7 +61,7 @@ export default function PracticeSessionPage() {
         />
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <p className="text-destructive mb-4">{error || 'Practice not found'}</p>
+            <p className="text-destructive mb-4">{error?.message || 'Practice not found'}</p>
             <button
               onClick={() => router.push(`/practice?lesson=${lessonSlug}`)}
               className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"

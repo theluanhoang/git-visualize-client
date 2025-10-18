@@ -10,18 +10,29 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, GripVertical, Lightbulb, Target, Terminal, CheckCircle, Tag } from 'lucide-react';
+import { Plus, Trash2, GripVertical, Lightbulb, Target, Terminal as TerminalIcon, Tag, RotateCcw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import CommitGraph from '@/components/common/CommitGraph';
+import Terminal from '@/components/common/terminal/Terminal';
+import { useTerminalResponses } from '@/lib/react-query/hooks/use-git-engine';
+import { useQueryClient } from '@tanstack/react-query';
+import { usePracticeFormSubmission } from '@/lib/react-query/hooks/use-practice';
+import { toast } from 'sonner';
+
 
 interface PracticeFormProps {
   onSave: (practice: PracticeFormData) => void;
   onCancel: () => void;
   initialData?: Partial<PracticeFormData>;
+  lessonId: string;
+  practiceId?: string;
 }
 
-export function PracticeForm({ onSave, onCancel, initialData }: PracticeFormProps) {
+export function PracticeForm({ onSave, onCancel, initialData, lessonId, practiceId }: PracticeFormProps) {
   const [activeTab, setActiveTab] = useState<'basic' | 'instructions' | 'commands' | 'hints' | 'validation' | 'tags'>('basic');
+  const queryClient = useQueryClient();
+  
+  const { handleSave, isSaving, error, isSuccess } = usePracticeFormSubmission();
 
   const {
     register,
@@ -42,7 +53,6 @@ export function PracticeForm({ onSave, onCancel, initialData }: PracticeFormProp
       instructions: initialData?.instructions || [],
       hints: initialData?.hints || [],
       expectedCommands: initialData?.expectedCommands || [],
-      validationRules: initialData?.validationRules || [],
       tags: initialData?.tags || []
     }
   });
@@ -62,18 +72,80 @@ export function PracticeForm({ onSave, onCancel, initialData }: PracticeFormProp
     name: 'expectedCommands'
   });
 
-  const { fields: validationFields, append: appendValidation, remove: removeValidation } = useFieldArray({
-    control,
-    name: 'validationRules'
-  });
-
   const { fields: tagFields, append: appendTag, remove: removeTag } = useFieldArray({
     control,
     name: 'tags'
   });
 
-  const onSubmit = (data: PracticeFormData) => {
-    onSave(data);
+  const goalBuilderId = 'goal-builder';
+  const { data: goalResponses = [] } = useTerminalResponses(goalBuilderId);
+  const [goalPreviewState, setGoalPreviewState] = useState<any>(initialData?.goalRepositoryState || null);
+  const [resetKey, setResetKey] = useState(0);
+  const [isResetting, setIsResetting] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+  
+  
+  
+  React.useEffect(() => {
+    if (initialData?.goalRepositoryState && !goalPreviewState) {
+      setGoalPreviewState(initialData.goalRepositoryState);
+    }
+  }, [initialData?.goalRepositoryState, goalPreviewState]);
+  
+  React.useEffect(() => {
+    const last = goalResponses[goalResponses.length - 1];
+    if (last?.repositoryState) {
+      setGoalPreviewState(last.repositoryState);
+    }
+  }, [goalResponses]);
+
+  React.useEffect(() => {
+    if (initialData?.goalRepositoryState && !isInitialized) {
+      queryClient.setQueryData(['git', 'state', goalBuilderId], initialData.goalRepositoryState);
+      setIsInitialized(true);
+    }
+  }, [initialData?.goalRepositoryState, isInitialized, queryClient, goalBuilderId]);
+
+  React.useEffect(() => {
+    if (goalPreviewState === null) {
+      queryClient.setQueryData(['goal-terminal-responses'], []);
+    }
+  }, [goalPreviewState, queryClient]);
+
+  const onSubmit = async (data: PracticeFormData) => {
+    try {
+      const commands = goalResponses.map(r => r.command).filter(Boolean) as string[];
+      const gitLines = commands.filter(c => c.startsWith('git '));
+      const mapped = gitLines.map((cmd, i) => ({ command: cmd, order: i + 1, isRequired: true }));
+
+      let goalState = goalPreviewState;
+
+      const formDataWithGoal: PracticeFormData = { 
+        ...data, 
+        expectedCommands: mapped, 
+        goalRepositoryState: goalState 
+      };
+
+      if (lessonId && practiceId) {
+        const result = await handleSave(formDataWithGoal, lessonId, practiceId);
+        toast.success('Practice updated successfully!');
+      } else {
+        onSave(formDataWithGoal);
+      }
+      
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message.includes('403') || error.message.includes('Forbidden')) {
+          toast.error('Bạn cần quyền admin để tạo/sửa practice. Vui lòng đăng nhập với tài khoản admin.');
+        } else if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+          toast.error('Bạn cần đăng nhập để thực hiện thao tác này.');
+        } else {
+          toast.error(`Lỗi khi lưu practice: ${error.message}`);
+        }
+      } else {
+        toast.error('Có lỗi xảy ra khi lưu practice. Vui lòng thử lại.');
+      }
+    }
   };
 
   const addInstruction = () => {
@@ -88,26 +160,55 @@ export function PracticeForm({ onSave, onCancel, initialData }: PracticeFormProp
     appendCommand({ command: '', order: commandFields.length + 1, isRequired: true });
   };
 
-  const addValidation = () => {
-    appendValidation({ type: 'min_commands', value: '', message: '' });
-  };
-
   const addTag = () => {
     appendTag({ name: '', color: '#3B82F6' });
   };
 
-  const tabs = [
+  const resetGoalBuilder = () => {
+    setIsResetting(true);
+    
+    try {
+      localStorage.removeItem(`git-terminal-responses:${goalBuilderId}`);
+      localStorage.removeItem(`git-commit-graph-node-positions:${goalBuilderId}`);
+      localStorage.removeItem('git-goal-commit-graph-node-positions');
+      localStorage.removeItem('git-goal-terminal-responses');
+    } catch (error) {
+      toast.error('Failed to clear local storage');
+    }
+    
+    setGoalPreviewState(null);
+    queryClient.setQueryData(['goal-terminal-responses'], []);
+    queryClient.setQueryData(['terminal-responses', goalBuilderId], []);
+    queryClient.setQueryData(['git', 'state', goalBuilderId], null);
+    queryClient.removeQueries({ queryKey: ['git', 'goal-state'] });
+    queryClient.removeQueries({ queryKey: ['git'] });
+    queryClient.removeQueries({ queryKey: ['goal'] });
+    setResetKey(prev => prev + 1);
+    setIsInitialized(false);
+    
+    setTimeout(() => {
+      if (typeof window !== 'undefined') {
+        const resetFunction = (window as Window & { resetGoalCommitGraphView?: () => void }).resetGoalCommitGraphView;
+        if (resetFunction && typeof resetFunction === 'function') {
+          resetFunction();
+        }
+      }
+      setIsResetting(false);
+    }, 200);
+  };
+
+  type TabId = 'basic' | 'instructions' | 'commands' | 'hints' | 'tags';
+  
+  const tabs: { id: TabId; label: string; icon: typeof Target }[] = [
     { id: 'basic', label: 'Basic Info', icon: Target },
     { id: 'instructions', label: 'Instructions', icon: Target },
-    { id: 'commands', label: 'Commands', icon: Terminal },
+    { id: 'commands', label: 'Commands', icon: TerminalIcon },
     { id: 'hints', label: 'Hints', icon: Lightbulb },
-    { id: 'validation', label: 'Validation', icon: CheckCircle },
     { id: 'tags', label: 'Tags', icon: Tag }
   ];
 
   return (
-    <div className="space-y-6">
-      {}
+    <div className="space-y-6 w-full max-w-full">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold">Practice Details</h2>
@@ -117,20 +218,18 @@ export function PracticeForm({ onSave, onCancel, initialData }: PracticeFormProp
           <Button variant="outline" onClick={onCancel}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit(onSubmit)} disabled={isSubmitting}>
-            {isSubmitting ? 'Saving...' : 'Save Practice'}
+          <Button onClick={handleSubmit(onSubmit)} disabled={isSubmitting || isSaving}>
+            {isSubmitting || isSaving ? 'Saving...' : 'Save Practice'}
           </Button>
         </div>
       </div>
-
-      {}
       <div className="flex space-x-1 bg-muted p-1 rounded-lg">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                 activeTab === tab.id
                   ? 'bg-background text-foreground shadow-sm'
@@ -144,7 +243,6 @@ export function PracticeForm({ onSave, onCancel, initialData }: PracticeFormProp
         })}
       </div>
 
-      {}
       <div className="space-y-6">
         <AnimatePresence mode="wait">
           {activeTab === 'basic' && (
@@ -212,7 +310,11 @@ export function PracticeForm({ onSave, onCancel, initialData }: PracticeFormProp
                       <Input
                         id="estimatedTime"
                         type="number"
-                        {...register('estimatedTime', { valueAsNumber: true })}
+                        step="1"
+                        {...register('estimatedTime', { 
+                          valueAsNumber: true,
+                          setValueAs: (value) => Math.round(Number(value) || 0)
+                        })}
                         placeholder="15"
                         className="mt-1"
                       />
@@ -302,58 +404,33 @@ export function PracticeForm({ onSave, onCancel, initialData }: PracticeFormProp
             >
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle>Expected Commands</CardTitle>
-                  <Button onClick={addCommand} size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Command
+                  <CardTitle>Goal Builder</CardTitle>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={resetGoalBuilder}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <RotateCcw className="h-4 w-4 mr-2" />
+                    Reset Graph
                   </Button>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  {commandFields.map((field, index) => (
-                    <div key={field.id} className="flex items-start gap-3 p-3 border rounded-lg">
-                      <div className="flex items-center gap-2">
-                        <GripVertical className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm font-medium text-muted-foreground">
-                          {index + 1}
-                        </span>
-                      </div>
-                      <div className="flex-1 space-y-2">
-                        <Input
-                          {...register(`expectedCommands.${index}.command`)}
-                          placeholder="e.g., git init"
-                          className="font-mono"
-                        />
-                        <div className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            {...register(`expectedCommands.${index}.isRequired`)}
-                            className="rounded"
-                          />
-                          <Label className="text-sm">Required command</Label>
-                        </div>
-                        {errors.expectedCommands?.[index]?.command && (
-                          <p className="text-sm text-red-500">
-                            {errors.expectedCommands[index]?.command?.message}
-                          </p>
-                        )}
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeCommand(index)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                <CardContent>
+                  <div className="space-y-3 min-w-0">
+                    <div className="min-w-0 overflow-hidden" key={`commit-graph-${resetKey}`}>
+                      <CommitGraph 
+                        dataSource="goal" 
+                        goalRepositoryState={goalPreviewState} 
+                        showClearButton={false} 
+                        title="Goal Preview"
+                        practiceId={goalBuilderId}
+                        isResetting={isResetting}
+                      />
                     </div>
-                  ))}
-                  {commandFields.length === 0 && (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <Terminal className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>No commands added yet</p>
-                      <p className="text-sm">Click "Add Command" to get started</p>
+                    <div className="min-w-0 overflow-hidden" key={resetKey}>
+                      <Terminal practiceId={goalBuilderId} />
                     </div>
-                  )}
+                  </div>
                 </CardContent>
               </Card>
             </motion.div>
@@ -418,86 +495,6 @@ export function PracticeForm({ onSave, onCancel, initialData }: PracticeFormProp
             </motion.div>
           )}
 
-          {activeTab === 'validation' && (
-            <motion.div
-              key="validation"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-4"
-            >
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle>Validation Rules</CardTitle>
-                  <Button onClick={addValidation} size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Rule
-                  </Button>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {validationFields.map((field, index) => (
-                    <div key={field.id} className="flex items-start gap-3 p-3 border rounded-lg">
-                      <div className="flex items-center gap-2">
-                        <GripVertical className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm font-medium text-muted-foreground">
-                          {index + 1}
-                        </span>
-                      </div>
-                      <div className="flex-1 space-y-2">
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <Label className="text-sm">Type</Label>
-                            <Select
-                              value={watch(`validationRules.${index}.type`)}
-                              onValueChange={(value) => setValue(`validationRules.${index}.type`, value)}
-                            >
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="min_commands">Min Commands</SelectItem>
-                                <SelectItem value="max_commands">Max Commands</SelectItem>
-                                <SelectItem value="required_commands">Required Commands</SelectItem>
-                                <SelectItem value="branch_count">Branch Count</SelectItem>
-                                <SelectItem value="commit_count">Commit Count</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div>
-                            <Label className="text-sm">Value</Label>
-                            <Input
-                              {...register(`validationRules.${index}.value`)}
-                              placeholder="e.g., 2"
-                            />
-                          </div>
-                        </div>
-                        <Input
-                          {...register(`validationRules.${index}.message`)}
-                          placeholder="Error message (optional)"
-                        />
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeValidation(index)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                  {validationFields.length === 0 && (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <CheckCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>No validation rules added yet</p>
-                      <p className="text-sm">Click "Add Rule" to get started</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
-
           {activeTab === 'tags' && (
             <motion.div
               key="tags"
@@ -531,13 +528,15 @@ export function PracticeForm({ onSave, onCancel, initialData }: PracticeFormProp
                           />
                           <div className="flex items-center gap-2">
                             <Input
+                              type="color"
+                              value={watch(`tags.${index}.color`) || '#3B82F6'}
+                              onChange={(e) => setValue(`tags.${index}.color`, e.target.value)}
+                              className="h-10 w-12 p-1 rounded border cursor-pointer bg-transparent"
+                            />
+                            <Input
                               {...register(`tags.${index}.color`)}
                               placeholder="#3B82F6"
                               className="font-mono"
-                            />
-                            <div
-                              className="w-8 h-8 rounded border"
-                              style={{ backgroundColor: watch(`tags.${index}.color`) || '#3B82F6' }}
                             />
                           </div>
                         </div>
