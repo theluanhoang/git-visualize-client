@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import React from 'react';
+import { useTranslations } from 'next-intl';
 
 type Props = {
   slug: string;
@@ -9,7 +10,8 @@ type Props = {
   description?: string;
 };
 
-export default function PracticeCTA({ slug, title = 'Thử ngay!', description = 'Bạn đã học các lệnh Git cơ bản. Hãy chuyển sang phòng thực hành để tự mình trải nghiệm và củng cố kiến thức.' }: Props) {
+export default function PracticeCTA({ slug, title, description }: Props) {
+  const t = useTranslations('gitTheory.practiceCTA');
   return (
     <div className="rounded-lg p-6 border bg-[var(--surface)] border-[var(--border)] relative overflow-hidden">
       <div className="pointer-events-none absolute inset-0 opacity-70 [mask-image:radial-gradient(60%_60%_at_20%_0%,#000_20%,transparent_70%)]">
@@ -21,13 +23,13 @@ export default function PracticeCTA({ slug, title = 'Thử ngay!', description =
           <span className="text-white text-xl">🚀</span>
         </div>
         <div className="flex-1">
-          <h3 className="text-lg font-semibold text-foreground mb-2">{title}</h3>
-          <p className="text-muted-foreground mb-4">{description}</p>
+          <h3 className="text-lg font-semibold text-foreground mb-2">{title || t('title')}</h3>
+          <p className="text-muted-foreground mb-4">{description || t('description')}</p>
           <Link
             href={`/practice?lesson=${slug}`}
             className="inline-flex items-center px-4 py-2 rounded-md bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-[var(--primary-700)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] shadow-sm ring-1 ring-[var(--primary-300)]/30"
           >
-            Vào phòng thực hành →
+            {t('button')}
           </Link>
         </div>
       </div>

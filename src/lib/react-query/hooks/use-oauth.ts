@@ -4,8 +4,8 @@ import { authStorage } from '@/services/auth';
 import { toast } from 'sonner';
 
 export const useOAuthLogin = () => {
-  const login = (provider: OAuthProvider) => {
-    oauthService.initiateOAuth(provider);
+  const login = (provider: OAuthProvider, locale: string = 'en') => {
+    oauthService.initiateOAuth(provider, locale);
   };
 
   return { login };
@@ -102,8 +102,8 @@ export const useOAuthCallback = () => {
 };
 
 export const useOAuthProviderInfo = () => {
-  const getProviderInfo = (provider: OAuthProvider) => ({
-    name: oauthService.getProviderDisplayName(provider),
+  const getProviderInfo = (provider: OAuthProvider, t?: (key: string) => string) => ({
+    name: oauthService.getProviderDisplayName(provider, t),
     icon: oauthService.getProviderIcon(provider),
     color: oauthService.getProviderColor(provider),
     textColor: oauthService.getProviderTextColor(provider),

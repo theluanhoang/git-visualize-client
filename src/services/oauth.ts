@@ -55,8 +55,8 @@ class OAuthService {
   private readonly baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 
 
-  initiateOAuth(provider: OAuthProvider): void {
-    const oauthUrl = `${this.baseUrl}/api/v1/auth/oauth/${provider}`;
+  initiateOAuth(provider: OAuthProvider, locale: string = 'en'): void {
+    const oauthUrl = `${this.baseUrl}/api/v1/auth/oauth/${provider}?locale=${locale}`;
     window.location.href = oauthUrl;
   }
 
@@ -108,7 +108,10 @@ class OAuthService {
     }
   }
 
-  getProviderDisplayName(provider: OAuthProvider): string {
+  getProviderDisplayName(provider: OAuthProvider, t?: (key: string) => string): string {
+    if (t) {
+      return t(provider);
+    }
     const names = {
       google: 'Google',
       github: 'GitHub',

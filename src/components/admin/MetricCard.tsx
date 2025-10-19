@@ -5,7 +5,7 @@ export function MetricCard({ title, value, icon: Icon, color = 'text-blue-600', 
   return (
     <Card className="p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+        <h3 className="text-lg font-semibold text-foreground">{title}</h3>
         <Icon className={`h-5 w-5 ${color}`} />
       </div>
       <div className={`text-3xl font-bold ${color} mb-2`}>

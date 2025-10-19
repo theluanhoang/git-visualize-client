@@ -5,6 +5,8 @@ import { useOAuthLogin, useOAuthProviderInfo } from '@/lib/react-query/hooks/use
 import { OAuthProvider } from '@/services/oauth';
 import { Loader2, Github, Facebook } from 'lucide-react';
 import { SiGoogle } from 'react-icons/si';
+import { useTranslations } from 'next-intl';
+import { useParams } from 'next/navigation';
 
 interface OAuthButtonProps {
   provider: OAuthProvider;
@@ -23,12 +25,15 @@ export function OAuthButton({
 }: OAuthButtonProps) {
   const { login } = useOAuthLogin();
   const { getProviderInfo } = useOAuthProviderInfo();
+  const params = useParams();
+  const locale = (params.locale as string) || 'en';
+  const t = useTranslations('auth');
   
-  const providerInfo = getProviderInfo(provider);
+  const providerInfo = getProviderInfo(provider, t);
   
   const handleClick = () => {
     if (!isLoading && !disabled) {
-      login(provider);
+      login(provider, locale);
     }
   };
 
@@ -61,7 +66,7 @@ export function OAuthButton({
             renderIcon()
           )}
         </span>
-        <span className="ml-2 truncate">{children || `Continue with ${providerInfo.name}`}</span>
+        <span className="ml-2 truncate">{children || `${t('continueWithProvider')} ${providerInfo.name}`}</span>
       </span>
     </Button>
   );
@@ -81,6 +86,7 @@ export function OAuthButtons({
   showLabels = true 
 }: OAuthButtonsProps) {
   const providers: OAuthProvider[] = ['google', 'github', 'facebook'];
+  const t = useTranslations('auth');
 
   return (
     <div className={`space-y-3 ${className}`}>
@@ -91,7 +97,7 @@ export function OAuthButtons({
           </div>
           <div className="relative flex justify-center text-xs uppercase">
             <span className="bg-background px-2 text-muted-foreground">
-              Or continue with
+              {t('continueWith')}
             </span>
           </div>
         </div>

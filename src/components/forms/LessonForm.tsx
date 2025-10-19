@@ -18,7 +18,7 @@ import { GoalModal } from '@/components/common/practice/GoalModal';
 import { PracticeFormData } from '@/lib/schemas/practice';
 import { IRepositoryState } from '@/types/git';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { toast } from 'sonner';
 
 interface LessonFormProps {
@@ -29,6 +29,8 @@ interface LessonFormProps {
 
 export function LessonForm({ initialData, isEdit = false, lessonId }: LessonFormProps) {
   const router = useRouter();
+  const params = useParams();
+  const locale = (params.locale as string) || 'en';
   const queryClient = useQueryClient();
   const [content, setContent] = useState(initialData?.content || '');
   const [showPracticeForm, setShowPracticeForm] = useState(false);
@@ -141,7 +143,7 @@ export function LessonForm({ initialData, isEdit = false, lessonId }: LessonForm
         toast.success('Lesson saved successfully!');
       }
       
-      router.push('/admin/lessons');
+      router.push(`/${locale}/admin/lessons`);
     } catch (error) {
       console.error('Error saving lesson:', error);
       toast.error('Failed to save lesson');
@@ -153,7 +155,7 @@ export function LessonForm({ initialData, isEdit = false, lessonId }: LessonForm
       {}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/admin/lessons">
+          <Link href={`/${locale}/admin/lessons`}>
             <Button variant="ghost" size="sm">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Quay lại

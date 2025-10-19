@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { X, Crown, Shield, Settings, Users, BookOpen } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface AdminWelcomeBannerProps {
   userName?: string;
@@ -14,6 +15,7 @@ interface AdminWelcomeBannerProps {
 export default function AdminWelcomeBanner({ userName, onDismiss }: AdminWelcomeBannerProps) {
   const [isVisible, setIsVisible] = useState(true);
   const [isDismissed, setIsDismissed] = useState(false);
+  const t = useTranslations('admin');
 
   useEffect(() => {
     const dismissed = localStorage.getItem('admin-welcome-dismissed');
@@ -62,25 +64,24 @@ export default function AdminWelcomeBanner({ userName, onDismiss }: AdminWelcome
                   
                   <div className="flex-1">
                     <h2 className="text-2xl font-bold text-blue-800 dark:text-blue-200 mb-2">
-                      🎉 Chào mừng Admin {userName || ''}!
+                      🎉 {t('welcome')} {userName || ''}!
                     </h2>
                     <p className="text-blue-700 dark:text-blue-300 mb-4">
-                      Bạn đã được chuyển hướng tự động đến trang quản trị. 
-                      Tại đây bạn có thể quản lý toàn bộ hệ thống Git Learning Platform.
+                      {t('welcomeMessage')}
                     </p>
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
                         <BookOpen className="h-4 w-4" />
-                        <span>Quản lý bài học</span>
+                        <span>{t('manageLessons')}</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
                         <Users className="h-4 w-4" />
-                        <span>Quản lý người dùng</span>
+                        <span>{t('manageUsers')}</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
                         <Settings className="h-4 w-4" />
-                        <span>Cài đặt hệ thống</span>
+                        <span>{t('systemSettings')}</span>
                       </div>
                     </div>
                   </div>

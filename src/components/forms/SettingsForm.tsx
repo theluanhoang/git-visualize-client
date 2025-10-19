@@ -5,29 +5,25 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { settingsSchema, Settings } from '@/lib/schemas/settings';
 import { useSettings, useUpdateSettings } from '@/lib/react-query/hooks/use-settings';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Toggle } from '@/components/ui/toggle';
-import { Card } from '@/components/ui/card';
 import { Save, AlertTriangle } from 'lucide-react';
 import { PageHeader, SettingsSidebar, SettingsSection } from '@/components/admin';
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 export function SettingsForm() {
   const [activeTab, setActiveTab] = useState('general');
+  const t = useTranslations('admin.settings');
   const { data: settings, isLoading } = useSettings();
   const updateSettingsMutation = useUpdateSettings();
 
   const {
-    register,
     handleSubmit,
     watch,
     setValue,
     formState: { errors, isDirty }
   } = useForm<Settings>({
     resolver: zodResolver(settingsSchema),
-    defaultValues: settings,
+    defaultValues: settings || {},
     values: settings
   });
 
@@ -40,29 +36,29 @@ export function SettingsForm() {
   };
 
   const tabs = [
-    { id: 'general', label: 'Tổng quan', icon: require('lucide-react').Settings },
-    { id: 'notifications', label: 'Thông báo', icon: require('lucide-react').Bell },
-    { id: 'security', label: 'Bảo mật', icon: require('lucide-react').Shield },
-    { id: 'appearance', label: 'Giao diện', icon: require('lucide-react').Palette },
-    { id: 'email', label: 'Email', icon: require('lucide-react').Mail },
-    { id: 'backup', label: 'Sao lưu', icon: require('lucide-react').Database }
+    { id: 'general', label: t('general'), icon: require('lucide-react').Settings },
+    { id: 'notifications', label: t('notifications'), icon: require('lucide-react').Bell },
+    { id: 'security', label: t('security'), icon: require('lucide-react').Shield },
+    { id: 'appearance', label: t('appearance'), icon: require('lucide-react').Palette },
+    { id: 'email', label: t('email'), icon: require('lucide-react').Mail },
+    { id: 'backup', label: t('backup'), icon: require('lucide-react').Database }
   ];
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div>{t('loading')}</div>;
   }
 
   return (
     <div className="space-y-6">
       <PageHeader 
-        title="Cài đặt hệ thống"
-        description="Quản lý cấu hình và cài đặt hệ thống"
+        title={t('title')}
+        description={t('description')}
         actions={
           <div className="flex items-center gap-3">
             {isDirty && (
               <div className="flex items-center text-sm text-orange-500">
                 <AlertTriangle className="h-4 w-4 mr-1" />
-                Có thay đổi chưa lưu
+                {t('unsavedChanges')}
               </div>
             )}
             <Button 
@@ -70,7 +66,7 @@ export function SettingsForm() {
               disabled={!isDirty || updateSettingsMutation.isPending}
             >
               <Save className="h-4 w-4 mr-2" />
-              {updateSettingsMutation.isPending ? 'Đang lưu...' : 'Lưu thay đổi'}
+              {updateSettingsMutation.isPending ? t('saving') : t('saveChanges')}
             </Button>
           </div>
         }
@@ -92,43 +88,43 @@ export function SettingsForm() {
             {}
             {activeTab === 'general' && (
               <SettingsSection
-                title="Cài đặt tổng quan"
+                title={t('generalSettings')}
                 layout="mixed"
                 fields={[
                   {
                     id: "siteName",
-                    label: "Tên trang web",
+                    label: t('siteName'),
                     type: "text",
-                    value: watch('general.siteName'),
-                    onChange: (value) => setValue('general.siteName', value)
+                    value: watch('general.siteName') || '',
+                    onChange: (value) => setValue('general.siteName', value as string)
                   },
                   {
                     id: "siteUrl",
-                    label: "URL trang web",
+                    label: t('siteUrl'),
                     type: "text",
-                    value: watch('general.siteUrl'),
-                    onChange: (value) => setValue('general.siteUrl', value)
+                    value: watch('general.siteUrl') || '',
+                    onChange: (value) => setValue('general.siteUrl', value as string)
                   },
                   {
                     id: "siteDescription",
-                    label: "Mô tả trang web",
+                    label: t('siteDescription'),
                     type: "text",
-                    value: watch('general.siteDescription'),
-                    onChange: (value) => setValue('general.siteDescription', value)
+                    value: watch('general.siteDescription') || '',
+                    onChange: (value) => setValue('general.siteDescription', value as string)
                   },
                   {
                     id: "adminEmail",
-                    label: "Email quản trị",
+                    label: t('adminEmail'),
                     type: "email",
-                    value: watch('general.adminEmail'),
-                    onChange: (value) => setValue('general.adminEmail', value)
+                    value: watch('general.adminEmail') || '',
+                    onChange: (value) => setValue('general.adminEmail', value as string)
                   },
                   {
                     id: "timezone",
-                    label: "Múi giờ",
+                    label: t('timezone'),
                     type: "select",
-                    value: watch('general.timezone'),
-                    onChange: (value) => setValue('general.timezone', value),
+                    value: watch('general.timezone') || 'UTC',
+                    onChange: (value) => setValue('general.timezone', value as string),
                     options: [
                       { value: "Asia/Ho_Chi_Minh", label: "Asia/Ho_Chi_Minh" },
                       { value: "UTC", label: "UTC" },
@@ -142,48 +138,48 @@ export function SettingsForm() {
             {}
             {activeTab === 'notifications' && (
               <SettingsSection
-                title="Cài đặt thông báo"
+                title={t('notificationSettings')}
                 layout="mixed"
                 fields={[
                   {
                     id: "emailNotifications",
-                    label: "Thông báo email",
+                    label: t('emailNotifications'),
                     type: "toggle",
-                    value: watch('notifications.emailNotifications'),
-                    onChange: (value) => setValue('notifications.emailNotifications', value),
-                    description: "Gửi thông báo qua email"
+                    value: watch('notifications.emailNotifications') || false,
+                    onChange: (value) => setValue('notifications.emailNotifications', value as boolean),
+                    description: t('emailNotificationsDesc')
                   },
                   {
                     id: "newUserRegistration",
-                    label: "Đăng ký người dùng mới",
+                    label: t('newUserRegistration'),
                     type: "toggle",
-                    value: watch('notifications.newUserRegistration'),
-                    onChange: (value) => setValue('notifications.newUserRegistration', value),
-                    description: "Thông báo khi có người dùng mới đăng ký"
+                    value: watch('notifications.newUserRegistration') || false,
+                    onChange: (value) => setValue('notifications.newUserRegistration', value as boolean),
+                    description: t('newUserRegistrationDesc')
                   },
                   {
                     id: "lessonPublished",
-                    label: "Bài học được xuất bản",
+                    label: t('lessonPublished'),
                     type: "toggle",
-                    value: watch('notifications.lessonPublished'),
-                    onChange: (value) => setValue('notifications.lessonPublished', value),
-                    description: "Thông báo khi có bài học mới"
+                    value: watch('notifications.lessonPublished') || false,
+                    onChange: (value) => setValue('notifications.lessonPublished', value as boolean),
+                    description: t('lessonPublishedDesc')
                   },
                   {
                     id: "systemAlerts",
-                    label: "Cảnh báo hệ thống",
+                    label: t('systemAlerts'),
                     type: "toggle",
-                    value: watch('notifications.systemAlerts'),
-                    onChange: (value) => setValue('notifications.systemAlerts', value),
-                    description: "Thông báo về các vấn đề hệ thống"
+                    value: watch('notifications.systemAlerts') || false,
+                    onChange: (value) => setValue('notifications.systemAlerts', value as boolean),
+                    description: t('systemAlertsDesc')
                   },
                   {
                     id: "weeklyReports",
-                    label: "Báo cáo hàng tuần",
+                    label: t('weeklyReports'),
                     type: "toggle",
-                    value: watch('notifications.weeklyReports'),
-                    onChange: (value) => setValue('notifications.weeklyReports', value),
-                    description: "Gửi báo cáo thống kê hàng tuần"
+                    value: watch('notifications.weeklyReports') || false,
+                    onChange: (value) => setValue('notifications.weeklyReports', value as boolean),
+                    description: t('weeklyReportsDesc')
                   }
                 ]}
               />
@@ -192,46 +188,46 @@ export function SettingsForm() {
             {}
             {activeTab === 'security' && (
               <SettingsSection
-                title="Cài đặt bảo mật"
+                title={t('securitySettings')}
                 layout="mixed"
                 fields={[
                   {
                     id: "requireEmailVerification",
-                    label: "Xác thực email",
+                    label: t('requireEmailVerification'),
                     type: "toggle",
-                    value: watch('security.requireEmailVerification'),
-                    onChange: (value) => setValue('security.requireEmailVerification', value),
-                    description: "Yêu cầu xác thực email khi đăng ký"
+                    value: watch('security.requireEmailVerification') || false,
+                    onChange: (value) => setValue('security.requireEmailVerification', value as boolean),
+                    description: t('requireEmailVerificationDesc')
                   },
                   {
                     id: "allowUserRegistration",
-                    label: "Cho phép đăng ký",
+                    label: t('allowUserRegistration'),
                     type: "toggle",
-                    value: watch('security.allowUserRegistration'),
-                    onChange: (value) => setValue('security.allowUserRegistration', value),
-                    description: "Cho phép người dùng tự đăng ký"
+                    value: watch('security.allowUserRegistration') || false,
+                    onChange: (value) => setValue('security.allowUserRegistration', value as boolean),
+                    description: t('allowUserRegistrationDesc')
                   },
                   {
                     id: "enableTwoFactor",
-                    label: "Xác thực 2 yếu tố",
+                    label: t('enableTwoFactor'),
                     type: "toggle",
-                    value: watch('security.enableTwoFactor'),
-                    onChange: (value) => setValue('security.enableTwoFactor', value),
-                    description: "Yêu cầu 2FA cho tài khoản admin"
+                    value: watch('security.enableTwoFactor') || false,
+                    onChange: (value) => setValue('security.enableTwoFactor', value as boolean),
+                    description: t('enableTwoFactorDesc')
                   },
                   {
                     id: "maxLoginAttempts",
-                    label: "Số lần đăng nhập tối đa",
+                    label: t('maxLoginAttempts'),
                     type: "number",
-                    value: watch('security.maxLoginAttempts'),
-                    onChange: (value) => setValue('security.maxLoginAttempts', parseInt(value))
+                    value: watch('security.maxLoginAttempts') || 5,
+                    onChange: (value) => setValue('security.maxLoginAttempts', parseInt(value as string))
                   },
                   {
                     id: "sessionTimeout",
-                    label: "Thời gian phiên (phút)",
+                    label: t('sessionTimeout'),
                     type: "number",
-                    value: watch('security.sessionTimeout'),
-                    onChange: (value) => setValue('security.sessionTimeout', parseInt(value))
+                    value: watch('security.sessionTimeout') || 30,
+                    onChange: (value) => setValue('security.sessionTimeout', parseInt(value as string))
                   }
                 ]}
               />
@@ -240,51 +236,51 @@ export function SettingsForm() {
             {}
             {activeTab === 'appearance' && (
               <SettingsSection
-                title="Cài đặt giao diện"
+                title={t('appearanceSettings')}
                 layout="mixed"
                 fields={[
                   {
                     id: "theme",
-                    label: "Chủ đề",
+                    label: t('theme'),
                     type: "select",
-                    value: watch('appearance.theme'),
+                    value: watch('appearance.theme') || 'light',
                     onChange: (value) => setValue('appearance.theme', value as any),
                     options: [
-                      { value: "light", label: "Sáng" },
-                      { value: "dark", label: "Tối" },
-                      { value: "auto", label: "Tự động" }
+                      { value: "light", label: t('light') },
+                      { value: "dark", label: t('dark') },
+                      { value: "auto", label: t('auto') }
                     ]
                   },
                   {
                     id: "primaryColor",
-                    label: "Màu chính",
+                    label: t('primaryColor'),
                     type: "color",
-                    value: watch('appearance.primaryColor'),
-                    onChange: (value) => setValue('appearance.primaryColor', value),
+                    value: watch('appearance.primaryColor') || '#000000',
+                    onChange: (value) => setValue('appearance.primaryColor', value as string),
                     className: "h-10"
                   },
                   {
                     id: "logoUrl",
-                    label: "URL Logo",
+                    label: t('logoUrl'),
                     type: "text",
-                    value: watch('appearance.logoUrl'),
-                    onChange: (value) => setValue('appearance.logoUrl', value),
+                    value: watch('appearance.logoUrl') || '',
+                    onChange: (value) => setValue('appearance.logoUrl', value as string),
                     placeholder: "https://example.com/logo.png"
                   },
                   {
                     id: "faviconUrl",
-                    label: "URL Favicon",
+                    label: t('faviconUrl'),
                     type: "text",
-                    value: watch('appearance.faviconUrl'),
-                    onChange: (value) => setValue('appearance.faviconUrl', value),
+                    value: watch('appearance.faviconUrl') || '',
+                    onChange: (value) => setValue('appearance.faviconUrl', value as string),
                     placeholder: "https://example.com/favicon.ico"
                   },
                   {
                     id: "customCSS",
-                    label: "CSS tùy chỉnh",
+                    label: t('customCSS'),
                     type: "textarea",
-                    value: watch('appearance.customCSS'),
-                    onChange: (value) => setValue('appearance.customCSS', value),
+                    value: watch('appearance.customCSS') || '',
+                    onChange: (value) => setValue('appearance.customCSS', value as string),
                     placeholder: ""
                   }
                 ]}
@@ -294,50 +290,50 @@ export function SettingsForm() {
             {}
             {activeTab === 'email' && (
               <SettingsSection
-                title="Cài đặt email"
+                title={t('emailSettings')}
                 layout="double"
                 fields={[
                   {
                     id: "smtpHost",
-                    label: "SMTP Host",
+                    label: t('smtpHost'),
                     type: "text",
-                    value: watch('email.smtpHost'),
-                    onChange: (value) => setValue('email.smtpHost', value)
+                    value: watch('email.smtpHost') || '',
+                    onChange: (value) => setValue('email.smtpHost', value as string)
                   },
                   {
                     id: "smtpPort",
-                    label: "SMTP Port",
+                    label: t('smtpPort'),
                     type: "number",
-                    value: watch('email.smtpPort'),
-                    onChange: (value) => setValue('email.smtpPort', parseInt(value))
+                    value: watch('email.smtpPort') || 587,
+                    onChange: (value) => setValue('email.smtpPort', parseInt(value as string))
                   },
                   {
                     id: "smtpUsername",
-                    label: "SMTP Username",
+                    label: t('smtpUsername'),
                     type: "text",
-                    value: watch('email.smtpUsername'),
-                    onChange: (value) => setValue('email.smtpUsername', value)
+                    value: watch('email.smtpUsername') || '',
+                    onChange: (value) => setValue('email.smtpUsername', value as string)
                   },
                   {
                     id: "smtpPassword",
-                    label: "SMTP Password",
+                    label: t('smtpPassword'),
                     type: "password",
-                    value: watch('email.smtpPassword'),
-                    onChange: (value) => setValue('email.smtpPassword', value)
+                    value: watch('email.smtpPassword') || '',
+                    onChange: (value) => setValue('email.smtpPassword', value as string)
                   },
                   {
                     id: "fromEmail",
-                    label: "Email gửi",
+                    label: t('fromEmail'),
                     type: "email",
-                    value: watch('email.fromEmail'),
-                    onChange: (value) => setValue('email.fromEmail', value)
+                    value: watch('email.fromEmail') || '',
+                    onChange: (value) => setValue('email.fromEmail', value as string)
                   },
                   {
                     id: "fromName",
-                    label: "Tên người gửi",
+                    label: t('fromName'),
                     type: "text",
-                    value: watch('email.fromName'),
-                    onChange: (value) => setValue('email.fromName', value)
+                    value: watch('email.fromName') || '',
+                    onChange: (value) => setValue('email.fromName', value as string)
                   }
                 ]}
               />
@@ -346,49 +342,49 @@ export function SettingsForm() {
             {}
             {activeTab === 'backup' && (
               <SettingsSection
-                title="Cài đặt sao lưu"
+                title={t('backupSettings')}
                 layout="mixed"
                 fields={[
                   {
                     id: "autoBackup",
-                    label: "Sao lưu tự động",
+                    label: t('autoBackup'),
                     type: "toggle",
-                    value: watch('backup.autoBackup'),
-                    onChange: (value) => setValue('backup.autoBackup', value),
-                    description: "Tự động sao lưu dữ liệu"
+                    value: watch('backup.autoBackup') || false,
+                    onChange: (value) => setValue('backup.autoBackup', value as boolean),
+                    description: t('autoBackupDesc')
                   },
                   {
                     id: "cloudStorage",
-                    label: "Lưu trữ đám mây",
+                    label: t('cloudStorage'),
                     type: "toggle",
-                    value: watch('backup.cloudStorage'),
-                    onChange: (value) => setValue('backup.cloudStorage', value),
-                    description: "Sao lưu lên cloud storage"
+                    value: watch('backup.cloudStorage') || false,
+                    onChange: (value) => setValue('backup.cloudStorage', value as boolean),
+                    description: t('cloudStorageDesc')
                   },
                   {
                     id: "backupFrequency",
-                    label: "Tần suất sao lưu",
+                    label: t('backupFrequency'),
                     type: "select",
-                    value: watch('backup.backupFrequency'),
+                    value: watch('backup.backupFrequency') || 'daily',
                     onChange: (value) => setValue('backup.backupFrequency', value as any),
                     options: [
-                      { value: "hourly", label: "Hàng giờ" },
-                      { value: "daily", label: "Hàng ngày" },
-                      { value: "weekly", label: "Hàng tuần" },
-                      { value: "monthly", label: "Hàng tháng" }
+                      { value: "hourly", label: t('hourly') },
+                      { value: "daily", label: t('daily') },
+                      { value: "weekly", label: t('weekly') },
+                      { value: "monthly", label: t('monthly') }
                     ]
                   },
                   {
                     id: "backupRetention",
-                    label: "Thời gian lưu trữ (ngày)",
+                    label: t('backupRetention'),
                     type: "number",
-                    value: watch('backup.backupRetention'),
-                    onChange: (value) => setValue('backup.backupRetention', parseInt(value))
+                    value: watch('backup.backupRetention') || 30,
+                    onChange: (value) => setValue('backup.backupRetention', parseInt(value as string))
                   }
                 ]}
                 actions={[
                   {
-                    label: "Tạo sao lưu",
+                    label: t('createBackup'),
                     onClick: () => {},
                     variant: "outline"
                   }

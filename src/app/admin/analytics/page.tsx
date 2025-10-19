@@ -216,7 +216,7 @@ export default function AnalyticsPage() {
       {activeTab === 'lessons' && (
         <div className="space-y-6">
           <Card className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Hiệu suất bài học</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-4">Hiệu suất bài học</h3>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -242,10 +242,10 @@ export default function AnalyticsPage() {
                   {analyticsData.topLessons.map((lesson) => (
                     <tr key={lesson.id}>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{lesson.title}</div>
+                        <div className="text-sm font-medium text-foreground">{lesson.title}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{lesson.views.toLocaleString()}</div>
+                        <div className="text-sm text-foreground">{lesson.views.toLocaleString()}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
@@ -255,16 +255,16 @@ export default function AnalyticsPage() {
                               style={{ width: `${lesson.completionRate}%` }}
                             ></div>
                           </div>
-                          <span className="text-sm text-gray-900">{lesson.completionRate}%</span>
+                          <span className="text-sm text-foreground">{lesson.completionRate}%</span>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <span className="text-sm text-gray-900">⭐ {lesson.rating}</span>
+                          <span className="text-sm text-foreground">⭐ {lesson.rating}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">24 phút</div>
+                        <div className="text-sm text-foreground">24 phút</div>
                       </td>
                     </tr>
                   ))}

@@ -18,6 +18,7 @@ import { useTerminalResponses } from '@/lib/react-query/hooks/use-git-engine';
 import { useQueryClient } from '@tanstack/react-query';
 import { usePracticeFormSubmission } from '@/lib/react-query/hooks/use-practice';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 
 
 interface PracticeFormProps {
@@ -31,6 +32,7 @@ interface PracticeFormProps {
 export function PracticeForm({ onSave, onCancel, initialData, lessonId, practiceId }: PracticeFormProps) {
   const [activeTab, setActiveTab] = useState<'basic' | 'instructions' | 'commands' | 'hints' | 'validation' | 'tags'>('basic');
   const queryClient = useQueryClient();
+  const t = useTranslations('practice.form');
   
   const { handleSave, isSaving, error, isSuccess } = usePracticeFormSubmission();
 
@@ -200,26 +202,26 @@ export function PracticeForm({ onSave, onCancel, initialData, lessonId, practice
   type TabId = 'basic' | 'instructions' | 'commands' | 'hints' | 'tags';
   
   const tabs: { id: TabId; label: string; icon: typeof Target }[] = [
-    { id: 'basic', label: 'Basic Info', icon: Target },
-    { id: 'instructions', label: 'Instructions', icon: Target },
-    { id: 'commands', label: 'Commands', icon: TerminalIcon },
-    { id: 'hints', label: 'Hints', icon: Lightbulb },
-    { id: 'tags', label: 'Tags', icon: Tag }
+    { id: 'basic', label: t('basic'), icon: Target },
+    { id: 'instructions', label: t('instructions'), icon: Target },
+    { id: 'commands', label: t('commands'), icon: TerminalIcon },
+    { id: 'hints', label: t('hints'), icon: Lightbulb },
+    { id: 'tags', label: t('tags'), icon: Tag }
   ];
 
   return (
     <div className="space-y-6 w-full max-w-full">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold">Practice Details</h2>
-          <p className="text-sm text-muted-foreground">Configure the practice session</p>
+          <h2 className="text-xl font-semibold">{t('title')}</h2>
+          <p className="text-sm text-muted-foreground">{t('scenario')}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={onCancel}>
-            Cancel
+            {t('cancel')}
           </Button>
           <Button onClick={handleSubmit(onSubmit)} disabled={isSubmitting || isSaving}>
-            {isSubmitting || isSaving ? 'Saving...' : 'Save Practice'}
+            {isSubmitting || isSaving ? 'Saving...' : t('save')}
           </Button>
         </div>
       </div>

@@ -3,8 +3,16 @@
 import OverviewCard from "@/components/common/home/OverviewCard";
 import { motion } from "framer-motion";
 import SectionTitle from "./SectionTitle";
+import { useTranslations } from 'next-intl';
 
 export default function SystemOverview() {
+  const t = useTranslations('home.systemOverview');
+  
+  const getBullets = (key: string): string[] => {
+    const bullets = t(key);
+    return bullets.split('\n').filter(Boolean);
+  };
+  
   return (
     <motion.section 
       aria-labelledby="system-title"
@@ -13,38 +21,38 @@ export default function SystemOverview() {
       transition={{ duration: 0.6 }}
       viewport={{ once: true }}
     >
-      <SectionTitle title="Hệ thống học Git toàn diện" description="Kết hợp lý thuyết, thực hành và trực quan hóa để học Git hiệu quả nhất" />
+      <SectionTitle title={t('title')} description={t('description')} />
       <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
         <OverviewCard
           icon="📚"
-          title="Git Theory"
-          subtitle="Lý thuyết có cấu trúc"
-          description="Học Git từ cơ bản đến nâng cao với các bài học được thiết kế khoa học, ví dụ rõ ràng và code examples có thể copy."
-          bullets={["Bài học từng bước", "Code examples tương tác", "Sidebar điều hướng"]}
+          title={t('gitTheory.title')}
+          subtitle={t('gitTheory.subtitle')}
+          description={t('gitTheory.description')}
+          bullets={getBullets('gitTheory.bullets')}
           ctaHref="/git-theory"
-          ctaLabel="Bắt đầu học"
+          ctaLabel={t('gitTheory.ctaLabel')}
           delay={0.1}
         />
 
         <OverviewCard
           icon="💻"
-          title="Practice Lab"
-          subtitle="Thực hành trực tiếp"
-          description="Terminal Git thực tế để thực thi lệnh và xem kết quả ngay lập tức. Không cần cài đặt gì thêm."
-          bullets={["Terminal Git thực tế", "Kết quả tức thì", "Môi trường an toàn"]}
+          title={t('practiceLab.title')}
+          subtitle={t('practiceLab.subtitle')}
+          description={t('practiceLab.description')}
+          bullets={getBullets('practiceLab.bullets')}
           ctaHref="/practice"
-          ctaLabel="Thực hành ngay"
+          ctaLabel={t('practiceLab.ctaLabel')}
           delay={0.2}
         />
 
         <OverviewCard
           icon="📊"
-          title="Commit Graph"
-          subtitle="Trực quan hóa"
-          description="Đồ thị commit tương tác giúp bạn hiểu rõ cấu trúc repository, nhánh và lịch sử thay đổi."
-          bullets={["Đồ thị tương tác", "Hiển thị nhánh & merge", "Cập nhật real-time"]}
+          title={t('commitGraph.title')}
+          subtitle={t('commitGraph.subtitle')}
+          description={t('commitGraph.description')}
+          bullets={getBullets('commitGraph.bullets')}
           ctaHref="/practice"
-          ctaLabel="Xem đồ thị"
+          ctaLabel={t('commitGraph.ctaLabel')}
           delay={0.3}
         />
       </div>

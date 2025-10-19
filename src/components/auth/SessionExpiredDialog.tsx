@@ -14,10 +14,12 @@ import { Button } from '@/components/ui/button'
 import { AlertTriangle } from 'lucide-react'
 import { tokenUtils } from '@/lib/api/axios'
 import { authStorage } from '@/services/auth'
+import { useTranslations } from 'next-intl'
 
 export function SessionExpiredDialog() {
   const [showDialog, setShowDialog] = useState(false)
   const router = useRouter()
+  const t = useTranslations('auth.sessionExpired')
 
   useEffect(() => {
     const handleAuthError = () => {
@@ -58,11 +60,10 @@ export function SessionExpiredDialog() {
         <DialogHeader>
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-orange-600" />
-            <DialogTitle>Phiên đăng nhập đã hết hạn</DialogTitle>
+            <DialogTitle>{t('title')}</DialogTitle>
           </div>
           <DialogDescription className="text-left">
-            Phiên đăng nhập của bạn đã hết hạn vì lý do bảo mật. 
-            Vui lòng đăng nhập lại để tiếp tục sử dụng ứng dụng.
+            {t('description')}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
@@ -70,7 +71,7 @@ export function SessionExpiredDialog() {
             onClick={handleConfirm}
             className="w-full"
           >
-            Đăng nhập lại
+            {t('loginAgain')}
           </Button>
         </DialogFooter>
       </DialogContent>

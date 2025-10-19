@@ -21,20 +21,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { NavigationItem, QuickAction } from './types';
+import { useTranslations } from 'next-intl';
 
-const navigation: NavigationItem[] = [
-  { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-  { name: 'Bài học', href: '/admin/lessons', icon: BookOpen },
-  { name: 'Người dùng', href: '/admin/users', icon: Users },
-  { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
-  { name: 'Cài đặt', href: '/admin/settings', icon: Settings },
-];
-
-const quickActions: QuickAction[] = [
-  { name: 'Thêm bài học mới', href: '/admin/lessons/new', icon: Plus },
-  { name: 'Xem báo cáo', href: '/admin/analytics', icon: TrendingUp },
-  { name: 'Quản lý người dùng', href: '/admin/users', icon: UserCheck },
-];
 
 interface AdminSidebarProps {
   sidebarOpen: boolean;
@@ -49,6 +37,21 @@ export function AdminSidebar({
   sidebarCollapsed, 
   setSidebarCollapsed 
 }: AdminSidebarProps) {
+  const t = useTranslations('admin');
+  
+  const navigation: NavigationItem[] = [
+    { name: t('dashboard.title'), href: '/admin', icon: LayoutDashboard },
+    { name: t('lessons'), href: '/admin/lessons', icon: BookOpen },
+    { name: t('users'), href: '/admin/users', icon: Users },
+    { name: t('analytics.title'), href: '/admin/analytics', icon: BarChart3 },
+    { name: t('settings.general'), href: '/admin/settings', icon: Settings },
+  ];
+
+  const quickActions: QuickAction[] = [
+    { name: t('createNew'), href: '/admin/lessons/new', icon: Plus },
+    { name: t('viewReports'), href: '/admin/analytics', icon: TrendingUp },
+    { name: t('manageUsers'), href: '/admin/users', icon: UserCheck },
+  ];
   const pathname = usePathname();
 
   return (

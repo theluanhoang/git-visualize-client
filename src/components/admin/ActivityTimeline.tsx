@@ -19,7 +19,7 @@ export function ActivityItem({ date, users, lessons, views }: ActivityItemProps)
 export function ActivityTimeline({ activities }: { activities: ActivityItemProps[] }) {
   return (
     <Card className="p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Hoạt động hàng ngày</h3>
+      <h3 className="text-lg font-semibold text-foreground mb-4">Hoạt động hàng ngày</h3>
       <div className="space-y-3">
         {activities.map((activity, index) => (
           <ActivityItem key={index} {...activity} />

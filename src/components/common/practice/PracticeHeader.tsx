@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 
 interface PracticeHeaderProps {
   lessonTitle?: string;
@@ -9,6 +10,8 @@ interface PracticeHeaderProps {
 }
 
 export default function PracticeHeader({ lessonTitle, lessonDescription }: PracticeHeaderProps) {
+  const t = useTranslations('practice');
+  const tCommon = useTranslations('common');
   return (
     <motion.section 
       className="rounded-lg border border-[var(--border)] bg-[var(--surface)] shadow-sm p-6 mb-6 relative overflow-hidden"
@@ -23,7 +26,7 @@ export default function PracticeHeader({ lessonTitle, lessonDescription }: Pract
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">
-            {lessonTitle ? `Practice: ${lessonTitle}` : 'Git Practice Lab'}
+            {lessonTitle ? `${t('title')}: ${lessonTitle}` : 'Git Practice Lab'}
           </h1>
           <p className="text-muted-foreground mt-1">
             {lessonDescription || 'Thực hành các lệnh Git bạn đã học với terminal và xem kết quả trên đồ thị commit.'}
@@ -33,7 +36,7 @@ export default function PracticeHeader({ lessonTitle, lessonDescription }: Pract
           href="/git-theory" 
           className="px-4 py-2 rounded-md border border-[var(--border)] bg-background text-foreground text-sm font-medium hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
         >
-          ← Quay lại lý thuyết
+          ← {tCommon('back')} {tCommon('gitTheory')}
         </Link>
       </div>
     </motion.section>

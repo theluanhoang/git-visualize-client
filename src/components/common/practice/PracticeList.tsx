@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Clock, Eye, CheckCircle, Play, Info } from 'lucide-react';
 import { Practice } from '@/services/practices';
 import { getDifficultyColor, getDifficultyText, formatTime } from '@/utils/practice';
+import { useTranslations } from 'next-intl';
 
 interface PracticeListProps {
   practices: Practice[];
@@ -21,6 +22,7 @@ export default function PracticeList({
   onStartPractice,
   selectedPracticeId 
 }: PracticeListProps) {
+  const t = useTranslations('practice');
 
   return (
     <div className="space-y-4">
@@ -85,7 +87,7 @@ export default function PracticeList({
                     }}
                   >
                     <Info className="w-4 h-4 mr-1" />
-                    View Details
+                    {t('viewDetails')}
                   </Button>
                   <Button 
                     size="sm" 
@@ -95,7 +97,7 @@ export default function PracticeList({
                     }}
                   >
                     <Play className="w-4 h-4 mr-1" />
-                    Start Practice
+                    {t('startPractice')}
                   </Button>
                 </div>
               </div>

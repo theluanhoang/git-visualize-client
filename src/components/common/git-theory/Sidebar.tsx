@@ -3,6 +3,7 @@ import { LessonMeta } from "@/types/git-theory";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { getSlugFromPath } from "@/lib/git-theory/get-slug-from-path";
+import { useTranslations } from 'next-intl';
 
 type Props = {
     items: LessonMeta[];
@@ -11,6 +12,7 @@ type Props = {
 export default function Sidebar({ items }: Props) {
     const [query, setQuery] = React.useState<string>("");
     const pathname = usePathname();
+    const t = useTranslations('gitTheory');
 
     const [activeSlug, setActiveSlug] = useState<string>(getSlugFromPath(pathname));
 
@@ -27,18 +29,18 @@ export default function Sidebar({ items }: Props) {
     return (
         <aside className="w-full md:w-64 lg:w-72 xl:w-80 flex-shrink-0 md:sticky md:top-6 self-start">
             <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-sm p-4">
-                <h2 className="text-base md:text-lg font-semibold text-foreground">Git Theory</h2>
-                <label htmlFor="git-theory-search" className="sr-only">Search lessons</label>
+                <h2 className="text-base md:text-lg font-semibold text-foreground">{t('title')}</h2>
+                <label htmlFor="git-theory-search" className="sr-only">{t('searchLabel')}</label>
                 <input
                     id="git-theory-search"
                     type="search"
-                    placeholder="Search lessons..."
+                    placeholder={t('searchPlaceholder')}
                     className="mt-3 w-full px-3 py-2 rounded-md bg-background border border-[var(--border)] text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    aria-label="Search lessons"
+                    aria-label={t('searchLabel')}
                 />
-                <nav className="mt-3 max-h-[70vh] overflow-auto pr-1" aria-label="Table of contents">
+                <nav className="mt-3 max-h-[70vh] overflow-auto pr-1" aria-label={t('tableOfContents')}>
                     <div className="space-y-1 list-decimal">
                         {filtered.map((item) => {
                             const isActive = item.slug === activeSlug;

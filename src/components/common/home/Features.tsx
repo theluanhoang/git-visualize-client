@@ -2,14 +2,17 @@
 
 import { motion } from "framer-motion";
 import SectionTitle from "./SectionTitle";
-
-const features = [
-  { icon: "🎯", title: "Lộ trình rõ ràng", desc: "Từ cơ bản đến nâng cao, mỗi bước đều được thiết kế để bạn tiến bộ." },
-  { icon: "⚡", title: "Học nhanh", desc: "Kết hợp lý thuyết, thực hành và trực quan hóa để ghi nhớ lâu hơn." },
-  { icon: "🆓", title: "Hoàn toàn miễn phí", desc: "Không cần đăng ký, không quảng cáo, học Git hoàn toàn miễn phí." }
-];
+import { useTranslations } from 'next-intl';
 
 export default function Features() {
+  const t = useTranslations('home.features');
+  
+  const features = [
+    { icon: "🎯", title: t('clearPath.title'), desc: t('clearPath.description') },
+    { icon: "⚡", title: t('fastLearning.title'), desc: t('fastLearning.description') },
+    { icon: "🆓", title: t('free.title'), desc: t('free.description') }
+  ];
+  
   return (
     <motion.section 
       aria-labelledby="features-title" 
@@ -19,7 +22,7 @@ export default function Features() {
       transition={{ duration: 0.5 }} // animation fade-in nhanh, không delay
       viewport={{ once: true }}
     >
-      <SectionTitle title="Tại sao chọn Git Visualized Engine?" description="Phương pháp học Git hiệu quả và thú vị" />
+      <SectionTitle title={t('title')} description={t('subtitle')} />
       <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
         {features.map((feature) => (
           <motion.div

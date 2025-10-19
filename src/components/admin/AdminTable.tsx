@@ -1,7 +1,10 @@
 import { Card } from '@/components/ui/card';
 import { TableProps } from './types';
+import { useTranslations } from 'next-intl';
 
-export function AdminTable<T = Record<string, unknown>>({ columns, data, loading = false, emptyMessage = 'Không có dữ liệu', onRowClick }: TableProps<T>) {
+export function AdminTable<T = Record<string, unknown>>({ columns, data, loading = false, emptyMessage, onRowClick }: TableProps<T>) {
+  const t = useTranslations('admin');
+  const defaultEmptyMessage = t('noData');
   if (loading) {
     return (
       <Card className="p-6">
@@ -20,7 +23,7 @@ export function AdminTable<T = Record<string, unknown>>({ columns, data, loading
     return (
       <Card className="p-6">
         <div className="text-center text-muted-foreground">
-          {emptyMessage}
+          {emptyMessage || defaultEmptyMessage}
         </div>
       </Card>
     );

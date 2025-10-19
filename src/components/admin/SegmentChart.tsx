@@ -16,7 +16,7 @@ export function SegmentItem({ segment, device, count, percentage, color = 'bg-bl
             showLabel={false}
           />
         </div>
-        <span className="text-sm font-medium text-gray-900 w-12 text-right">
+        <span className="text-sm font-medium text-foreground w-12 text-right">
           {count}
         </span>
       </div>
@@ -31,7 +31,7 @@ export function SegmentChart({ segments, title, color = 'bg-blue-600' }: {
 }) {
   return (
     <Card className="p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">{title}</h3>
+      <h3 className="text-lg font-semibold text-foreground mb-4">{title}</h3>
       <div className="space-y-3">
         {segments.map((segment, index) => (
           <SegmentItem key={index} {...segment} color={color} />

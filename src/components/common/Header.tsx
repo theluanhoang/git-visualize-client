@@ -2,9 +2,12 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import { GitFork, Menu, X, Bell, Shield, Crown } from 'lucide-react'
 import React from 'react'
+import { useTranslations } from 'next-intl'
 import ThemeToggle from '@/components/common/ThemeToggle'
+import LanguageSwitcher from '@/components/common/LanguageSwitcher'
 import { Button } from '@/components/ui/button'
 import { useLogout, useIsAuthenticated } from '@/lib/react-query/hooks/use-auth'
 import { Input } from '@/components/ui/input'
@@ -13,6 +16,9 @@ import Image from 'next/image';
 
 function Header() {
     const [open, setOpen] = React.useState(false)
+    const t = useTranslations('common')
+    const params = useParams()
+    const locale = (params.locale as string) || 'en'
 
     React.useEffect(() => {
         const handler = () => setOpen(false)
@@ -41,7 +47,7 @@ function Header() {
                         <div className="p-2 rounded-lg bg-gradient-to-br from-[var(--primary-50)] to-[var(--primary-100)] shadow-sm">
                             <GitFork className="text-[var(--primary-600)]" size={24} />
                         </div>
-                        <Link href="/" className="font-bold text-xl text-[var(--foreground)] hover:text-[var(--primary-600)] transition-colors truncate">
+                        <Link href={`/${locale}`} className="font-bold text-xl text-[var(--foreground)] hover:text-[var(--primary-600)] transition-colors truncate">
                             Git Visualized Engine
                         </Link>
                     </div>
@@ -50,24 +56,24 @@ function Header() {
                     </div>
                     <nav className="hidden sm:flex items-center gap-2 shrink-0" aria-label="Main navigation">
                         <Link 
-                            href="/" 
+                            href={`/${locale}`} 
                             className="px-3 py-2 rounded-md text-sm font-medium text-[var(--foreground)]/85 hover:text-[var(--primary-600)] hover:bg-[var(--primary-50)] transition-colors"
                         >
-                            Home
+                            {t('home')}
                         </Link>
                         <Link 
-                            href="/git-theory" 
+                            href={`/${locale}/git-theory`} 
                             className="px-3 py-2 rounded-md text-sm font-medium text-[var(--foreground)]/85 hover:text-[var(--primary-600)] hover:bg-[var(--primary-50)] transition-colors"
                         >
-                            Git Theory
+                            {t('gitTheory')}
                         </Link>
                         {isAdmin && (
                             <Link 
-                                href="/admin" 
+                                href={`/${locale}/admin`} 
                                 className="px-3 py-2 rounded-md text-sm font-medium text-[var(--foreground)]/85 hover:text-[var(--primary-600)] hover:bg-[var(--primary-50)] transition-colors flex items-center gap-1"
                             >
                                 <Shield className="h-4 w-4" />
-                                Admin
+                                {t('admin')}
                             </Link>
                         )}
                         
@@ -78,20 +84,20 @@ function Header() {
                                         href="/auth/login" 
                                         className="px-3 py-2 rounded-md text-sm font-medium text-[var(--foreground)]/85 hover:text-[var(--primary-600)] hover:bg-[var(--primary-50)] transition-colors"
                                     >
-                                        Login
+                                        {t('login')}
                                     </Link>
                                     <Link 
                                         href="/auth/register" 
                                         className="px-3 py-2 rounded-md text-sm font-medium text-[var(--foreground)]/85 hover:text-[var(--primary-600)] hover:bg-[var(--primary-50)] transition-colors"
                                     >
-                                        Register
+                                        {t('register')}
                                     </Link>
                                 </>
                             ) : (
                                 <>
                                     <Button 
                                         variant={"ghost"}
-                                        aria-label="Notifications" 
+                                        aria-label={t('notifications')} 
                                         className="p-2 rounded-md hover:bg-[var(--primary-50)] dark:hover:bg-[var(--primary-900)] text-[var(--foreground)]/85 hover:text-[var(--primary-600)] dark:hover:text-[var(--primary-400)] transition-colors"
                                     >
                                         <Bell size={18} />
@@ -109,18 +115,20 @@ function Header() {
                                         </div>
                                     </Link>
                                     <Button variant="outline" size="sm" onClick={handleLogout} disabled={logoutMutation.isPending}>
-                                        {logoutMutation.isPending ? 'Logging out...' : 'Logout'}
+                                        {logoutMutation.isPending ? t('loggingOut') : t('logout')}
                                     </Button>
                                 </>
                             )}
                         </div>
+                        <LanguageSwitcher />
                         <ThemeToggle />
                     </nav>
                     <div className="sm:hidden flex items-center gap-2">
+                        <LanguageSwitcher />
                         <ThemeToggle />
                         <Button
                             onClick={() => setOpen(v => !v)}
-                            aria-label="Open menu"
+                            aria-label={open ? t('closeMenu') : t('openMenu')}
                             aria-expanded={open}
                             aria-controls="mobile-nav"
                             className="inline-flex items-center justify-center w-10 h-10 rounded-md border border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)] shadow-sm"
@@ -132,22 +140,22 @@ function Header() {
             </div>
             <div id="mobile-nav" className={`sm:hidden ${open ? 'block' : 'hidden'} border-t border-[var(--border)] bg-[var(--surface)]`}>
                 <div className="container mx-auto px-4 py-3">
-                    <div className="flex flex-col gap-1" role="menu" aria-label="Mobile navigation">
+                    <div className="flex flex-col gap-1" role="menu" aria-label={t('mobileNavigation')}>
                         <div className="py-2"><SearchBar size="sm" /></div>
-                        <Link onClick={() => setOpen(false)} href="/" className="px-3 py-2 rounded-md text-sm font-medium text-[var(--foreground)]/90 hover:bg-[var(--primary-50)]" role="menuitem">Home</Link>
-                        <Link onClick={() => setOpen(false)} href="/git-theory" className="px-3 py-2 rounded-md text-sm font-medium text-[var(--foreground)]/90 hover:bg-[var(--primary-50)]" role="menuitem">Git Theory</Link>
-                        <Link onClick={() => setOpen(false)} href="/practice" className="px-3 py-2 rounded-md text-sm font-medium text-[var(--foreground)]/90 hover:bg-[var(--primary-50)]" role="menuitem">Practice</Link>
+                        <Link onClick={() => setOpen(false)} href={`/${locale}`} className="px-3 py-2 rounded-md text-sm font-medium text-[var(--foreground)]/90 hover:bg-[var(--primary-50)]" role="menuitem">{t('home')}</Link>
+                        <Link onClick={() => setOpen(false)} href={`/${locale}/git-theory`} className="px-3 py-2 rounded-md text-sm font-medium text-[var(--foreground)]/90 hover:bg-[var(--primary-50)]" role="menuitem">{t('gitTheory')}</Link>
+                        <Link onClick={() => setOpen(false)} href={`/${locale}/practice`} className="px-3 py-2 rounded-md text-sm font-medium text-[var(--foreground)]/90 hover:bg-[var(--primary-50)]" role="menuitem">{t('practice')}</Link>
                         {isAdmin && (
-                            <Link onClick={() => setOpen(false)} href="/admin" className="px-3 py-2 rounded-md text-sm font-medium text-[var(--foreground)]/90 hover:bg-[var(--primary-50)] flex items-center gap-2" role="menuitem">
+                            <Link onClick={() => setOpen(false)} href={`/${locale}/admin`} className="px-3 py-2 rounded-md text-sm font-medium text-[var(--foreground)]/90 hover:bg-[var(--primary-50)] flex items-center gap-2" role="menuitem">
                                 <Shield className="h-4 w-4" />
-                                Admin Panel
+                                {t('adminPanel')}
                             </Link>
                         )}
                         <div className="flex flex-col gap-2 pt-2">
                             {!isAuthenticated ? (
                                 <>
-                                    <Link onClick={() => setOpen(false)} href="/auth/login" className="px-3 py-2 rounded-md text-sm font-medium text-[var(--foreground)]/90 hover:bg-[var(--primary-50)]" role="menuitem">Login</Link>
-                                    <Link onClick={() => setOpen(false)} href="/auth/register" className="px-3 py-2 rounded-md text-sm font-medium text-[var(--foreground)]/90 hover:bg-[var(--primary-50)]" role="menuitem">Register</Link>
+                                    <Link onClick={() => setOpen(false)} href="/auth/login" className="px-3 py-2 rounded-md text-sm font-medium text-[var(--foreground)]/90 hover:bg-[var(--primary-50)]" role="menuitem">{t('login')}</Link>
+                                    <Link onClick={() => setOpen(false)} href="/auth/register" className="px-3 py-2 rounded-md text-sm font-medium text-[var(--foreground)]/90 hover:bg-[var(--primary-50)]" role="menuitem">{t('register')}</Link>
                                 </>
                             ) : (
                                 <>
@@ -164,7 +172,7 @@ function Header() {
                                         </div>
                                     </div>
                                     <Button variant="outline" size="sm" className="w-full justify-center" onClick={() => { handleLogout(); setOpen(false); }} disabled={logoutMutation.isPending}>
-                                        {logoutMutation.isPending ? 'Logging out...' : 'Logout'}
+                                        {logoutMutation.isPending ? t('loggingOut') : t('logout')}
                                     </Button>
                                 </>
                             )}
@@ -180,11 +188,14 @@ export default Header
 
 function SearchBar({ size = 'md' as 'md' | 'sm' }) {
     const router = useRouter()
+    const params = useParams()
+    const locale = (params.locale as string) || 'en'
+    const t = useTranslations('common')
     const [q, setQ] = React.useState('')
     const onSubmit = (e: React.FormEvent) => {
         e.preventDefault()
         const query = q.trim()
-        if (query.length > 0) router.push(`/git-theory?query=${encodeURIComponent(query)}`)
+        if (query.length > 0) router.push(`/${locale}/git-theory?query=${encodeURIComponent(query)}`)
     }
     return (
         <form onSubmit={onSubmit} className={`w-full ${size==='sm' ? '' : 'max-w-xl'}`} role="search">
@@ -192,7 +203,7 @@ function SearchBar({ size = 'md' as 'md' | 'sm' }) {
                 <Input
                     value={q}
                     onChange={(e) => setQ(e.target.value)}
-                    placeholder="Search lessons, practices..."
+                    placeholder={t('search')}
                     className="pl-3 pr-3"
                 />
             </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslations } from 'next-intl';
 
 type ConfirmDialogProps = {
   open: boolean;
@@ -17,12 +18,15 @@ export default function ConfirmDialog({
   open,
   title,
   description,
-  confirmText = 'Xác nhận',
-  cancelText = 'Hủy',
+  confirmText,
+  cancelText,
   loading = false,
   onConfirm,
   onClose,
 }: ConfirmDialogProps) {
+  const t = useTranslations('common');
+  const defaultConfirmText = confirmText || t('confirm');
+  const defaultCancelText = cancelText || t('cancel');
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50" role="dialog" aria-modal="true">
@@ -40,14 +44,14 @@ export default function ConfirmDialog({
               className="px-3 py-2 rounded-md border border-[var(--border)] hover:bg-muted"
               onClick={onClose}
             >
-              {cancelText}
+              {defaultCancelText}
             </button>
             <button
               className="px-3 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
               disabled={loading}
               onClick={onConfirm}
             >
-              {loading ? 'Đang xử lý...' : confirmText}
+              {loading ? t('processing') : defaultConfirmText}
             </button>
           </div>
         </div>

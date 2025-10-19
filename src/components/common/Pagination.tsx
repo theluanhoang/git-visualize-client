@@ -3,6 +3,7 @@
 import React from 'react'
 import { Button } from '@/components/ui/button'
 import { ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 interface PaginationProps {
   currentPage: number
@@ -21,6 +22,7 @@ export default function Pagination({
   totalItems,
   showInfo = true
 }: PaginationProps) {
+  const t = useTranslations('common');
   const getVisiblePages = () => {
     const delta = 2
     const range = []
@@ -59,7 +61,7 @@ export default function Pagination({
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
       {showInfo && totalItems && (
         <div className="text-sm text-muted-foreground">
-          Showing {startItem} to {endItem} of {totalItems} results
+          {t('showingResults', { start: startItem, end: endItem, total: totalItems })}
         </div>
       )}
       

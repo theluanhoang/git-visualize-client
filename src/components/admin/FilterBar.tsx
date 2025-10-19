@@ -3,6 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, Filter } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export interface FilterOption {
   value: string;
@@ -34,7 +35,7 @@ export interface FilterBarProps {
 export function FilterBar({
   searchTerm,
   onSearchChange,
-  searchPlaceholder = "Tìm kiếm...",
+  searchPlaceholder,
   filterValue,
   onFilterChange,
   filterOptions = [],
@@ -42,8 +43,9 @@ export function FilterBar({
   filters,
   showSortButton = false,
   onSortClick,
-  sortButtonText = "Sắp xếp"
+  sortButtonText
 }: FilterBarProps) {
+  const t = useTranslations('common');
   const useMultipleFilters = filters && filters.length > 0;
   const useSingleFilter = !useMultipleFilters && filterOptions.length > 0 && onFilterChange;
 
@@ -54,7 +56,7 @@ export function FilterBar({
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
-              placeholder={searchPlaceholder}
+              placeholder={searchPlaceholder || t('search')}
               value={searchTerm}
               onChange={(e) => onSearchChange(e.target.value)}
               className="pl-10 w-full sm:w-64"
@@ -98,7 +100,7 @@ export function FilterBar({
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={onSortClick}>
               <Filter className="h-4 w-4 mr-2" />
-              {sortButtonText}
+              {sortButtonText || t('sort')}
             </Button>
           </div>
         )}
