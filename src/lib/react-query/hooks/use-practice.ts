@@ -49,13 +49,21 @@ export const useUpdatePractice = () => {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<PracticeFormData> }) => 
       PracticesService.update(id, data),
-    onSuccess: (updatedPractice) => {
+    onSuccess: (updatedPractice, variables) => {
       qc.setQueryData(['practices', 'detail', updatedPractice.id], updatedPractice);
       
       qc.invalidateQueries({ queryKey: ['practices'] });
       
-      if (updatedPractice.goalRepositoryState) {
-        qc.invalidateQueries({ queryKey: ['goal-terminal-responses'] });
+      if (updatedPractice.goalRepositoryState && variables.data.goalRepositoryState) {
+        const mockResponses = [
+          {
+            repositoryState: updatedPractice.goalRepositoryState,
+            command: 'git status',
+            success: true,
+            output: 'Repository state loaded for goal visualization'
+          }
+        ];
+        qc.setQueryData(['goal-terminal-responses'], mockResponses);
       }
     },
     onError: (error: unknown) => {

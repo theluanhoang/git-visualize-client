@@ -81,7 +81,9 @@ export function PracticeForm({ onSave, onCancel, initialData, lessonId, practice
 
   const goalBuilderId = 'goal-builder';
   const { data: goalResponses = [] } = useTerminalResponses(goalBuilderId);
-  const [goalPreviewState, setGoalPreviewState] = useState<any>(initialData?.goalRepositoryState || null);
+  const [goalPreviewState, setGoalPreviewState] = useState<any>(() => {
+    return practiceId ? (initialData?.goalRepositoryState || null) : null;
+  });
   const [resetKey, setResetKey] = useState(0);
   const [isResetting, setIsResetting] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -89,10 +91,11 @@ export function PracticeForm({ onSave, onCancel, initialData, lessonId, practice
   
   
   React.useEffect(() => {
-    if (initialData?.goalRepositoryState && !goalPreviewState) {
+    // Only set goalPreviewState from initialData if we're editing an existing practice
+    if (practiceId && initialData?.goalRepositoryState && !goalPreviewState) {
       setGoalPreviewState(initialData.goalRepositoryState);
     }
-  }, [initialData?.goalRepositoryState, goalPreviewState]);
+  }, [practiceId, initialData?.goalRepositoryState, goalPreviewState]);
   
   React.useEffect(() => {
     const last = goalResponses[goalResponses.length - 1];
@@ -102,17 +105,74 @@ export function PracticeForm({ onSave, onCancel, initialData, lessonId, practice
   }, [goalResponses]);
 
   React.useEffect(() => {
-    if (initialData?.goalRepositoryState && !isInitialized) {
+    if (practiceId && initialData?.goalRepositoryState && !isInitialized) {
       queryClient.setQueryData(['git', 'state', goalBuilderId], initialData.goalRepositoryState);
       setIsInitialized(true);
     }
-  }, [initialData?.goalRepositoryState, isInitialized, queryClient, goalBuilderId]);
+  }, [practiceId, initialData?.goalRepositoryState, isInitialized, queryClient, goalBuilderId]);
 
   React.useEffect(() => {
     if (goalPreviewState === null) {
       queryClient.setQueryData(['goal-terminal-responses'], []);
     }
   }, [goalPreviewState, queryClient]);
+
+  React.useEffect(() => {
+    if (!practiceId && !initialData?.goalRepositoryState) {
+      setGoalPreviewState(null);
+      queryClient.setQueryData(['goal-terminal-responses'], []);
+      queryClient.setQueryData(['terminal-responses', goalBuilderId], []);
+      queryClient.setQueryData(['git', 'state', goalBuilderId], null);
+      setIsInitialized(false);
+      setResetKey(prev => prev + 1);
+      
+      try {
+        localStorage.removeItem(`git-terminal-responses:${goalBuilderId}`);
+        localStorage.removeItem(`git-commit-graph-node-positions:${goalBuilderId}`);
+        localStorage.removeItem('git-goal-commit-graph-node-positions');
+        localStorage.removeItem('git-goal-terminal-responses');
+      } catch (error) {
+        console.warn('Failed to clear localStorage:', error);
+      }
+    }
+  }, [practiceId, initialData?.goalRepositoryState, queryClient, goalBuilderId]);
+
+  const prevPracticeIdRef = React.useRef(practiceId);
+  React.useEffect(() => {
+    const prevPracticeId = prevPracticeIdRef.current;
+    
+    if (prevPracticeId !== practiceId) {
+      if (!practiceId) {
+        setGoalPreviewState(null);
+        queryClient.setQueryData(['goal-terminal-responses'], []);
+        queryClient.setQueryData(['terminal-responses', goalBuilderId], []);
+        queryClient.setQueryData(['git', 'state', goalBuilderId], null);
+        setIsInitialized(false);
+        setResetKey(prev => prev + 1);
+        
+        try {
+          localStorage.removeItem(`git-terminal-responses:${goalBuilderId}`);
+          localStorage.removeItem(`git-commit-graph-node-positions:${goalBuilderId}`);
+          localStorage.removeItem('git-goal-commit-graph-node-positions');
+          localStorage.removeItem('git-goal-terminal-responses');
+        } catch (error) {
+          console.warn('Failed to clear localStorage:', error);
+        }
+      }
+      
+      prevPracticeIdRef.current = practiceId;
+    }
+  }, [practiceId, queryClient, goalBuilderId]);
+
+  React.useEffect(() => {
+    return () => {
+      if (!practiceId) {
+        queryClient.setQueryData(['goal-terminal-responses'], []);
+        queryClient.setQueryData(['terminal-responses', goalBuilderId], []);
+        queryClient.setQueryData(['git', 'state', goalBuilderId], null);
+      }
+    };
+  }, [practiceId, queryClient, goalBuilderId]);
 
   const onSubmit = async (data: PracticeFormData) => {
     try {
@@ -121,6 +181,13 @@ export function PracticeForm({ onSave, onCancel, initialData, lessonId, practice
       const mapped = gitLines.map((cmd, i) => ({ command: cmd, order: i + 1, isRequired: true }));
 
       let goalState = goalPreviewState;
+      
+      if (!goalState && goalResponses.length > 0) {
+        const lastResponse = goalResponses[goalResponses.length - 1];
+        if (lastResponse?.repositoryState) {
+          goalState = lastResponse.repositoryState;
+        }
+      }
 
       const formDataWithGoal: PracticeFormData = { 
         ...data, 
@@ -130,6 +197,9 @@ export function PracticeForm({ onSave, onCancel, initialData, lessonId, practice
 
       if (lessonId && practiceId) {
         const result = await handleSave(formDataWithGoal, lessonId, practiceId);
+        if (result?.goalRepositoryState) {
+          setGoalPreviewState(result.goalRepositoryState);
+        }
         toast.success('Practice updated successfully!');
       } else {
         onSave(formDataWithGoal);
@@ -156,10 +226,6 @@ export function PracticeForm({ onSave, onCancel, initialData, lessonId, practice
 
   const addHint = () => {
     appendHint({ content: '', order: hintFields.length + 1 });
-  };
-
-  const addCommand = () => {
-    appendCommand({ command: '', order: commandFields.length + 1, isRequired: true });
   };
 
   const addTag = () => {
