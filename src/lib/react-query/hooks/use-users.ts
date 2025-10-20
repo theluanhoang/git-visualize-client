@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { userKeys } from '@/lib/react-query/query-keys';
 import { UserFormData, UserUpdateData, UserCreateData } from '@/lib/schemas/user';
 
 const usersApi = {
@@ -113,14 +114,14 @@ const usersApi = {
 
 export const useUsers = () => {
   return useQuery({
-    queryKey: ['users'],
+    queryKey: userKeys.all,
     queryFn: usersApi.getAll,
   });
 };
 
 export const useUser = (id: number) => {
   return useQuery({
-    queryKey: ['users', id],
+    queryKey: userKeys.detail(String(id)),
     queryFn: () => usersApi.getById(id),
     enabled: !!id,
   });
@@ -132,7 +133,7 @@ export const useCreateUser = () => {
   return useMutation({
     mutationFn: usersApi.create,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: userKeys.all });
     },
   });
 };
@@ -144,8 +145,8 @@ export const useUpdateUser = () => {
     mutationFn: ({ id, data }: { id: number; data: UserUpdateData }) => 
       usersApi.update(id, data),
     onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      queryClient.invalidateQueries({ queryKey: ['users', id] });
+      queryClient.invalidateQueries({ queryKey: userKeys.all });
+      queryClient.invalidateQueries({ queryKey: userKeys.detail(String(id)) });
     },
   });
 };
@@ -156,7 +157,7 @@ export const useDeleteUser = () => {
   return useMutation({
     mutationFn: usersApi.delete,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: userKeys.all });
     },
   });
 };
@@ -168,7 +169,7 @@ export const useToggleUserStatus = () => {
     mutationFn: ({ id, status }: { id: number; status: 'active' | 'inactive' | 'banned' }) => 
       usersApi.toggleStatus(id, status),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: userKeys.all });
     },
   });
 };

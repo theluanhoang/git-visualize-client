@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import PracticesService from '@/services/practice';
 import { PracticeFormData } from '@/lib/schemas/practice';
-import { practiceKeys, terminalKeys } from '../query-keys';
+import { lessonKeys, practiceKeys, terminalKeys } from '../query-keys';
 
 export const usePractices = (params?: {
   limit?: number;
@@ -141,7 +141,7 @@ export const useSavePractice = () => {
       console.log('Practice saved successfully:', result);
       
       queryClient.invalidateQueries({ queryKey: practiceKeys.all });
-      queryClient.invalidateQueries({ queryKey: ['lessons'] });
+      queryClient.invalidateQueries({ queryKey: lessonKeys.all });
       
       if (variables.practiceId) {
         queryClient.invalidateQueries({ queryKey: practiceKeys.detail(variables.practiceId) });

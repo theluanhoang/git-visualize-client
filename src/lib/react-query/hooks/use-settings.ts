@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { settingsKeys } from '@/lib/react-query/query-keys';
 import { Settings } from '@/lib/schemas/settings';
 
 const settingsApi = {
@@ -59,7 +60,7 @@ const settingsApi = {
 
 export const useSettings = () => {
   return useQuery({
-    queryKey: ['settings'],
+    queryKey: settingsKeys.all,
     queryFn: settingsApi.get,
     staleTime: 10 * 60 * 1000,
   });
@@ -71,7 +72,7 @@ export const useUpdateSettings = () => {
   return useMutation({
     mutationFn: settingsApi.update,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['settings'] });
+      queryClient.invalidateQueries({ queryKey: settingsKeys.all });
     },
   });
 };

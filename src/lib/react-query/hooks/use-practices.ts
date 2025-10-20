@@ -1,10 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { PracticesService, GetPracticesQuery } from '@/services/practices';
 import { IRepositoryState } from '@/types/git';
+import { practiceKeys } from '@/lib/react-query/query-keys';
 
 export const usePractices = (query: GetPracticesQuery = {}) => {
   return useQuery({
-    queryKey: ['practices', query],
+    queryKey: practiceKeys.list(query),
     queryFn: () => PracticesService.getPractices(query),
   });
 };
@@ -15,8 +16,8 @@ export const useIncrementViews = () => {
   return useMutation({
     mutationFn: (id: string) => PracticesService.incrementViews(id),
     onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey: ['practices'] });
-      queryClient.invalidateQueries({ queryKey: ['practices', id] });
+      queryClient.invalidateQueries({ queryKey: practiceKeys.all });
+      queryClient.invalidateQueries({ queryKey: practiceKeys.detail(id) });
     },
   });
 };
@@ -27,8 +28,8 @@ export const useIncrementCompletions = () => {
   return useMutation({
     mutationFn: (id: string) => PracticesService.incrementCompletions(id),
     onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey: ['practices'] });
-      queryClient.invalidateQueries({ queryKey: ['practices', id] });
+      queryClient.invalidateQueries({ queryKey: practiceKeys.all });
+      queryClient.invalidateQueries({ queryKey: practiceKeys.detail(id) });
     },
   });
 };

@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { oauthService, OAuthProvider } from '@/services/oauth';
+import { oauthKeys, authKeys } from '@/lib/react-query/query-keys';
 import { authStorage } from '@/services/auth';
 import { toast } from 'sonner';
 
@@ -13,7 +14,7 @@ export const useOAuthLogin = () => {
 
 export const useActiveSessions = () => {
   return useQuery({
-    queryKey: ['oauth', 'sessions', 'active'],
+    queryKey: oauthKeys.sessions.active(),
     queryFn: () => oauthService.getActiveSessions(),
     staleTime: 5 * 60 * 1000,
     retry: 1,
@@ -22,7 +23,7 @@ export const useActiveSessions = () => {
 
 export const useOAuthSessions = () => {
   return useQuery({
-    queryKey: ['oauth', 'sessions', 'oauth'],
+    queryKey: oauthKeys.sessions.oauth(),
     queryFn: () => oauthService.getOAuthSessions(),
     staleTime: 5 * 60 * 1000,
     retry: 1,
@@ -31,7 +32,7 @@ export const useOAuthSessions = () => {
 
 export const useCurrentDeviceInfo = () => {
   return useQuery({
-    queryKey: ['oauth', 'device-info'],
+    queryKey: oauthKeys.deviceInfo(),
     queryFn: () => oauthService.getCurrentDeviceInfo(),
     staleTime: 10 * 60 * 1000, 
     retry: 1,
@@ -40,7 +41,7 @@ export const useCurrentDeviceInfo = () => {
 
 export const useOAuthProviderStatus = () => {
   return useQuery({
-    queryKey: ['oauth', 'provider-status'],
+    queryKey: oauthKeys.providerStatus(),
     queryFn: () => oauthService.getProviderStatus(),
     staleTime: 30 * 60 * 1000,
     retry: 1,
@@ -55,8 +56,8 @@ export const useUnlinkProvider = () => {
     onSuccess: (data, provider) => {
       toast.success(`Successfully unlinked ${provider} account`);
       
-      queryClient.invalidateQueries({ queryKey: ['oauth', 'sessions'] });
-      queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
+      queryClient.invalidateQueries({ queryKey: oauthKeys.sessions.all });
+      queryClient.invalidateQueries({ queryKey: authKeys.user() });
     },
     onError: (error: any) => {
       toast.error(error?.response?.data?.message || 'Failed to unlink provider');
@@ -86,10 +87,10 @@ export const useOAuthCallback = () => {
       const { api } = await import('@/lib/api/axios');
       api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
 
-      queryClient.setQueryData(['auth', 'user'], userInfo);
+      queryClient.setQueryData(authKeys.user(), userInfo);
 
-      queryClient.invalidateQueries({ queryKey: ['auth'] });
-      queryClient.invalidateQueries({ queryKey: ['oauth'] });
+      queryClient.invalidateQueries({ queryKey: authKeys.all });
+      queryClient.invalidateQueries({ queryKey: oauthKeys.all });
 
       return { success: true, isNewUser };
     } catch (error) {

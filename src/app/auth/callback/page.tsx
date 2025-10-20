@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
+import { authKeys } from '@/lib/react-query/query-keys';
 import { toast } from 'sonner';
 import { authStorage } from '@/services/auth';
 import CodeImageBackground from '@/components/common/CodeImageBackground';
@@ -44,7 +45,7 @@ export default function OAuthCallbackPage() {
           userInfo
         );
 
-        queryClient.setQueryData(['auth', 'user'], userInfo);
+        queryClient.setQueryData(authKeys.user(), userInfo);
 
         setStatus('success');
         setMessage(isNewUser ? 'Account created successfully! Welcome!' : 'Login successful!');

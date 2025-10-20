@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { lessonSchema, LessonFormData, LessonWithPractices } from '@/lib/schemas/lesson';
 import { useCreateLesson, useUpdateLesson } from '@/lib/react-query/hooks/use-lessons';
 import { useQueryClient } from '@tanstack/react-query';
+import { lessonKeys, practiceKeys } from '@/lib/react-query/query-keys';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -132,8 +133,8 @@ export function LessonForm({ initialData, isEdit = false, lessonId }: LessonForm
             savedPractices.push(savedPractice);
           }
           
-          queryClient.invalidateQueries({ queryKey: ['practices'] });
-          queryClient.invalidateQueries({ queryKey: ['lessons'] });
+          queryClient.invalidateQueries({ queryKey: practiceKeys.all });
+          queryClient.invalidateQueries({ queryKey: lessonKeys.all });
           
           toast.success(`Lesson and ${savedPractices.length} practice(s) saved successfully!`);
           

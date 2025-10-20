@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { LOCALSTORAGE_KEYS, localStorageHelpers } from '@/constants/localStorage';
 
 const baseURL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:8001';
@@ -67,27 +68,25 @@ const processQueue = (error: unknown, token: string | null = null) => {
 
 api.interceptors.request.use(async (config) => {
   try {
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('auth:access');
-      if (token) {
-        if (tokenUtils.isTokenExpired(token) || tokenUtils.shouldRefreshToken(token)) {
-          if (!authState.isRefreshing) {
-            authState.isRefreshing = true;
-            authState.refreshPromise = refreshToken();
-          }
-          
-          try {
-            const newToken = await authState.refreshPromise;
-            config.headers = config.headers || {};
-            config.headers.Authorization = `Bearer ${newToken}`;
-          } catch (error) {
-            clearAuthState();
-            throw error;
-          }
-        } else {
-          config.headers = config.headers || {};
-          config.headers.Authorization = `Bearer ${token}`;
+    const token = localStorageHelpers.getItem(LOCALSTORAGE_KEYS.AUTH.ACCESS_TOKEN);
+    if (token) {
+      if (tokenUtils.isTokenExpired(token) || tokenUtils.shouldRefreshToken(token)) {
+        if (!authState.isRefreshing) {
+          authState.isRefreshing = true;
+          authState.refreshPromise = refreshToken();
         }
+        
+        try {
+          const newToken = await authState.refreshPromise;
+          config.headers = config.headers || {};
+          config.headers.Authorization = `Bearer ${newToken}`;
+        } catch (error) {
+          clearAuthState();
+          throw error;
+        }
+      } else {
+        config.headers = config.headers || {};
+        config.headers.Authorization = `Bearer ${token}`;
       }
     }
   } catch (error) {
@@ -145,9 +144,9 @@ api.interceptors.response.use(
 
 async function refreshToken(): Promise<string> {
   try {
-    const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('auth:refresh') : null;
-    const userStr = typeof window !== 'undefined' ? localStorage.getItem('auth:user') : null;
-    const userId = userStr ? JSON.parse(userStr)?.id : undefined;
+    const refreshToken = localStorageHelpers.getItem(LOCALSTORAGE_KEYS.AUTH.REFRESH_TOKEN);
+    const user = localStorageHelpers.getJSON<any>(LOCALSTORAGE_KEYS.AUTH.USER, null);
+    const userId = user?.id;
     
     if (!refreshToken || !userId) {
       throw new Error('No refresh token or user ID available');
@@ -167,11 +166,9 @@ async function refreshToken(): Promise<string> {
       throw new Error('No access token received from refresh');
     }
 
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('auth:access', accessToken);
-      if (newRefreshToken) {
-        localStorage.setItem('auth:refresh', newRefreshToken);
-      }
+    localStorageHelpers.setItem(LOCALSTORAGE_KEYS.AUTH.ACCESS_TOKEN, accessToken);
+    if (newRefreshToken) {
+      localStorageHelpers.setItem(LOCALSTORAGE_KEYS.AUTH.REFRESH_TOKEN, newRefreshToken);
     }
 
     api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
@@ -187,12 +184,10 @@ async function refreshToken(): Promise<string> {
 }
 
 function clearAuthState() {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('auth:access');
-    localStorage.removeItem('auth:refresh');
-    localStorage.removeItem('auth:user');
-    localStorage.removeItem('auth:oauth-session');
-  }
+  localStorageHelpers.removeItem(LOCALSTORAGE_KEYS.AUTH.ACCESS_TOKEN);
+  localStorageHelpers.removeItem(LOCALSTORAGE_KEYS.AUTH.REFRESH_TOKEN);
+  localStorageHelpers.removeItem(LOCALSTORAGE_KEYS.AUTH.USER);
+  localStorageHelpers.removeItem(LOCALSTORAGE_KEYS.AUTH.OAUTH_SESSION);
   delete api.defaults.headers.common['Authorization'];
   authState.isRefreshing = false;
   authState.refreshPromise = null;

@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 import CommitGraphSvg from './svgs/CommitGraphSvg'
 import { useGitEngine } from '@/lib/react-query/hooks/use-git-engine';
 import { useQueryClient } from '@tanstack/react-query';
+import { terminalKeys } from '@/lib/react-query/query-keys';
 import CommitDetailsDialog from './CommitDetailsDialog';
 import { ICommit, IRepositoryState, GitCommandResponse } from '@/types/git';
 
@@ -53,13 +54,13 @@ function CommitGraph({
                     }
                 ];
 
-                queryClient.setQueryData(['goal-terminal-responses'], mockResponses);
+                queryClient.setQueryData(terminalKeys.goal, mockResponses);
             } else {
-                queryClient.setQueryData(['goal-terminal-responses'], []);
+                queryClient.setQueryData(terminalKeys.goal, []);
             }
 
             return () => {
-                queryClient.setQueryData(['goal-terminal-responses'], []);
+                queryClient.setQueryData(terminalKeys.goal, []);
             };
         }
     }, [goalRepositoryState, queryClient, dataSource]);

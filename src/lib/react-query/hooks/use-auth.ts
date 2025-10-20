@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
+import { authKeys } from '@/lib/react-query/query-keys'
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import api, { clearAuthState, tokenUtils } from '@/lib/api/axios'
@@ -16,7 +17,7 @@ export const useCurrentUser = () => {
   const shouldEnableQuery = hasAccessToken && hasRefreshToken && (!isAccessTokenExpired || !isRefreshTokenExpired)
   
   const query = useQuery({
-    queryKey: ['auth', 'user'],
+    queryKey: authKeys.user(),
     queryFn: authApi.getCurrentUser,
     enabled: shouldEnableQuery,
     staleTime: 0,
@@ -32,8 +33,8 @@ export const useCurrentUser = () => {
 
   useEffect(() => {
     const handleAuthLogout = () => {
-      queryClient.setQueryData(['auth', 'user'], null)
-      queryClient.removeQueries({ queryKey: ['auth'], exact: false })
+      queryClient.setQueryData(authKeys.user(), null)
+      queryClient.removeQueries({ queryKey: authKeys.all, exact: false })
     }
 
     window.addEventListener('auth:logout', handleAuthLogout)
@@ -52,8 +53,8 @@ export const useLogin = () => {
     onSuccess: ({ user, accessToken, refreshToken }) => {
       authStorage.save({ accessToken, refreshToken }, user as AuthUser)
       api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`
-      qc.setQueryData(['auth', 'user'], user)
-      qc.invalidateQueries({ queryKey: ['auth'] })
+      qc.setQueryData(authKeys.user(), user)
+      qc.invalidateQueries({ queryKey: authKeys.all })
       
       if (user.role === 'ADMIN') {
         router.push('/admin')
@@ -90,16 +91,16 @@ export const useLogout = () => {
     },
     onSuccess: () => {
       clearAuthState()
-      qc.setQueryData(['auth', 'user'], null)
-      qc.removeQueries({ queryKey: ['auth'], exact: false })
+      qc.setQueryData(authKeys.user(), null)
+      qc.removeQueries({ queryKey: authKeys.all, exact: false })
       qc.clear()
       
       router.replace('/')
     },
     onError: () => {
       clearAuthState()
-      qc.setQueryData(['auth', 'user'], null)
-      qc.removeQueries({ queryKey: ['auth'], exact: false })
+      qc.setQueryData(authKeys.user(), null)
+      qc.removeQueries({ queryKey: authKeys.all, exact: false })
       router.replace('/')
     }
   })
@@ -110,7 +111,7 @@ export const useUpdateProfile = () => {
   return useMutation({
     mutationFn: (payload: Partial<Pick<AuthUser, 'firstName'|'lastName'|'avatar'>>) => authApi.updateCurrentUser(payload),
     onSuccess: (user) => {
-      qc.setQueryData(['auth', 'user'], user)
+      qc.setQueryData(authKeys.user(), user)
       const stored = authStorage.load()
       if (stored.tokens) {
         authStorage.save(stored.tokens, user)

@@ -1,4 +1,5 @@
 import api from '@/lib/api/axios';
+import { LOCALSTORAGE_KEYS, localStorageHelpers } from '@/constants/localStorage';
 
 export interface AuthUser { 
   id: string; 
@@ -50,50 +51,35 @@ export const authApi = {
 
 export const authStorage = {
   save(tokens: AuthTokens, user: AuthUser) {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('auth:access', tokens.accessToken);
-      localStorage.setItem('auth:refresh', tokens.refreshToken);
-      localStorage.setItem('auth:user', JSON.stringify(user));
-    }
+    localStorageHelpers.setItem(LOCALSTORAGE_KEYS.AUTH.ACCESS_TOKEN, tokens.accessToken);
+    localStorageHelpers.setItem(LOCALSTORAGE_KEYS.AUTH.REFRESH_TOKEN, tokens.refreshToken);
+    localStorageHelpers.setJSON(LOCALSTORAGE_KEYS.AUTH.USER, user);
   },
   load(): { tokens: AuthTokens | null; user: AuthUser | null } {
-    if (typeof window === 'undefined') {
-      return { tokens: null, user: null };
-    }
-    const accessToken = localStorage.getItem('auth:access');
-    const refreshToken = localStorage.getItem('auth:refresh');
-    const userStr = localStorage.getItem('auth:user');
+    const accessToken = localStorageHelpers.getItem(LOCALSTORAGE_KEYS.AUTH.ACCESS_TOKEN);
+    const refreshToken = localStorageHelpers.getItem(LOCALSTORAGE_KEYS.AUTH.REFRESH_TOKEN);
+    const user = localStorageHelpers.getJSON<AuthUser | null>(LOCALSTORAGE_KEYS.AUTH.USER, null);
     return {
       tokens: accessToken && refreshToken ? { accessToken, refreshToken } : null,
-      user: userStr ? JSON.parse(userStr) : null,
+      user,
     };
   },
   clear() {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('auth:access');
-      localStorage.removeItem('auth:refresh');
-      localStorage.removeItem('auth:user');
-    }
+    localStorageHelpers.removeItem(LOCALSTORAGE_KEYS.AUTH.ACCESS_TOKEN);
+    localStorageHelpers.removeItem(LOCALSTORAGE_KEYS.AUTH.REFRESH_TOKEN);
+    localStorageHelpers.removeItem(LOCALSTORAGE_KEYS.AUTH.USER);
   },
   
   saveOAuthSession(sessionInfo: OAuthSessionInfo) {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('auth:oauth-session', JSON.stringify(sessionInfo));
-    }
+    localStorageHelpers.setJSON(LOCALSTORAGE_KEYS.AUTH.OAUTH_SESSION, sessionInfo);
   },
 
   loadOAuthSession(): OAuthSessionInfo | null {
-    if (typeof window === 'undefined') {
-      return null;
-    }
-    const sessionStr = localStorage.getItem('auth:oauth-session');
-    return sessionStr ? JSON.parse(sessionStr) : null;
+    return localStorageHelpers.getJSON<OAuthSessionInfo | null>(LOCALSTORAGE_KEYS.AUTH.OAUTH_SESSION, null);
   },
 
   clearOAuthSession() {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('auth:oauth-session');
-    }
+    localStorageHelpers.removeItem(LOCALSTORAGE_KEYS.AUTH.OAUTH_SESSION);
   },
   
   isOAuthUser(): boolean {

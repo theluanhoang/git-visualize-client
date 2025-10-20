@@ -2,41 +2,28 @@ import React, { useEffect, useRef, useState, useCallback } from 'react'
 import CommitSvg from './CommitSvg';
 import { useTerminalResponses, useGoalTerminalResponses } from '@/lib/react-query/hooks/use-git-engine';
 import { ICommit, IHead, GitCommandResponse } from '@/types/git';
+import { LOCALSTORAGE_KEYS, localStorageHelpers } from '@/constants/localStorage';
 import { useQueryClient } from '@tanstack/react-query';
+import { terminalKeys } from '@/lib/react-query/query-keys';
 
 const getNodePositionsKey = (dataSource: 'practice' | 'goal', practiceId?: string) => 
     dataSource === 'goal' 
-        ? 'git-goal-commit-graph-node-positions'
-        : (practiceId ? `git-commit-graph-node-positions:${practiceId}` : 'git-commit-graph-node-positions');
+        ? LOCALSTORAGE_KEYS.GIT_ENGINE.GOAL_COMMIT_GRAPH_POSITIONS
+        : (practiceId ? LOCALSTORAGE_KEYS.GIT_ENGINE.COMMIT_GRAPH_POSITIONS(practiceId) : LOCALSTORAGE_KEYS.GIT_ENGINE.COMMIT_GRAPH_POSITIONS('global'));
 
 const saveNodePositions = (positions: Record<string, { x: number; y: number }>, dataSource: 'practice' | 'goal', practiceId?: string) => {
-    try {
-        const key = getNodePositionsKey(dataSource, practiceId);
-        localStorage.setItem(key, JSON.stringify(positions));
-    } catch (error) {
-        console.warn('Failed to save node positions:', error);
-    }
+    const key = getNodePositionsKey(dataSource, practiceId);
+    localStorageHelpers.setJSON(key, positions);
 };
 
 const loadNodePositions = (dataSource: 'practice' | 'goal', practiceId?: string): Record<string, { x: number; y: number }> => {
-    try {
-        const key = getNodePositionsKey(dataSource, practiceId);
-        const saved = localStorage.getItem(key);
-        const positions = saved ? JSON.parse(saved) : {};
-        return positions;
-    } catch (error) {
-        console.warn('Failed to load node positions:', error);
-        return {};
-    }
+    const key = getNodePositionsKey(dataSource, practiceId);
+    return localStorageHelpers.getJSON<Record<string, { x: number; y: number }>>(key, {});
 };
 
 const clearNodePositions = (dataSource: 'practice' | 'goal', practiceId?: string) => {
-    try {
-        const key = getNodePositionsKey(dataSource, practiceId);
-        localStorage.removeItem(key);
-    } catch (error) {
-        console.warn('Failed to clear node positions:', error);
-    }
+    const key = getNodePositionsKey(dataSource, practiceId);
+    localStorageHelpers.removeItem(key);
 };
 
 interface CommitNode {
@@ -109,13 +96,13 @@ function CommitGraphSvg({
         if (isResetting) return; 
         
         const storageKey = dataSource === 'goal' ? 'git-goal-terminal-responses' : (practiceId ? `git-terminal-responses:${practiceId}` : 'git-terminal-responses');
-        const queryKey = dataSource === 'goal' ? ['goal-terminal-responses'] : ['terminal-responses'];
         
-        const rawData = localStorage.getItem(storageKey);
-        const savedResponses = JSON.parse(rawData || '[]');
+        const rawData = localStorageHelpers.getItem(storageKey);
+        const savedResponses = localStorageHelpers.getJSON<GitCommandResponse[]>(storageKey, []);
         
         if (savedResponses.length > 0) {
-            queryClient.setQueryData(dataSource === 'goal' ? ['goal-terminal-responses'] : ['terminal-responses', practiceId ?? 'global'], savedResponses);
+            const key = dataSource === 'goal' ? terminalKeys.goal : terminalKeys.practice(practiceId);
+            queryClient.setQueryData(key, savedResponses);
         }
     }, [queryClient, dataSource, practiceId, isResetting]);
 
@@ -123,10 +110,11 @@ function CommitGraphSvg({
         if (isResetting) return;
         
         if (responses.length === 0) {
-            const storageKey = dataSource === 'goal' ? 'git-goal-terminal-responses' : (practiceId ? `git-terminal-responses:${practiceId}` : 'git-terminal-responses');
-            const savedResponses = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            const storageKey = dataSource === 'goal' ? LOCALSTORAGE_KEYS.GIT_ENGINE.GOAL_TERMINAL_RESPONSES : (practiceId ? LOCALSTORAGE_KEYS.GIT_ENGINE.TERMINAL_RESPONSES(practiceId) : LOCALSTORAGE_KEYS.GIT_ENGINE.TERMINAL_RESPONSES('global'));
+            const savedResponses = localStorageHelpers.getJSON<GitCommandResponse[]>(storageKey, []);
             if (savedResponses.length > 0) {
-                queryClient.setQueryData(dataSource === 'goal' ? ['goal-terminal-responses'] : ['terminal-responses', practiceId ?? 'global'], savedResponses);
+                const key = dataSource === 'goal' ? terminalKeys.goal : terminalKeys.practice(practiceId);
+                queryClient.setQueryData(key, savedResponses);
             }
         }
     }, [responses.length, queryClient, dataSource, practiceId, isResetting]);
@@ -139,8 +127,8 @@ function CommitGraphSvg({
         }
         
         if (responses.length === 0) {
-            const storageKey = dataSource === 'goal' ? 'git-goal-terminal-responses' : (practiceId ? `git-terminal-responses:${practiceId}` : 'git-terminal-responses');
-            const savedResponses = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            const storageKey = dataSource === 'goal' ? LOCALSTORAGE_KEYS.GIT_ENGINE.GOAL_TERMINAL_RESPONSES : (practiceId ? LOCALSTORAGE_KEYS.GIT_ENGINE.TERMINAL_RESPONSES(practiceId) : LOCALSTORAGE_KEYS.GIT_ENGINE.TERMINAL_RESPONSES('global'));
+            const savedResponses = localStorageHelpers.getJSON<GitCommandResponse[]>(storageKey, []);
             
             if (savedResponses.length > 0) {
                 return;

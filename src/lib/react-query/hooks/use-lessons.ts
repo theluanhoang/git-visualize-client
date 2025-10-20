@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { LessonFormData, LessonUpdateData } from '@/lib/schemas/lesson';
 import { LessonsService } from '@/services/lessons';
+import { lessonKeys } from '@/lib/react-query/query-keys';
 
 const lessonsApi = {
   getAll: async () => {
@@ -61,7 +62,7 @@ export const useLessons = (params: {
   includePractices?: boolean;
 } = {}) => {
   return useQuery({
-    queryKey: ['lessons', params],
+    queryKey: lessonKeys.list(params),
     queryFn: async () => {
       const res = await LessonsService.getAll(params);
       return res.data;
@@ -75,7 +76,7 @@ export const useCreateLesson = () => {
   return useMutation({
     mutationFn: lessonsApi.create,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['lessons'] });
+      queryClient.invalidateQueries({ queryKey: lessonKeys.all });
     },
   });
 };
@@ -87,8 +88,8 @@ export const useUpdateLesson = () => {
     mutationFn: ({ id, data }: { id: string; data: LessonUpdateData }) => 
       lessonsApi.update(id, data),
     onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: ['lessons'] });
-      queryClient.invalidateQueries({ queryKey: ['lessons', id] });
+      queryClient.invalidateQueries({ queryKey: lessonKeys.all });
+      queryClient.invalidateQueries({ queryKey: lessonKeys.detail(id) });
     },
   });
 };
@@ -99,7 +100,7 @@ export const useDeleteLesson = () => {
   return useMutation({
     mutationFn: lessonsApi.delete,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['lessons'] });
+      queryClient.invalidateQueries({ queryKey: lessonKeys.all });
     },
   });
 };

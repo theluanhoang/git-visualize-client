@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
+import { authKeys } from '@/lib/react-query/query-keys';
 import { toast } from 'sonner';
 import { authStorage } from '@/services/auth';
 import { api } from '@/lib/api/axios';
@@ -47,7 +48,7 @@ export default function OAuthCallbackPage() {
           userInfo
         );
 
-        queryClient.setQueryData(['auth', 'user'], userInfo);
+        queryClient.setQueryData(authKeys.user(), userInfo);
 
         setStatus('success');
         setMessage(isNewUser ? t('accountCreated') || 'Account created successfully! Welcome!' : t('loginSuccessful') || 'Login successful!');

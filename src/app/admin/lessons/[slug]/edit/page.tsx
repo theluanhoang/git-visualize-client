@@ -3,6 +3,7 @@
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
+import { lessonKeys } from '@/lib/react-query/query-keys';
 import { LessonsService } from '@/services/lessons';
 import { LessonForm } from '@/components/forms/LessonForm';
 
@@ -11,7 +12,7 @@ export default function EditLessonPage() {
     const { slug } = useParams<{ slug: string }>();
 
     const { data: lesson, isLoading, error } = useQuery({
-        queryKey: ['admin-lesson-edit', slug],
+        queryKey: lessonKeys.admin.edit(slug),
         queryFn: () => LessonsService.getBySlugWithPractices(slug),
         enabled: Boolean(slug),
     });

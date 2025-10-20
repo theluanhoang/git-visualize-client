@@ -20,6 +20,7 @@ import { usePracticeFormSubmission } from '@/lib/react-query/hooks/use-practice'
 import { terminalKeys, gitKeys, goalKeys } from '@/lib/react-query/query-keys';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
+import { LOCALSTORAGE_KEYS, localStorageHelpers } from '@/constants/localStorage';
 
 
 interface PracticeFormProps {
@@ -131,10 +132,10 @@ export function PracticeForm({ onSave, onCancel, initialData, lessonId, practice
       setResetKey(prev => prev + 1);
       
       try {
-        localStorage.removeItem(`git-terminal-responses:${goalBuilderId}`);
-        localStorage.removeItem(`git-commit-graph-node-positions:${goalBuilderId}`);
-        localStorage.removeItem('git-goal-commit-graph-node-positions');
-        localStorage.removeItem('git-goal-terminal-responses');
+      localStorageHelpers.removeItem(LOCALSTORAGE_KEYS.GIT_ENGINE.TERMINAL_RESPONSES(goalBuilderId));
+      localStorageHelpers.removeItem(LOCALSTORAGE_KEYS.GIT_ENGINE.COMMIT_GRAPH_POSITIONS(goalBuilderId));
+      localStorageHelpers.removeItem(LOCALSTORAGE_KEYS.GIT_ENGINE.GOAL_COMMIT_GRAPH_POSITIONS);
+      localStorageHelpers.removeItem(LOCALSTORAGE_KEYS.GIT_ENGINE.GOAL_TERMINAL_RESPONSES);
       } catch (error) {
         console.warn('Failed to clear localStorage:', error);
       }
@@ -155,10 +156,10 @@ export function PracticeForm({ onSave, onCancel, initialData, lessonId, practice
         setResetKey(prev => prev + 1);
         
         try {
-          localStorage.removeItem(`git-terminal-responses:${goalBuilderId}`);
-          localStorage.removeItem(`git-commit-graph-node-positions:${goalBuilderId}`);
-          localStorage.removeItem('git-goal-commit-graph-node-positions');
-          localStorage.removeItem('git-goal-terminal-responses');
+          localStorageHelpers.removeItem(LOCALSTORAGE_KEYS.GIT_ENGINE.TERMINAL_RESPONSES(goalBuilderId));
+          localStorageHelpers.removeItem(LOCALSTORAGE_KEYS.GIT_ENGINE.COMMIT_GRAPH_POSITIONS(goalBuilderId));
+          localStorageHelpers.removeItem(LOCALSTORAGE_KEYS.GIT_ENGINE.GOAL_COMMIT_GRAPH_POSITIONS);
+          localStorageHelpers.removeItem(LOCALSTORAGE_KEYS.GIT_ENGINE.GOAL_TERMINAL_RESPONSES);
         } catch (error) {
           console.warn('Failed to clear localStorage:', error);
         }
@@ -241,10 +242,10 @@ export function PracticeForm({ onSave, onCancel, initialData, lessonId, practice
     setHasBeenReset(true); 
     
     try {
-      localStorage.removeItem(`git-terminal-responses:${goalBuilderId}`);
-      localStorage.removeItem(`git-commit-graph-node-positions:${goalBuilderId}`);
-      localStorage.removeItem('git-goal-commit-graph-node-positions');
-      localStorage.removeItem('git-goal-terminal-responses');
+      localStorageHelpers.removeItem(LOCALSTORAGE_KEYS.GIT_ENGINE.TERMINAL_RESPONSES(goalBuilderId));
+      localStorageHelpers.removeItem(LOCALSTORAGE_KEYS.GIT_ENGINE.COMMIT_GRAPH_POSITIONS(goalBuilderId));
+      localStorageHelpers.removeItem(LOCALSTORAGE_KEYS.GIT_ENGINE.GOAL_COMMIT_GRAPH_POSITIONS);
+      localStorageHelpers.removeItem(LOCALSTORAGE_KEYS.GIT_ENGINE.GOAL_TERMINAL_RESPONSES);
     } catch (error) {
       console.warn('Failed to clear localStorage:', error);
     }

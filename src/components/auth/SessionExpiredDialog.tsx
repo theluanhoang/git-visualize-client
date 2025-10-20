@@ -15,6 +15,7 @@ import { AlertTriangle } from 'lucide-react'
 import { tokenUtils } from '@/lib/api/axios'
 import { authStorage } from '@/services/auth'
 import { useTranslations } from 'next-intl'
+import { LOCALSTORAGE_KEYS, localStorageHelpers } from '@/constants/localStorage'
 
 export function SessionExpiredDialog() {
   const [showDialog, setShowDialog] = useState(false)
@@ -46,10 +47,10 @@ export function SessionExpiredDialog() {
   const handleConfirm = () => {
     setShowDialog(false)
     
-    localStorage.removeItem('auth:access')
-    localStorage.removeItem('auth:refresh')
-    localStorage.removeItem('auth:user')
-    localStorage.removeItem('auth:oauth-session')
+    localStorageHelpers.removeItem(LOCALSTORAGE_KEYS.AUTH.ACCESS_TOKEN)
+    localStorageHelpers.removeItem(LOCALSTORAGE_KEYS.AUTH.REFRESH_TOKEN)
+    localStorageHelpers.removeItem(LOCALSTORAGE_KEYS.AUTH.USER)
+    localStorageHelpers.removeItem(LOCALSTORAGE_KEYS.AUTH.OAUTH_SESSION)
     
     router.replace('/auth/login')
   }

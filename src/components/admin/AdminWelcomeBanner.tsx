@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { X, Crown, Shield, Settings, Users, BookOpen } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { LOCALSTORAGE_KEYS, localStorageHelpers } from '@/constants/localStorage';
 
 interface AdminWelcomeBannerProps {
   userName?: string;
@@ -18,7 +19,7 @@ export default function AdminWelcomeBanner({ userName, onDismiss }: AdminWelcome
   const t = useTranslations('admin');
 
   useEffect(() => {
-    const dismissed = localStorage.getItem('admin-welcome-dismissed');
+    const dismissed = localStorageHelpers.getItem(LOCALSTORAGE_KEYS.ADMIN.WELCOME_DISMISSED);
     if (dismissed === 'true') {
       setIsVisible(false);
       setIsDismissed(true);
@@ -27,7 +28,7 @@ export default function AdminWelcomeBanner({ userName, onDismiss }: AdminWelcome
 
   const handleDismiss = () => {
     setIsVisible(false);
-    localStorage.setItem('admin-welcome-dismissed', 'true');
+    localStorageHelpers.setItem(LOCALSTORAGE_KEYS.ADMIN.WELCOME_DISMISSED, 'true');
     onDismiss?.();
   };
 
