@@ -47,6 +47,12 @@ export const useExecuteGitCommand = (practiceId?: string) => {
   return useMutation<GitCommandResponse, unknown, string>({
     mutationFn: (command: string) => {
       const currentState = queryClient.getQueryData<IRepositoryState | null>(['git', 'state', practiceId ?? 'global']);
+      
+      if (currentState && command === 'git init') {
+        queryClient.setQueryData(['git', 'state', practiceId ?? 'global'], null);
+        return gitEngineApi.executeGitCommand(command, null);
+      }
+      
       return gitEngineApi.executeGitCommand(command, currentState ?? null);
     },
     onSuccess: (data, command) => {
@@ -55,6 +61,10 @@ export const useExecuteGitCommand = (practiceId?: string) => {
       const newResponses = [...oldResponses, { ...data, command }];
       
       queryClient.setQueryData<GitCommandResponse[]>(key, newResponses);
+      
+      if (practiceId === 'goal-builder') {
+        queryClient.setQueryData(['goal-terminal-responses'], newResponses);
+      }
       
       if (data.repositoryState) {
         queryClient.setQueryData(['git', 'state', practiceId ?? 'global'], data.repositoryState);
@@ -107,18 +117,28 @@ export const useTerminalResponses = (practiceId?: string) => {
   const queryClient = useQueryClient();
   
   const [data, setData] = useState<GitCommandResponse[]>([]);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [resetKey, setResetKey] = useState(0);
+  const [hasBeenReset, setHasBeenReset] = useState(false);
   
   useEffect(() => {
-    const savedResponses = JSON.parse(localStorage.getItem(terminalKeyFor(practiceId)) || '[]');
-    
-    setData(savedResponses);
-    
-    queryClient.setQueryData(['terminal-responses', practiceId ?? 'global'], savedResponses);
-  }, [queryClient, practiceId]);
+    if (!isInitialized) {
+      const savedResponses = JSON.parse(localStorage.getItem(terminalKeyFor(practiceId)) || '[]');
+      
+      if (hasBeenReset && savedResponses.length > 0) {
+        setData([]);
+        queryClient.setQueryData(['terminal-responses', practiceId ?? 'global'], []);
+      } else {
+        setData(savedResponses);
+        queryClient.setQueryData(['terminal-responses', practiceId ?? 'global'], savedResponses);
+      }
+      setIsInitialized(true);
+    }
+  }, [queryClient, practiceId, isInitialized, resetKey, hasBeenReset]);
   
   useEffect(() => {
     const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
-      if (event.query.queryKey[0] === 'terminal-responses') {
+      if (event.query.queryKey[0] === 'terminal-responses' && event.query.queryKey[1] === (practiceId ?? 'global')) {
         const key = ['terminal-responses', practiceId ?? 'global'] as const;
         const newData = queryClient.getQueryData<GitCommandResponse[]>(key) || [];
         setData(newData);
@@ -128,6 +148,13 @@ export const useTerminalResponses = (practiceId?: string) => {
     return unsubscribe;
   }, [queryClient, practiceId]);
   
+  const reset = () => {
+    setIsInitialized(false);
+    setData([]);
+    setHasBeenReset(true);
+    setResetKey(prev => prev + 1);
+  };
+
   return {
     data,
     isLoading: false,
@@ -136,7 +163,8 @@ export const useTerminalResponses = (practiceId?: string) => {
       const savedResponses = JSON.parse(localStorage.getItem(terminalKeyFor(practiceId)) || '[]');
       queryClient.setQueryData(['terminal-responses', practiceId ?? 'global'], savedResponses);
       setData(savedResponses);
-    }
+    },
+    reset
   };
 };
 
@@ -146,7 +174,8 @@ export const useGoalTerminalResponses = () => {
   return useQuery<GitCommandResponse[]>({
     queryKey: ['goal-terminal-responses'],
     queryFn: () => {
-      return [];
+      const savedResponses = JSON.parse(localStorage.getItem('git-goal-terminal-responses') || '[]');
+      return savedResponses;
     },
     initialData: [],
     staleTime: Infinity, 
@@ -173,7 +202,7 @@ export const useBuildGoalRepositoryState = (commands: string[], enabled: boolean
 
 export const useGitEngine = (practiceId?: string) => {
   const { mutateAsync: runCommand, isPending: isRunning } = useExecuteGitCommand(practiceId);
-  const { data: responses = [] } = useTerminalResponses(practiceId);
+  const { data: responses = [], reset: resetTerminalResponses } = useTerminalResponses(practiceId);
   const queryClient = useQueryClient();
   
   const syncFromServer = async () => {
@@ -202,17 +231,45 @@ export const useGitEngine = (practiceId?: string) => {
       }
     }
 
-    try { localStorage.removeItem(terminalKeyFor(practiceId)); } catch {}
-    try { localStorage.removeItem(practiceId ? `git-commit-graph-node-positions:${practiceId}` : 'git-commit-graph-node-positions'); } catch {}
-    try { localStorage.removeItem('git-repository-state'); } catch {}
+    try { 
+      localStorage.removeItem(terminalKeyFor(practiceId)); 
+    } catch {}
+    try { 
+      localStorage.removeItem(practiceId ? `git-commit-graph-node-positions:${practiceId}` : 'git-commit-graph-node-positions'); 
+    } catch {}
+    try { 
+      localStorage.removeItem('git-repository-state'); 
+    } catch {}
 
     queryClient.setQueryData(['terminal-responses', practiceId ?? 'global'], []);
     queryClient.setQueryData(['git', 'state', practiceId ?? 'global'], null);
+    
+    if (practiceId === 'goal-builder') {
+      queryClient.setQueryData(['goal-terminal-responses'], []);
+    }
+    
     if (practiceId) {
       queryClient.setQueryData(['git', 'state-version', practiceId], 0);
     }
-    queryClient.invalidateQueries({ queryKey: ['terminal-responses', practiceId ?? 'global'] });
-    queryClient.invalidateQueries({ queryKey: ['git', 'state', practiceId ?? 'global'] });
+    
+    queryClient.removeQueries({ queryKey: ['terminal-responses', practiceId ?? 'global'] });
+    queryClient.removeQueries({ queryKey: ['git', 'state', practiceId ?? 'global'] });
+    
+    if (practiceId === 'goal-builder') {
+      queryClient.removeQueries({ queryKey: ['goal-terminal-responses'] });
+    }
+    
+    queryClient.setQueryData(['git', 'state', practiceId ?? 'global'], null);
+    
+    if (practiceId === 'goal-builder') {
+      queryClient.setQueryData(['goal-terminal-responses'], []);
+    }
+    
+    resetTerminalResponses();
+    
+    if (practiceId === 'goal-builder') {
+      queryClient.invalidateQueries({ queryKey: ['goal-terminal-responses'] });
+    }
   };
   
   return { responses, runCommand, isRunning, clearAllData, syncFromServer };

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import PracticesService from '@/services/practice';
 import { PracticeFormData } from '@/lib/schemas/practice';
+import { practiceKeys, terminalKeys } from '../query-keys';
 
 export const usePractices = (params?: {
   limit?: number;
@@ -15,14 +16,14 @@ export const usePractices = (params?: {
   isActive?: boolean;
 }) => {
   return useQuery({
-    queryKey: ['practices', params],
+    queryKey: practiceKeys.list(params),
     queryFn: () => PracticesService.getAll(params),
   });
 };
 
 export const usePractice = (id: string, options?: { enabled?: boolean }) => {
   return useQuery({
-    queryKey: ['practices', 'detail', id],
+    queryKey: practiceKeys.detail(id),
     queryFn: () => PracticesService.getById(id),
     enabled: !!id && (options?.enabled !== false),
   });
@@ -34,8 +35,8 @@ export const useCreatePractice = () => {
   return useMutation({
     mutationFn: (data: PracticeFormData & { lessonId: string }) => PracticesService.create(data),
     onSuccess: (newPractice) => {
-      qc.invalidateQueries({ queryKey: ['practices'] });
-      qc.setQueryData(['practices', 'detail', newPractice.id], newPractice);
+      qc.invalidateQueries({ queryKey: practiceKeys.all });
+      qc.setQueryData(practiceKeys.detail(newPractice.id), newPractice);
     },
     onError: (error: unknown) => {
       console.error('Create practice failed:', error);
@@ -50,9 +51,9 @@ export const useUpdatePractice = () => {
     mutationFn: ({ id, data }: { id: string; data: Partial<PracticeFormData> }) => 
       PracticesService.update(id, data),
     onSuccess: (updatedPractice, variables) => {
-      qc.setQueryData(['practices', 'detail', updatedPractice.id], updatedPractice);
+      qc.setQueryData(practiceKeys.detail(updatedPractice.id), updatedPractice);
       
-      qc.invalidateQueries({ queryKey: ['practices'] });
+      qc.invalidateQueries({ queryKey: practiceKeys.all });
       
       if (updatedPractice.goalRepositoryState && variables.data.goalRepositoryState) {
         const mockResponses = [
@@ -63,7 +64,7 @@ export const useUpdatePractice = () => {
             output: 'Repository state loaded for goal visualization'
           }
         ];
-        qc.setQueryData(['goal-terminal-responses'], mockResponses);
+        qc.setQueryData(terminalKeys.goal, mockResponses);
       }
     },
     onError: (error: unknown) => {
@@ -78,8 +79,8 @@ export const useDeletePractice = () => {
   return useMutation({
     mutationFn: (id: string) => PracticesService.delete(id),
     onSuccess: (_, deletedId) => {
-      qc.removeQueries({ queryKey: ['practices', 'detail', deletedId] });
-      qc.invalidateQueries({ queryKey: ['practices'] });
+      qc.removeQueries({ queryKey: practiceKeys.detail(deletedId) });
+      qc.invalidateQueries({ queryKey: practiceKeys.all });
     },
     onError: (error: unknown) => {
       console.error('Delete practice failed:', error);
@@ -93,7 +94,7 @@ export const useIncrementViews = () => {
   return useMutation({
     mutationFn: (id: string) => PracticesService.incrementViews(id),
     onSuccess: (_, practiceId) => {
-      qc.invalidateQueries({ queryKey: ['practices', 'detail', practiceId] });
+      qc.invalidateQueries({ queryKey: practiceKeys.detail(practiceId) });
     },
     onError: (error: unknown) => {
       console.error('Increment views failed:', error);
@@ -107,7 +108,7 @@ export const useIncrementCompletions = () => {
   return useMutation({
     mutationFn: (id: string) => PracticesService.incrementCompletions(id),
     onSuccess: (_, practiceId) => {
-      qc.invalidateQueries({ queryKey: ['practices', 'detail', practiceId] });
+      qc.invalidateQueries({ queryKey: practiceKeys.detail(practiceId) });
     },
     onError: (error: unknown) => {
       console.error('Increment completions failed:', error);
@@ -139,11 +140,11 @@ export const useSavePractice = () => {
     onSuccess: (result, variables) => {
       console.log('Practice saved successfully:', result);
       
-      queryClient.invalidateQueries({ queryKey: ['practices'] });
+      queryClient.invalidateQueries({ queryKey: practiceKeys.all });
       queryClient.invalidateQueries({ queryKey: ['lessons'] });
       
       if (variables.practiceId) {
-        queryClient.invalidateQueries({ queryKey: ['practices', 'detail', variables.practiceId] });
+        queryClient.invalidateQueries({ queryKey: practiceKeys.detail(variables.practiceId) });
       }
     },
     onError: (error) => {

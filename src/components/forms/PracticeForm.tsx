@@ -14,9 +14,10 @@ import { Plus, Trash2, GripVertical, Lightbulb, Target, Terminal as TerminalIcon
 import { motion, AnimatePresence } from 'framer-motion';
 import CommitGraph from '@/components/common/CommitGraph';
 import Terminal from '@/components/common/terminal/Terminal';
-import { useTerminalResponses } from '@/lib/react-query/hooks/use-git-engine';
+import { useTerminalResponses, useGitEngine } from '@/lib/react-query/hooks/use-git-engine';
 import { useQueryClient } from '@tanstack/react-query';
 import { usePracticeFormSubmission } from '@/lib/react-query/hooks/use-practice';
+import { terminalKeys, gitKeys, goalKeys } from '@/lib/react-query/query-keys';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 
@@ -81,48 +82,51 @@ export function PracticeForm({ onSave, onCancel, initialData, lessonId, practice
 
   const goalBuilderId = 'goal-builder';
   const { data: goalResponses = [] } = useTerminalResponses(goalBuilderId);
+  const { clearAllData } = useGitEngine(goalBuilderId);
   const [goalPreviewState, setGoalPreviewState] = useState<any>(() => {
     return practiceId ? (initialData?.goalRepositoryState || null) : null;
   });
   const [resetKey, setResetKey] = useState(0);
   const [isResetting, setIsResetting] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [hasBeenReset, setHasBeenReset] = useState(false);
   
   
   
   React.useEffect(() => {
-    // Only set goalPreviewState from initialData if we're editing an existing practice
-    if (practiceId && initialData?.goalRepositoryState && !goalPreviewState) {
+    if (practiceId && initialData?.goalRepositoryState && !goalPreviewState && !isResetting && !hasBeenReset) {
       setGoalPreviewState(initialData.goalRepositoryState);
     }
-  }, [practiceId, initialData?.goalRepositoryState, goalPreviewState]);
+  }, [practiceId, initialData?.goalRepositoryState, goalPreviewState, isResetting, hasBeenReset]);
   
   React.useEffect(() => {
-    const last = goalResponses[goalResponses.length - 1];
-    if (last?.repositoryState) {
-      setGoalPreviewState(last.repositoryState);
+    if (!hasBeenReset) {
+      const last = goalResponses[goalResponses.length - 1];
+      if (last?.repositoryState) {
+        setGoalPreviewState(last.repositoryState);
+      }
     }
-  }, [goalResponses]);
+  }, [goalResponses, hasBeenReset]);
 
   React.useEffect(() => {
     if (practiceId && initialData?.goalRepositoryState && !isInitialized) {
-      queryClient.setQueryData(['git', 'state', goalBuilderId], initialData.goalRepositoryState);
+      queryClient.setQueryData(gitKeys.state(goalBuilderId), initialData.goalRepositoryState);
       setIsInitialized(true);
     }
   }, [practiceId, initialData?.goalRepositoryState, isInitialized, queryClient, goalBuilderId]);
 
   React.useEffect(() => {
     if (goalPreviewState === null) {
-      queryClient.setQueryData(['goal-terminal-responses'], []);
+      queryClient.setQueryData(terminalKeys.goal, []);
     }
   }, [goalPreviewState, queryClient]);
 
   React.useEffect(() => {
     if (!practiceId && !initialData?.goalRepositoryState) {
       setGoalPreviewState(null);
-      queryClient.setQueryData(['goal-terminal-responses'], []);
-      queryClient.setQueryData(['terminal-responses', goalBuilderId], []);
-      queryClient.setQueryData(['git', 'state', goalBuilderId], null);
+      queryClient.setQueryData(terminalKeys.goal, []);
+      queryClient.setQueryData(terminalKeys.practice(goalBuilderId), []);
+      queryClient.setQueryData(gitKeys.state(goalBuilderId), null);
       setIsInitialized(false);
       setResetKey(prev => prev + 1);
       
@@ -144,9 +148,9 @@ export function PracticeForm({ onSave, onCancel, initialData, lessonId, practice
     if (prevPracticeId !== practiceId) {
       if (!practiceId) {
         setGoalPreviewState(null);
-        queryClient.setQueryData(['goal-terminal-responses'], []);
-        queryClient.setQueryData(['terminal-responses', goalBuilderId], []);
-        queryClient.setQueryData(['git', 'state', goalBuilderId], null);
+        queryClient.setQueryData(terminalKeys.goal, []);
+        queryClient.setQueryData(terminalKeys.practice(goalBuilderId), []);
+        queryClient.setQueryData(gitKeys.state(goalBuilderId), null);
         setIsInitialized(false);
         setResetKey(prev => prev + 1);
         
@@ -167,9 +171,9 @@ export function PracticeForm({ onSave, onCancel, initialData, lessonId, practice
   React.useEffect(() => {
     return () => {
       if (!practiceId) {
-        queryClient.setQueryData(['goal-terminal-responses'], []);
-        queryClient.setQueryData(['terminal-responses', goalBuilderId], []);
-        queryClient.setQueryData(['git', 'state', goalBuilderId], null);
+        queryClient.setQueryData(terminalKeys.goal, []);
+        queryClient.setQueryData(terminalKeys.practice(goalBuilderId), []);
+        queryClient.setQueryData(gitKeys.state(goalBuilderId), null);
       }
     };
   }, [practiceId, queryClient, goalBuilderId]);
@@ -232,8 +236,9 @@ export function PracticeForm({ onSave, onCancel, initialData, lessonId, practice
     appendTag({ name: '', color: '#3B82F6' });
   };
 
-  const resetGoalBuilder = () => {
+  const resetGoalBuilder = async () => {
     setIsResetting(true);
+    setHasBeenReset(true); 
     
     try {
       localStorage.removeItem(`git-terminal-responses:${goalBuilderId}`);
@@ -241,20 +246,26 @@ export function PracticeForm({ onSave, onCancel, initialData, lessonId, practice
       localStorage.removeItem('git-goal-commit-graph-node-positions');
       localStorage.removeItem('git-goal-terminal-responses');
     } catch (error) {
-      toast.error('Failed to clear local storage');
+      console.warn('Failed to clear localStorage:', error);
     }
     
+    await clearAllData();
+    
     setGoalPreviewState(null);
-    queryClient.setQueryData(['goal-terminal-responses'], []);
-    queryClient.setQueryData(['terminal-responses', goalBuilderId], []);
-    queryClient.setQueryData(['git', 'state', goalBuilderId], null);
-    queryClient.removeQueries({ queryKey: ['git', 'goal-state'] });
-    queryClient.removeQueries({ queryKey: ['git'] });
-    queryClient.removeQueries({ queryKey: ['goal'] });
+    queryClient.setQueryData(terminalKeys.goal, []);
+    queryClient.setQueryData(terminalKeys.practice(goalBuilderId), []);
+    queryClient.setQueryData(gitKeys.state(goalBuilderId), null);
+    queryClient.removeQueries({ queryKey: gitKeys.goalState([]) });
+    queryClient.removeQueries({ queryKey: gitKeys.all });
+    queryClient.removeQueries({ queryKey: goalKeys.all });
+    
+    queryClient.setQueryData(gitKeys.state(goalBuilderId), null);
+    
     setResetKey(prev => prev + 1);
     setIsInitialized(false);
     
-    setTimeout(() => {
+    // Use requestAnimationFrame for better performance
+    requestAnimationFrame(() => {
       if (typeof window !== 'undefined') {
         const resetFunction = (window as Window & { resetGoalCommitGraphView?: () => void }).resetGoalCommitGraphView;
         if (resetFunction && typeof resetFunction === 'function') {
@@ -262,7 +273,7 @@ export function PracticeForm({ onSave, onCancel, initialData, lessonId, practice
         }
       }
       setIsResetting(false);
-    }, 200);
+    });
   };
 
   type TabId = 'basic' | 'instructions' | 'commands' | 'hints' | 'tags';
