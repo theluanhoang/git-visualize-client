@@ -42,6 +42,8 @@
     "success": "Thành công",
     "warning": "Cảnh báo",
     "info": "Thông tin",
+    "pageNotFound": "Không tìm thấy trang",
+    "tryAgain": "Thử lại",
     "practiceUpdated": "Bài Thực Hành Đã Cập Nhật",
     "practiceUpdatedMessage": "{practiceTitle} đã được cập nhật lên phiên bản {currentVersion}",
     "savedProgressFrom": "Tiến độ đã lưu của bạn là từ phiên bản {savedVersion}",
@@ -52,6 +54,9 @@
     "repositoryState": "Trạng thái repository",
     "resetting": "Đang đặt lại...",
     "resetAndContinue": "Đặt Lại & Tiếp Tục"
+  },
+  "auth": {
+    "loggingOut": "Đang đăng xuất..."
   },
   "home": {
     "title": "Công cụ Git Trực quan",

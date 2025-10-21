@@ -42,6 +42,8 @@
     "success": "Success",
     "warning": "Warning",
     "info": "Information",
+    "pageNotFound": "Page not found",
+    "tryAgain": "Try again",
     "practiceUpdated": "Practice Updated",
     "practiceUpdatedMessage": "{practiceTitle} has been updated to version {currentVersion}",
     "savedProgressFrom": "Your saved progress is from version {savedVersion}",
@@ -52,6 +54,9 @@
     "repositoryState": "Repository state",
     "resetting": "Resetting...",
     "resetAndContinue": "Reset & Continue"
+  },
+  "auth": {
+    "loggingOut": "Logging out..."
   },
   "home": {
     "title": "Git Visualized Engine",
