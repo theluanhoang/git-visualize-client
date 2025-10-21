@@ -6,10 +6,11 @@ import { PracticeRepoStateService } from '@/services/practiceRepositoryState';
 import { LOCALSTORAGE_KEYS, localStorageHelpers } from '@/constants/localStorage';
 import { gitKeys, terminalKeys, goalKeys } from '@/lib/react-query/query-keys';
 
-const terminalKeyFor = (practiceId?: string) => practiceId ? LOCALSTORAGE_KEYS.GIT_ENGINE.TERMINAL_RESPONSES(practiceId) : LOCALSTORAGE_KEYS.GIT_ENGINE.TERMINAL_RESPONSES('global');
+const terminalKeyFor = (practiceId?: string, version?: number) => 
+  practiceId ? LOCALSTORAGE_KEYS.GIT_ENGINE.TERMINAL_RESPONSES(practiceId, version) : LOCALSTORAGE_KEYS.GIT_ENGINE.TERMINAL_RESPONSES('global');
 
-const saveTerminalResponses = (responses: GitCommandResponse[], practiceId?: string) => {
-  localStorageHelpers.setJSON(terminalKeyFor(practiceId), responses);
+const saveTerminalResponses = (responses: GitCommandResponse[], practiceId?: string, version?: number) => {
+  localStorageHelpers.setJSON(terminalKeyFor(practiceId, version), responses);
 };
 
 export const gitEngineApi = {
@@ -27,6 +28,7 @@ export const gitEngineApi = {
     for (const command of commands) {
       try {
         const response = await gitEngineApi.executeGitCommand(command, currentState);
+        
         if (response.repositoryState) {
           currentState = response.repositoryState;
         }
@@ -39,7 +41,7 @@ export const gitEngineApi = {
   }
 };
 
-export const useExecuteGitCommand = (practiceId?: string) => {
+export const useExecuteGitCommand = (practiceId?: string, version?: number) => {
   const queryClient = useQueryClient();
   
   return useMutation<GitCommandResponse, unknown, string>({
@@ -68,7 +70,7 @@ export const useExecuteGitCommand = (practiceId?: string) => {
         queryClient.setQueryData(gitKeys.state(practiceId), data.repositoryState);
       }
       
-      saveTerminalResponses(newResponses, practiceId);
+      saveTerminalResponses(newResponses, practiceId, version);
       if (practiceId && data.repositoryState) {
         const currentVersion = queryClient.getQueryData<number>(['git', 'state-version', practiceId]) || 0;
         PracticeRepoStateService.upsert(practiceId, { state: data.repositoryState, version: currentVersion }).then((res) => {
@@ -91,7 +93,7 @@ export const useExecuteGitCommand = (practiceId?: string) => {
       
       queryClient.setQueryData<GitCommandResponse[]>(key, newResponses);
       
-      saveTerminalResponses(newResponses, practiceId);
+      saveTerminalResponses(newResponses, practiceId, version);
     },
   });
 };
@@ -111,7 +113,7 @@ export const useRepositoryState = (practiceId?: string) => {
   });
 };
 
-export const useTerminalResponses = (practiceId?: string) => {
+export const useTerminalResponses = (practiceId?: string, version?: number) => {
   const queryClient = useQueryClient();
   
   const [data, setData] = useState<GitCommandResponse[]>([]);
@@ -121,7 +123,16 @@ export const useTerminalResponses = (practiceId?: string) => {
   
   useEffect(() => {
     if (!isInitialized) {
-      const savedResponses = localStorageHelpers.getJSON<GitCommandResponse[]>(terminalKeyFor(practiceId), []);
+      let savedResponses = localStorageHelpers.getJSON<GitCommandResponse[]>(terminalKeyFor(practiceId, version), []);
+      
+      if (savedResponses.length === 0 && practiceId) {
+        const legacyKey = LOCALSTORAGE_KEYS.GIT_ENGINE.TERMINAL_RESPONSES(practiceId);
+        savedResponses = localStorageHelpers.getJSON<GitCommandResponse[]>(legacyKey, []);
+        
+        if (savedResponses.length > 0 && version) {
+          localStorageHelpers.setJSON(terminalKeyFor(practiceId, version), savedResponses);
+        }
+      }
       
       if (hasBeenReset && savedResponses.length > 0) {
         setData([]);
@@ -132,7 +143,7 @@ export const useTerminalResponses = (practiceId?: string) => {
       }
       setIsInitialized(true);
     }
-  }, [queryClient, practiceId, isInitialized, resetKey, hasBeenReset]);
+  }, [queryClient, practiceId, version, isInitialized, resetKey, hasBeenReset]);
   
   useEffect(() => {
     const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
@@ -158,7 +169,7 @@ export const useTerminalResponses = (practiceId?: string) => {
     isLoading: false,
     error: null,
     refetch: () => {
-      const savedResponses = localStorageHelpers.getJSON<GitCommandResponse[]>(terminalKeyFor(practiceId), []);
+      const savedResponses = localStorageHelpers.getJSON<GitCommandResponse[]>(terminalKeyFor(practiceId, version), []);
       queryClient.setQueryData(terminalKeys.practice(practiceId), savedResponses);
       setData(savedResponses);
     },
@@ -197,9 +208,9 @@ export const useBuildGoalRepositoryState = (commands: string[], enabled: boolean
   });
 };
 
-export const useGitEngine = (practiceId?: string) => {
-  const { mutateAsync: runCommand, isPending: isRunning } = useExecuteGitCommand(practiceId);
-  const { data: responses = [], reset: resetTerminalResponses } = useTerminalResponses(practiceId);
+export const useGitEngine = (practiceId?: string, version?: number) => {
+  const { mutateAsync: runCommand, isPending: isRunning } = useExecuteGitCommand(practiceId, version);
+  const { data: responses = [], reset: resetTerminalResponses } = useTerminalResponses(practiceId, version);
   const queryClient = useQueryClient();
   
   const syncFromServer = async () => {
@@ -228,8 +239,13 @@ export const useGitEngine = (practiceId?: string) => {
       }
     }
 
-    localStorageHelpers.removeItem(terminalKeyFor(practiceId));
-    localStorageHelpers.removeItem(practiceId ? LOCALSTORAGE_KEYS.GIT_ENGINE.COMMIT_GRAPH_POSITIONS(practiceId) : LOCALSTORAGE_KEYS.GIT_ENGINE.COMMIT_GRAPH_POSITIONS('global'));
+    if (practiceId && version) {
+      localStorageHelpers.version.clearVersionedData(practiceId, version);
+    } else {
+      localStorageHelpers.removeItem(terminalKeyFor(practiceId));
+      localStorageHelpers.removeItem(practiceId ? LOCALSTORAGE_KEYS.GIT_ENGINE.COMMIT_GRAPH_POSITIONS(practiceId) : LOCALSTORAGE_KEYS.GIT_ENGINE.COMMIT_GRAPH_POSITIONS('global'));
+    }
+    
     localStorageHelpers.removeItem(LOCALSTORAGE_KEYS.GIT_ENGINE.REPOSITORY_STATE);
 
     queryClient.setQueryData(terminalKeys.practice(practiceId), []);

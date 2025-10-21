@@ -6,23 +6,23 @@ import { LOCALSTORAGE_KEYS, localStorageHelpers } from '@/constants/localStorage
 import { useQueryClient } from '@tanstack/react-query';
 import { terminalKeys } from '@/lib/react-query/query-keys';
 
-const getNodePositionsKey = (dataSource: 'practice' | 'goal', practiceId?: string) => 
+const getNodePositionsKey = (dataSource: 'practice' | 'goal', practiceId?: string, version?: number) => 
     dataSource === 'goal' 
         ? LOCALSTORAGE_KEYS.GIT_ENGINE.GOAL_COMMIT_GRAPH_POSITIONS
-        : (practiceId ? LOCALSTORAGE_KEYS.GIT_ENGINE.COMMIT_GRAPH_POSITIONS(practiceId) : LOCALSTORAGE_KEYS.GIT_ENGINE.COMMIT_GRAPH_POSITIONS('global'));
+        : (practiceId ? LOCALSTORAGE_KEYS.GIT_ENGINE.COMMIT_GRAPH_POSITIONS(practiceId, version) : LOCALSTORAGE_KEYS.GIT_ENGINE.COMMIT_GRAPH_POSITIONS('global'));
 
-const saveNodePositions = (positions: Record<string, { x: number; y: number }>, dataSource: 'practice' | 'goal', practiceId?: string) => {
-    const key = getNodePositionsKey(dataSource, practiceId);
+const saveNodePositions = (positions: Record<string, { x: number; y: number }>, dataSource: 'practice' | 'goal', practiceId?: string, version?: number) => {
+    const key = getNodePositionsKey(dataSource, practiceId, version);
     localStorageHelpers.setJSON(key, positions);
 };
 
-const loadNodePositions = (dataSource: 'practice' | 'goal', practiceId?: string): Record<string, { x: number; y: number }> => {
-    const key = getNodePositionsKey(dataSource, practiceId);
+const loadNodePositions = (dataSource: 'practice' | 'goal', practiceId?: string, version?: number): Record<string, { x: number; y: number }> => {
+    const key = getNodePositionsKey(dataSource, practiceId, version);
     return localStorageHelpers.getJSON<Record<string, { x: number; y: number }>>(key, {});
 };
 
-const clearNodePositions = (dataSource: 'practice' | 'goal', practiceId?: string) => {
-    const key = getNodePositionsKey(dataSource, practiceId);
+const clearNodePositions = (dataSource: 'practice' | 'goal', practiceId?: string, version?: number) => {
+    const key = getNodePositionsKey(dataSource, practiceId, version);
     localStorageHelpers.removeItem(key);
 };
 
@@ -53,6 +53,7 @@ interface CommitGraphSvgProps extends React.SVGProps<SVGSVGElement> {
     dataSource?: 'practice' | 'goal';
     customResponses?: GitCommandResponse[];
     practiceId?: string;
+    practiceVersion?: number;
     isResetting?: boolean;
 }
 
@@ -69,6 +70,7 @@ function CommitGraphSvg({
     dataSource = 'practice',
     customResponses,
     practiceId,
+    practiceVersion,
     isResetting = false,
     ...svgProps
 }: CommitGraphSvgProps) {
@@ -144,7 +146,16 @@ function CommitGraphSvg({
         branchCommits.current = {};
         const commitNodes = calculateTreeLayout();
 
-        const savedPositions = loadNodePositions(dataSource, practiceId);
+        let savedPositions = loadNodePositions(dataSource, practiceId, practiceVersion);
+        
+        if (Object.keys(savedPositions).length === 0 && practiceId && dataSource === 'practice') {
+            const legacyKey = LOCALSTORAGE_KEYS.GIT_ENGINE.COMMIT_GRAPH_POSITIONS(practiceId);
+            savedPositions = localStorageHelpers.getJSON<Record<string, { x: number; y: number }>>(legacyKey, {});
+            
+            if (Object.keys(savedPositions).length > 0 && practiceVersion) {
+                saveNodePositions(savedPositions, dataSource, practiceId, practiceVersion);
+            }
+        }
         let commitNodesWithSavedPositions = commitNodes.map(node => {
             const savedPos = savedPositions[node.commit.id];
             if (savedPos) {
@@ -545,7 +556,7 @@ function CommitGraphSvg({
             commitNodes.forEach(node => {
                 currentPositions[node.commit.id] = { x: node.x, y: node.y };
             });
-            saveNodePositions(currentPositions, dataSource, practiceId);
+            saveNodePositions(currentPositions, dataSource, practiceId, practiceVersion);
 
             setDragState({
                 isDragging: false,

@@ -15,6 +15,7 @@ interface CommitGraphProps {
     title?: string;
     className?: string;
     practiceId?: string;
+    practiceVersion?: number;
     isResetting?: boolean;
 }
 
@@ -26,6 +27,7 @@ function CommitGraph({
     title = 'Commit Graph',
     className = '',
     practiceId,
+    practiceVersion,
     isResetting = false
 }: CommitGraphProps) {
     const [containerSize, setContainerSize] = useState({ width: 1504, height: 400 });
@@ -258,6 +260,7 @@ function CommitGraph({
                         pan={pan} 
                         zoom={zoom}
                         practiceId={practiceId}
+                        practiceVersion={practiceVersion}
                         onMouseDown={handleMouseDown}
                         onMouseMove={handleMouseMove}
                         onMouseUp={handleMouseUp}

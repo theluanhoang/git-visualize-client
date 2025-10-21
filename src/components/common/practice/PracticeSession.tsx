@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Lightbulb } from 'lucide-react';
 import { Practice } from '@/services/practices';
 import PracticeSidebar from './PracticeSidebar';
@@ -18,6 +18,12 @@ import { useErrorFeedback } from '@/hooks/use-error-feedback';
 import ErrorFeedbackModal from '@/components/common/animations/ErrorFeedbackModal';
 import InitialGuidanceModal from '@/components/common/animations/InitialGuidanceModal';
 import { useInitialGuidance } from '@/hooks/use-initial-guidance';
+import { useVersionCheck } from '@/hooks/use-version-check';
+import VersionResetDialog from '@/components/common/VersionResetDialog';
+import { useQueryClient } from '@tanstack/react-query';
+import { terminalKeys, practiceKeys } from '@/lib/react-query/query-keys';
+import { localStorageHelpers, LOCALSTORAGE_KEYS } from '@/constants/localStorage';
+import { toast } from 'sonner';
 
 interface PracticeSessionProps {
   practice: Practice;
@@ -32,10 +38,48 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
   const [showHintModal, setShowHintModal] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
+  const queryClient = useQueryClient();
 
-  const { clearAllData, syncFromServer } = useGitEngine(practice.id);
+  const { clearAllData, syncFromServer } = useGitEngine(practice.id, practice.version);
   const { data: repoState } = useRepositoryState(practice.id);
   const { mutate: validatePractice, isPending: isValidating } = useValidatePractice();
+
+  const {
+    showResetDialog,
+    savedVersion,
+    isResetting,
+    handleConfirmReset,
+    handleCancelReset,
+  } = useVersionCheck({
+    practiceId: practice.id,
+    practiceTitle: practice.title,
+    currentVersion: practice.version || 1,
+    onVersionMismatch: () => {
+      window.location.reload();
+    },
+  });
+
+  React.useEffect(() => {
+    if (practice.goalRepositoryState) {
+      queryClient.invalidateQueries({ queryKey: terminalKeys.goal });
+      queryClient.invalidateQueries({ queryKey: practiceKeys.detail(practice.id) });
+    }
+  }, [practice.goalRepositoryState, queryClient, practice.id]);
+
+  React.useEffect(() => {
+    queryClient.invalidateQueries({ queryKey: practiceKeys.detail(practice.id) });
+  }, [queryClient, practice.id]);
+
+  React.useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        queryClient.invalidateQueries({ queryKey: practiceKeys.detail(practice.id) });
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [queryClient, practice.id]);
 
 
   const {
@@ -51,25 +95,54 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
   const { errorFeedback, showErrorFeedback, closeErrorFeedback } = useErrorFeedback();
   const { guidanceState, showInitialGuidance, closeInitialGuidance } = useInitialGuidance();
 
+  const checkForPracticeUpdates = async () => {
+    try {
+      const hasTerminalData = localStorageHelpers.getItem(LOCALSTORAGE_KEYS.GIT_ENGINE.TERMINAL_RESPONSES(practice.id)) !== null;
+      const hasCommitGraphData = localStorageHelpers.getItem(LOCALSTORAGE_KEYS.GIT_ENGINE.COMMIT_GRAPH_POSITIONS(practice.id)) !== null;
+      const hasAnyPracticeData = hasTerminalData || hasCommitGraphData;
+      
+      if (!hasAnyPracticeData) {
+        return false;
+      }
+      
+      await queryClient.refetchQueries({ queryKey: practiceKeys.detail(practice.id) });
+      
+      const freshPractice = queryClient.getQueryData(practiceKeys.detail(practice.id)) as Practice | undefined;
+      const currentVersion = freshPractice?.version || practice.version || 1;
+      const savedVersion = localStorageHelpers.version.getVersion(practice.id);
+      
+      if (savedVersion !== null && savedVersion !== currentVersion) {
+        toast.info('Practice has been updated! Please refresh to get the latest version.');
+        return true;
+      }
+    } catch (error) {
+      console.warn('Failed to check for updates:', error);
+    }
+    return false;
+  };
+
   const checkStepCompletion = () => {
     return completedSteps.has(currentStep);
   };
 
-  const handleNextStep = () => {
+  const handleNextStep = async () => {
+    await checkForPracticeUpdates();
     if (currentStep < (practice.instructions?.length || 0)) {
       setCurrentStep(prev => prev + 1);
       setShowHint(false);
     }
   };
 
-  const handlePrevStep = () => {
+  const handlePrevStep = async () => {
+    await checkForPracticeUpdates();
     if (currentStep > 1) {
       setCurrentStep(prev => prev - 1);
       setShowHint(false);
     }
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
+    await checkForPracticeUpdates();
     if (!isCompleted) {
       setIsCompleted(true);
       showEpicSuccess(
@@ -91,21 +164,14 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
     await clearAllData();
   };
 
-  const handleStartFresh = () => {
-    clearAllData();
-    setCurrentStep(1);
-    setIsCompleted(false);
-    setCompletedSteps(new Set());
-    setShowHint(false);
-  };
-
-  const handleViewGoal = () => {
+  const handleViewGoal = async () => {
+    await checkForPracticeUpdates();
     setIsGoalModalOpen(true);
   };
 
-  const handleValidate = () => {
+  const handleValidate = async () => {
+    await checkForPracticeUpdates();
     if (!repoState) {
-      // Hiển thị Initial Guidance Modal thay vì thông báo kỹ thuật
       showInitialGuidance({
         practiceTitle: practice.title,
         firstCommand: 'git init',
@@ -118,7 +184,6 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
       {
         onSuccess: (res) => {
           if (res.isCorrect) {
-            // Kích hoạt celebration khi đúng
             triggerValidationCelebration({
               isCorrect: res.isCorrect,
               score: res.score,
@@ -126,7 +191,6 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
               feedback: res.feedback
             });
           } else {
-            // Hiển thị Error Modal khi sai
             const errorItems = res.differences.map(d => ({
               type: d.type,
               field: d.field,
@@ -140,7 +204,8 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
     );
   };
 
-  const handleToggleHint = () => {
+  const handleToggleHint = async () => {
+    await checkForPracticeUpdates();
     setShowHint(!showHint);
   };
 
@@ -169,7 +234,7 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
         {}
         <div className="flex-1 flex flex-col gap-4 p-4">
           <div className="flex-1">
-            <CommitGraph practiceId={practice.id} title="Practice Graph" />
+            <CommitGraph practiceId={practice.id} practiceVersion={practice.version} title="Practice Graph" />
           </div>
           <div className="flex-1">
             <Terminal practiceId={practice.id} />
@@ -189,7 +254,6 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
         showHint={showHint}
         onToggleHint={handleToggleHint}
         onShowHintModal={() => setShowHintModal(true)}
-        onSync={syncFromServer}
         onViewGoal={handleViewGoal}
         onValidate={handleValidate}
         isValidating={isValidating}
@@ -228,7 +292,6 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
         </div>
       )}
 
-      {/* Error Feedback Modal */}
       <ErrorFeedbackModal
         isOpen={errorFeedback.isOpen}
         onClose={closeErrorFeedback}
@@ -236,7 +299,6 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
         errors={errorFeedback.errors}
         onRetry={() => {
           closeErrorFeedback();
-          // Có thể thêm logic retry ở đây nếu cần
         }}
         onViewHint={() => {
           closeErrorFeedback();
@@ -244,17 +306,25 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
         }}
       />
 
-      {/* Initial Guidance Modal */}
       <InitialGuidanceModal
         isOpen={guidanceState.isOpen}
         onClose={closeInitialGuidance}
         onStart={() => {
           closeInitialGuidance();
-          // Focus vào terminal hoặc thực hiện hành động bắt đầu
         }}
         practiceTitle={guidanceState.practiceTitle}
         firstCommand={guidanceState.firstCommand}
         guidanceMessage={guidanceState.guidanceMessage}
+      />
+
+      {/* Version Reset Dialog */}
+      <VersionResetDialog
+        open={showResetDialog}
+        practiceTitle={practice.title}
+        currentVersion={practice.version || 1}
+        savedVersion={savedVersion || 1}
+        onConfirm={handleConfirmReset}
+        loading={isResetting}
       />
     </div>
   );

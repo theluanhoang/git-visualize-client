@@ -14,7 +14,7 @@ import { Plus, Trash2, GripVertical, Lightbulb, Target, Terminal as TerminalIcon
 import { motion, AnimatePresence } from 'framer-motion';
 import CommitGraph from '@/components/common/CommitGraph';
 import Terminal from '@/components/common/terminal/Terminal';
-import { useTerminalResponses, useGitEngine } from '@/lib/react-query/hooks/use-git-engine';
+import { useTerminalResponses, useGitEngine, gitEngineApi } from '@/lib/react-query/hooks/use-git-engine';
 import { useQueryClient } from '@tanstack/react-query';
 import { usePracticeFormSubmission } from '@/lib/react-query/hooks/use-practice';
 import { terminalKeys, gitKeys, goalKeys } from '@/lib/react-query/query-keys';
@@ -187,7 +187,21 @@ export function PracticeForm({ onSave, onCancel, initialData, lessonId, practice
 
       let goalState = goalPreviewState;
       
-      if (!goalState && goalResponses.length > 0) {
+      if (mapped.length > 0) {
+        try {
+          const commandsToExecute = mapped.map(cmd => cmd.command);
+          const buildResult = await gitEngineApi.buildGoalRepositoryState(commandsToExecute);
+          goalState = buildResult.repositoryState;
+        } catch (error) {
+          console.warn('Failed to rebuild goal state:', error);
+          if (!goalState && goalResponses.length > 0) {
+            const lastResponse = goalResponses[goalResponses.length - 1];
+            if (lastResponse?.repositoryState) {
+              goalState = lastResponse.repositoryState;
+            }
+          }
+        }
+      } else if (!goalState && goalResponses.length > 0) {
         const lastResponse = goalResponses[goalResponses.length - 1];
         if (lastResponse?.repositoryState) {
           goalState = lastResponse.repositoryState;

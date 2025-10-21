@@ -66,6 +66,8 @@ export const useUpdatePractice = () => {
         ];
         qc.setQueryData(terminalKeys.goal, mockResponses);
       }
+      
+      qc.invalidateQueries({ queryKey: practiceKeys.detail(updatedPractice.id) });
     },
     onError: (error: unknown) => {
       console.error('Update practice failed:', error);
@@ -138,8 +140,6 @@ export const useSavePractice = () => {
       }
     },
     onSuccess: (result, variables) => {
-      console.log('Practice saved successfully:', result);
-      
       queryClient.invalidateQueries({ queryKey: practiceKeys.all });
       queryClient.invalidateQueries({ queryKey: lessonKeys.all });
       

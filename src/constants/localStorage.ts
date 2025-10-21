@@ -14,11 +14,14 @@ export const LOCALSTORAGE_KEYS = {
 
   // Git Engine keys
   GIT_ENGINE: {
-    TERMINAL_RESPONSES: (practiceId: string) => `git-terminal-responses:${practiceId}`,
-    COMMIT_GRAPH_POSITIONS: (practiceId: string) => `git-commit-graph-node-positions:${practiceId}`,
+    TERMINAL_RESPONSES: (practiceId: string, version?: number) => 
+      version ? `git-terminal-responses:${practiceId}:v${version}` : `git-terminal-responses:${practiceId}`,
+    COMMIT_GRAPH_POSITIONS: (practiceId: string, version?: number) => 
+      version ? `git-commit-graph-node-positions:${practiceId}:v${version}` : `git-commit-graph-node-positions:${practiceId}`,
     GOAL_TERMINAL_RESPONSES: 'git-goal-terminal-responses',
     GOAL_COMMIT_GRAPH_POSITIONS: 'git-goal-commit-graph-node-positions',
     REPOSITORY_STATE: 'git-repository-state',
+    VERSION_METADATA: (practiceId: string) => `git-version-metadata:${practiceId}`,
   },
 
   // Admin keys
@@ -96,6 +99,51 @@ export const localStorageHelpers = {
       console.warn('Failed to stringify localStorage JSON:', error);
       return false;
     }
+  },
+
+  /**
+   * Version management helpers
+   */
+  version: {
+    /**
+     * Save version metadata for a practice
+     */
+    saveVersion: (practiceId: string, version: number): boolean => {
+      const key = LOCALSTORAGE_KEYS.GIT_ENGINE.VERSION_METADATA(practiceId);
+      return localStorageHelpers.setJSON(key, { version, timestamp: Date.now() });
+    },
+
+    /**
+     * Get saved version for a practice
+     */
+    getVersion: (practiceId: string): number | null => {
+      const key = LOCALSTORAGE_KEYS.GIT_ENGINE.VERSION_METADATA(practiceId);
+      const data = localStorageHelpers.getJSON<{ version: number; timestamp: number } | null>(key, null);
+      return data?.version || null;
+    },
+
+    /**
+     * Check if version has changed and needs reset
+     */
+    hasVersionChanged: (practiceId: string, currentVersion: number): boolean => {
+      const savedVersion = localStorageHelpers.version.getVersion(practiceId);
+      return savedVersion !== null && savedVersion !== currentVersion;
+    },
+
+    /**
+     * Clear all versioned data for a practice
+     */
+    clearVersionedData: (practiceId: string, version?: number): void => {
+      if (version) {
+        localStorageHelpers.removeItem(LOCALSTORAGE_KEYS.GIT_ENGINE.TERMINAL_RESPONSES(practiceId, version));
+        localStorageHelpers.removeItem(LOCALSTORAGE_KEYS.GIT_ENGINE.COMMIT_GRAPH_POSITIONS(practiceId, version));
+      }
+      
+      localStorageHelpers.removeItem(LOCALSTORAGE_KEYS.GIT_ENGINE.TERMINAL_RESPONSES(practiceId));
+      localStorageHelpers.removeItem(LOCALSTORAGE_KEYS.GIT_ENGINE.COMMIT_GRAPH_POSITIONS(practiceId));
+      
+      localStorageHelpers.removeItem(LOCALSTORAGE_KEYS.GIT_ENGINE.VERSION_METADATA(practiceId));
+    },
   },
 } as const;
 

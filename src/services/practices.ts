@@ -9,6 +9,7 @@ export interface Practice {
   estimatedTime: number;
   isActive: boolean;
   order: number;
+  version: number;
   views: number;
   completions: number;
   lessonId: string;
@@ -116,7 +117,6 @@ export class PracticesService {
     await api.post(`/api/v1/practices/${id}/complete`);
   }
 
-  // Validate user's repository state against goal state
   static async validatePractice(practiceId: string, userRepositoryState: IRepositoryState) {
     const res = await api.post('/api/v1/git/validate-practice', {
       practiceId,
