@@ -48,6 +48,16 @@ const getErrorTypeInfo = (type: string, field: string) => {
       title: 'Tệp tin',
       icon: <Target className="h-4 w-4" />,
       color: 'text-cyan-600 dark:text-cyan-400'
+    },
+    'error': {
+      title: 'Lỗi Hệ Thống',
+      icon: <AlertTriangle className="h-4 w-4" />,
+      color: 'text-red-600 dark:text-red-400'
+    },
+    'server': {
+      title: 'Kết Nối Server',
+      icon: <AlertTriangle className="h-4 w-4" />,
+      color: 'text-red-600 dark:text-red-400'
     }
   };
 

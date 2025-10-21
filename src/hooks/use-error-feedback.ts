@@ -36,6 +36,13 @@ export const useErrorFeedback = () => {
   }, []);
 
   const closeErrorFeedback = useCallback(() => {
+    setErrorFeedback(prev => ({
+      ...prev,
+      isOpen: false
+    }));
+  }, []);
+
+  const resetErrorFeedback = useCallback(() => {
     setErrorFeedback({
       isOpen: false,
       errorCount: 0,
@@ -47,6 +54,7 @@ export const useErrorFeedback = () => {
     errorFeedback,
     showErrorFeedback,
     hideErrorFeedback,
-    closeErrorFeedback
+    closeErrorFeedback,
+    resetErrorFeedback
   };
 };

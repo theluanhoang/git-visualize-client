@@ -38,6 +38,7 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
   const [showHintModal, setShowHintModal] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
+  const [hasShownInitialGuidance, setHasShownInitialGuidance] = useState(false);
   const queryClient = useQueryClient();
 
   const { clearAllData, syncFromServer } = useGitEngine(practice.id, practice.version);
@@ -92,7 +93,7 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
   } = useFeedback();
 
   const { triggerValidationCelebration } = useValidationCelebration();
-  const { errorFeedback, showErrorFeedback, closeErrorFeedback } = useErrorFeedback();
+  const { errorFeedback, showErrorFeedback, closeErrorFeedback, resetErrorFeedback } = useErrorFeedback();
   const { guidanceState, showInitialGuidance, closeInitialGuidance } = useInitialGuidance();
 
   const checkForPracticeUpdates = async () => {
@@ -161,6 +162,8 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
     setIsCompleted(false);
     setCompletedSteps(new Set());
     setShowHint(false);
+    setHasShownInitialGuidance(false);
+    resetErrorFeedback();
     await clearAllData();
   };
 
@@ -171,16 +174,38 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
 
   const handleValidate = async () => {
     await checkForPracticeUpdates();
+    
     if (!repoState) {
+      const guidanceMessage = !hasShownInitialGuidance 
+        ? 'Hãy gõ câu lệnh đầu tiên của bạn vào terminal để bắt đầu bài học!'
+        : 'Bạn cần bắt đầu với câu lệnh đầu tiên! Hãy gõ "git init" vào terminal.';
+      
       showInitialGuidance({
         practiceTitle: practice.title,
         firstCommand: 'git init',
-        guidanceMessage: 'Hãy gõ câu lệnh đầu tiên của bạn vào terminal để bắt đầu bài học!'
+        guidanceMessage
       });
+      
+      if (!hasShownInitialGuidance) {
+        setHasShownInitialGuidance(true);
+      }
       return;
     }
+    
+    if (!practice.goalRepositoryState) {
+      showErrorFeedback([{
+        type: 'error',
+        field: 'practice',
+        expected: 'Goal repository state',
+        actual: 'Not defined'
+      }]);
+      return;
+    }
+    
+    const actualRepoState = (repoState as any).state || repoState;
+    
     validatePractice(
-      { practiceId: practice.id, userRepositoryState: repoState as IRepositoryState },
+      { practiceId: practice.id, userRepositoryState: actualRepoState as IRepositoryState },
       {
         onSuccess: (res) => {
           if (res.isCorrect) {
@@ -200,6 +225,25 @@ export default function PracticeSession({ practice, onComplete, onExit }: Practi
             showErrorFeedback(errorItems);
           }
         },
+        onError: (error: any) => {
+          let errorMessage = 'Validation failed';
+          if (error.response?.status === 400) {
+            errorMessage = `Bad Request: ${error.response?.data?.message || 'Invalid request data'}`;
+          } else if (error.message?.includes('Network Error') || error.message?.includes('ERR_NETWORK')) {
+            errorMessage = 'Cannot connect to server. Please make sure the backend is running.';
+          } else if (error.message?.includes('404')) {
+            errorMessage = 'API endpoint not found. Please check the server configuration.';
+          } else if (error.message?.includes('500')) {
+            errorMessage = 'Server error. Please try again later.';
+          }
+          
+          showErrorFeedback([{
+            type: 'error',
+            field: 'server',
+            expected: 'Valid Request',
+            actual: errorMessage
+          }]);
+        }
       }
     );
   };
