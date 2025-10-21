@@ -36,9 +36,9 @@ export default function VersionResetDialog({
                 <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold">Practice Updated</h3>
+                <h3 className="text-lg font-semibold">{t('practiceUpdated')}</h3>
                 <p className="text-sm text-muted-foreground mt-1">
-                  "{practiceTitle}" has been updated to version {currentVersion}
+                  {t('practiceUpdatedMessage', { practiceTitle, currentVersion })}
                 </p>
               </div>
             </div>
@@ -50,21 +50,21 @@ export default function VersionResetDialog({
                 <RefreshCw className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
                 <div className="text-sm">
                   <p className="font-medium text-amber-800 dark:text-amber-200 mb-1">
-                    Your saved progress is from version {savedVersion}
+                    {t('savedProgressFrom', { savedVersion })}
                   </p>
                   <p className="text-amber-700 dark:text-amber-300">
-                    To ensure compatibility with the latest version, your local data will be reset.
+                    {t('resetRequired')}
                   </p>
                 </div>
               </div>
             </div>
             
             <div className="text-sm text-muted-foreground">
-              <p>This will clear:</p>
+              <p>{t('thisWillClear')}</p>
               <ul className="list-disc list-inside mt-2 space-y-1">
-                <li>Terminal command history</li>
-                <li>Commit graph positions</li>
-                <li>Repository state</li>
+                <li>{t('terminalCommandHistory')}</li>
+                <li>{t('commitGraphPositions')}</li>
+                <li>{t('repositoryState')}</li>
               </ul>
             </div>
           </div>
@@ -78,12 +78,12 @@ export default function VersionResetDialog({
               {loading ? (
                 <>
                   <RefreshCw className="w-4 h-4 animate-spin" />
-                  Resetting...
+                  {t('resetting')}
                 </>
               ) : (
                 <>
                   <RefreshCw className="w-4 h-4" />
-                  Reset & Continue
+                  {t('resetAndContinue')}
                 </>
               )}
             </button>

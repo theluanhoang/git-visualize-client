@@ -41,7 +41,17 @@
     "error": "Lỗi",
     "success": "Thành công",
     "warning": "Cảnh báo",
-    "info": "Thông tin"
+    "info": "Thông tin",
+    "practiceUpdated": "Bài Thực Hành Đã Cập Nhật",
+    "practiceUpdatedMessage": "{practiceTitle} đã được cập nhật lên phiên bản {currentVersion}",
+    "savedProgressFrom": "Tiến độ đã lưu của bạn là từ phiên bản {savedVersion}",
+    "resetRequired": "Để đảm bảo tương thích với phiên bản mới nhất, dữ liệu cục bộ của bạn sẽ được đặt lại.",
+    "thisWillClear": "Điều này sẽ xóa:",
+    "terminalCommandHistory": "Lịch sử lệnh terminal",
+    "commitGraphPositions": "Vị trí đồ thị commit",
+    "repositoryState": "Trạng thái repository",
+    "resetting": "Đang đặt lại...",
+    "resetAndContinue": "Đặt Lại & Tiếp Tục"
   },
   "home": {
     "title": "Công cụ Git Trực quan",

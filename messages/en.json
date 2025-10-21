@@ -41,7 +41,17 @@
     "error": "Error",
     "success": "Success",
     "warning": "Warning",
-    "info": "Information"
+    "info": "Information",
+    "practiceUpdated": "Practice Updated",
+    "practiceUpdatedMessage": "{practiceTitle} has been updated to version {currentVersion}",
+    "savedProgressFrom": "Your saved progress is from version {savedVersion}",
+    "resetRequired": "To ensure compatibility with the latest version, your local data will be reset.",
+    "thisWillClear": "This will clear:",
+    "terminalCommandHistory": "Terminal command history",
+    "commitGraphPositions": "Commit graph positions",
+    "repositoryState": "Repository state",
+    "resetting": "Resetting...",
+    "resetAndContinue": "Reset & Continue"
   },
   "home": {
     "title": "Git Visualized Engine",
