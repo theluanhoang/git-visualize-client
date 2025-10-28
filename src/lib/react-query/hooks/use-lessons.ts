@@ -104,3 +104,20 @@ export const useDeleteLesson = () => {
     },
   });
 };
+
+export const useGenerateLesson = () => {
+  return useMutation({
+    mutationFn: async (params: {
+      sourceType: 'url' | 'file';
+      url?: string;
+      fileId?: string;
+      language?: 'vi' | 'en';
+      model?: 'gemini-2.5-flash' | 'gemini-2.5-pro';
+      outlineStyle?: 'concise' | 'detailed';
+      additionalInstructions?: string;
+    }) => {
+      const { LessonsService } = await import('@/services/lessons');
+      return LessonsService.generateLesson(params);
+    },
+  });
+};

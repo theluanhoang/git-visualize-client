@@ -29,9 +29,10 @@ interface PracticeFormProps {
   initialData?: Partial<PracticeFormData>;
   lessonId: string;
   practiceId?: string;
+  practiceIndex?: number;
 }
 
-export function PracticeForm({ onSave, onCancel, initialData, lessonId, practiceId }: PracticeFormProps) {
+export function PracticeForm({ onSave, onCancel, initialData, lessonId, practiceId, practiceIndex }: PracticeFormProps) {
   const [activeTab, setActiveTab] = useState<'basic' | 'instructions' | 'commands' | 'hints' | 'validation' | 'tags'>('basic');
   const queryClient = useQueryClient();
   const t = useTranslations('practice.form');
@@ -81,11 +82,15 @@ export function PracticeForm({ onSave, onCancel, initialData, lessonId, practice
     name: 'tags'
   });
 
-  const goalBuilderId = 'goal-builder';
+  const goalBuilderId = practiceIndex !== undefined 
+    ? `goal-builder-${practiceIndex}` 
+    : (practiceId || 'goal-builder');
+  
   const { data: goalResponses = [] } = useTerminalResponses(goalBuilderId);
   const { clearAllData } = useGitEngine(goalBuilderId);
+
   const [goalPreviewState, setGoalPreviewState] = useState<any>(() => {
-    return practiceId ? (initialData?.goalRepositoryState || null) : null;
+    return initialData?.goalRepositoryState || null;
   });
   const [resetKey, setResetKey] = useState(0);
   const [isResetting, setIsResetting] = useState(false);
@@ -93,12 +98,11 @@ export function PracticeForm({ onSave, onCancel, initialData, lessonId, practice
   const [hasBeenReset, setHasBeenReset] = useState(false);
   
   
-  
   React.useEffect(() => {
-    if (practiceId && initialData?.goalRepositoryState && !goalPreviewState && !isResetting && !hasBeenReset) {
+    if (initialData?.goalRepositoryState && !goalPreviewState && !isResetting && !hasBeenReset) {
       setGoalPreviewState(initialData.goalRepositoryState);
     }
-  }, [practiceId, initialData?.goalRepositoryState, goalPreviewState, isResetting, hasBeenReset]);
+  }, [initialData?.goalRepositoryState, goalPreviewState, isResetting, hasBeenReset]);
   
   React.useEffect(() => {
     if (!hasBeenReset) {
@@ -110,11 +114,35 @@ export function PracticeForm({ onSave, onCancel, initialData, lessonId, practice
   }, [goalResponses, hasBeenReset]);
 
   React.useEffect(() => {
-    if (practiceId && initialData?.goalRepositoryState && !isInitialized) {
-      queryClient.setQueryData(gitKeys.state(goalBuilderId), initialData.goalRepositoryState);
+    if (initialData?.goalRepositoryState && !isInitialized) {
+      const goalState = initialData.goalRepositoryState;
+      queryClient.setQueryData(['git', 'state', goalBuilderId], goalState);
+      setGoalPreviewState(goalState);
+      
+      const expectedCommands = initialData.expectedCommands || [];
+      if (expectedCommands.length > 0) {
+        const mockResponses = expectedCommands.map((cmd: any, index: number) => ({
+          command: cmd.command,
+          success: true,
+          output: cmd.expectedOutput || 'Command executed successfully',
+          repositoryState: null,
+        }));
+        
+        const cacheKey = terminalKeys.practice(goalBuilderId);
+        queryClient.setQueryData(cacheKey, mockResponses);
+        
+        try {
+          const localStorageKey = goalBuilderId 
+            ? LOCALSTORAGE_KEYS.GIT_ENGINE.TERMINAL_RESPONSES(goalBuilderId)
+            : LOCALSTORAGE_KEYS.GIT_ENGINE.TERMINAL_RESPONSES('global');
+          localStorageHelpers.setJSON(localStorageKey, mockResponses);
+        } catch (error) {
+          console.warn('Failed to save to localStorage:', error);
+        }
+      }
       setIsInitialized(true);
     }
-  }, [practiceId, initialData?.goalRepositoryState, isInitialized, queryClient, goalBuilderId]);
+  }, [initialData?.goalRepositoryState, initialData?.expectedCommands, isInitialized, queryClient, goalBuilderId]);
 
   React.useEffect(() => {
     if (goalPreviewState === null) {
@@ -122,36 +150,17 @@ export function PracticeForm({ onSave, onCancel, initialData, lessonId, practice
     }
   }, [goalPreviewState, queryClient]);
 
-  React.useEffect(() => {
-    if (!practiceId && !initialData?.goalRepositoryState) {
-      setGoalPreviewState(null);
-      queryClient.setQueryData(terminalKeys.goal, []);
-      queryClient.setQueryData(terminalKeys.practice(goalBuilderId), []);
-      queryClient.setQueryData(gitKeys.state(goalBuilderId), null);
-      setIsInitialized(false);
-      setResetKey(prev => prev + 1);
-      
-      try {
-      localStorageHelpers.removeItem(LOCALSTORAGE_KEYS.GIT_ENGINE.TERMINAL_RESPONSES(goalBuilderId));
-      localStorageHelpers.removeItem(LOCALSTORAGE_KEYS.GIT_ENGINE.COMMIT_GRAPH_POSITIONS(goalBuilderId));
-      localStorageHelpers.removeItem(LOCALSTORAGE_KEYS.GIT_ENGINE.GOAL_COMMIT_GRAPH_POSITIONS);
-      localStorageHelpers.removeItem(LOCALSTORAGE_KEYS.GIT_ENGINE.GOAL_TERMINAL_RESPONSES);
-      } catch (error) {
-        console.warn('Failed to clear localStorage:', error);
-      }
-    }
-  }, [practiceId, initialData?.goalRepositoryState, queryClient, goalBuilderId]);
 
   const prevPracticeIdRef = React.useRef(practiceId);
   React.useEffect(() => {
     const prevPracticeId = prevPracticeIdRef.current;
     
-    if (prevPracticeId !== practiceId) {
+    if (prevPracticeId !== practiceId && !initialData?.goalRepositoryState) {
       if (!practiceId) {
         setGoalPreviewState(null);
         queryClient.setQueryData(terminalKeys.goal, []);
         queryClient.setQueryData(terminalKeys.practice(goalBuilderId), []);
-        queryClient.setQueryData(gitKeys.state(goalBuilderId), null);
+        queryClient.setQueryData(['git', 'state', goalBuilderId], null);
         setIsInitialized(false);
         setResetKey(prev => prev + 1);
         
@@ -167,17 +176,19 @@ export function PracticeForm({ onSave, onCancel, initialData, lessonId, practice
       
       prevPracticeIdRef.current = practiceId;
     }
-  }, [practiceId, queryClient, goalBuilderId]);
+  }, [practiceId, initialData?.goalRepositoryState, queryClient, goalBuilderId]);
 
   React.useEffect(() => {
     return () => {
-      if (!practiceId) {
+      const shouldClear = !practiceId && !initialData?.goalRepositoryState;
+      
+      if (shouldClear) {
         queryClient.setQueryData(terminalKeys.goal, []);
         queryClient.setQueryData(terminalKeys.practice(goalBuilderId), []);
-        queryClient.setQueryData(gitKeys.state(goalBuilderId), null);
+        queryClient.setQueryData(['git', 'state', goalBuilderId], null);
       }
     };
-  }, [practiceId, queryClient, goalBuilderId]);
+  }, [practiceId, initialData?.goalRepositoryState, queryClient, goalBuilderId]);
 
   const onSubmit = async (data: PracticeFormData) => {
     try {
@@ -269,12 +280,12 @@ export function PracticeForm({ onSave, onCancel, initialData, lessonId, practice
     setGoalPreviewState(null);
     queryClient.setQueryData(terminalKeys.goal, []);
     queryClient.setQueryData(terminalKeys.practice(goalBuilderId), []);
-    queryClient.setQueryData(gitKeys.state(goalBuilderId), null);
+    queryClient.setQueryData(['git', 'state', goalBuilderId], null);
     queryClient.removeQueries({ queryKey: gitKeys.goalState([]) });
     queryClient.removeQueries({ queryKey: gitKeys.all });
     queryClient.removeQueries({ queryKey: goalKeys.all });
     
-    queryClient.setQueryData(gitKeys.state(goalBuilderId), null);
+    queryClient.setQueryData(['git', 'state', goalBuilderId], null);
     
     setResetKey(prev => prev + 1);
     setIsInitialized(false);

@@ -3,7 +3,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { lessonSchema, LessonFormData, LessonWithPractices } from '@/lib/schemas/lesson';
-import { useCreateLesson, useUpdateLesson } from '@/lib/react-query/hooks/use-lessons';
+import { useCreateLesson, useUpdateLesson, useGenerateLesson } from '@/lib/react-query/hooks/use-lessons';
 import { useQueryClient } from '@tanstack/react-query';
 import { lessonKeys, practiceKeys } from '@/lib/react-query/query-keys';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
-import { Save, Eye, ArrowLeft, Plus, Trash2 } from 'lucide-react';
+import { Save, Eye, ArrowLeft, Plus, Trash2, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import RichTextEditor from '@/components/common/rich-editor/RichTextEditor';
 import { PracticeForm } from './PracticeForm';
@@ -21,6 +21,8 @@ import { IRepositoryState } from '@/types/git';
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { toast } from 'sonner';
+import { GenerateLessonModal } from '@/components/modals/GenerateLessonModal';
+import { gitEngineApi } from '@/lib/react-query/hooks/use-git-engine';
 
 interface LessonFormProps {
   initialData?: Partial<LessonWithPractices>;
@@ -39,6 +41,7 @@ export function LessonForm({ initialData, isEdit = false, lessonId }: LessonForm
   const [editPracticeIndex, setEditPracticeIndex] = useState<number | null>(null);
   const [previewGoal, setPreviewGoal] = useState<IRepositoryState | null>(null);
   const [showGoalModal, setShowGoalModal] = useState(false);
+  const [showGenerateModal, setShowGenerateModal] = useState(false);
   
   const [serverPractices] = useState<PracticeFormData[]>(initialData?.practices || []);
   
@@ -61,6 +64,7 @@ export function LessonForm({ initialData, isEdit = false, lessonId }: LessonForm
 
   const createLessonMutation = useCreateLesson();
   const updateLessonMutation = useUpdateLesson();
+  const generateLessonMutation = useGenerateLesson();
 
   useEffect(() => {
     const handler = (e: CustomEvent<{ goal: IRepositoryState }>) => {
@@ -85,6 +89,112 @@ export function LessonForm({ initialData, isEdit = false, lessonId }: LessonForm
       .replace(/-+/g, '-')
       .trim();
   };
+
+  const simulateCommands = async (commands: string[], practiceId: string) => {
+    let currentState: IRepositoryState | null = null;
+    const responses: any[] = [];
+    
+    for (const command of commands) {
+      try {
+        const response = await gitEngineApi.executeGitCommand(command, currentState);
+        if (response.repositoryState) {
+          currentState = response.repositoryState;
+        }
+        responses.push({ ...response, command });
+        await new Promise(resolve => setTimeout(resolve, 200));
+      } catch (error) {
+        console.warn(`Failed to simulate command "${command}":`, error);
+        responses.push({ 
+          success: false, 
+          output: error instanceof Error ? error.message : 'Unknown error',
+          command,
+          repositoryState: currentState
+        });
+      }
+    }
+
+    if (responses.length > 0) {
+      const key = ['terminal-responses', practiceId];
+      queryClient.setQueryData(key, responses);
+
+      if (practiceId === 'goal-builder') {
+        queryClient.setQueryData(['terminal-responses', 'goal'], responses);
+      }
+
+      if (currentState) {
+        queryClient.setQueryData(['git', 'state', practiceId], currentState);
+        if (practiceId === 'goal-builder') {
+          queryClient.setQueryData(['git', 'state', 'goal'], currentState);
+        }
+      }
+    }
+
+    return currentState;
+  };
+
+  const handleGenerateLesson = async (params: {
+    sourceType: 'url' | 'file';
+    url?: string;
+    language?: 'vi' | 'en';
+    model?: 'gemini-2.5-flash' | 'gemini-2.5-pro';
+    outlineStyle?: 'concise' | 'detailed';
+    additionalInstructions?: string;
+  }) => {
+    try {   
+      const result = await generateLessonMutation.mutateAsync(params);
+      
+      setContent(result.html);
+      
+      if (result.meta) {
+        toast.success('Bài học đã được tạo thành công!');
+      }
+
+      if (result.practices && result.practices.length > 0) {
+        toast.info('Đang xử lý practice sessions...');
+        
+        const processedPractices: PracticeFormData[] = [];
+        
+        for (let i = 0; i < result.practices.length; i++) {
+          const practice = result.practices[i];
+          
+          let finalGoalState = practice.goalRepositoryState;
+          if (!practice.goalRepositoryState && practice.expectedCommands && practice.expectedCommands.length > 0) {
+            const commands: string[] = (practice.expectedCommands || [])
+              .map((cmd: { command: string }) => cmd.command)
+              .filter((cmd: string | undefined): cmd is string => Boolean(cmd));
+            
+            if (commands.length > 0) {
+              const goalBuilderId = `goal-builder-${i}`;
+              finalGoalState = await simulateCommands(commands, goalBuilderId);
+            }
+          }
+          
+          processedPractices.push({
+            title: practice.title,
+            scenario: practice.scenario,
+            difficulty: practice.difficulty || 1,
+            estimatedTime: practice.estimatedTime || 0,
+            isActive: practice.isActive ?? true,
+            order: practice.order || i,
+            instructions: practice.instructions || [],
+            hints: practice.hints || [],
+            expectedCommands: practice.expectedCommands || [],
+            validationRules: practice.validationRules || [],
+            tags: practice.tags || [],
+            goalRepositoryState: finalGoalState || null,
+          });
+        }
+
+      setPractices(prev => [...prev, ...processedPractices]);
+      toast.success(`${processedPractices.length} practice sessions đã được tạo!`);
+      
+      setShowGenerateModal(false);
+    }
+  } catch (error) {
+    console.error('Failed to generate lesson:', error);
+    toast.error('Không thể tạo bài học. Vui lòng thử lại.');
+  }
+};
 
   const handleSavePractice = (practice: PracticeFormData) => {
     if (isEdit && editPracticeIndex != null) {
@@ -172,6 +282,14 @@ export function LessonForm({ initialData, isEdit = false, lessonId }: LessonForm
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <Button 
+            variant="outline"
+            onClick={() => setShowGenerateModal(true)}
+            className="bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-300"
+          >
+            <Sparkles className="h-4 w-4 mr-2" />
+            Tạo bằng AI
+          </Button>
           <Button variant="outline">
             <Eye className="h-4 w-4 mr-2" />
             Xem trước
@@ -358,6 +476,7 @@ export function LessonForm({ initialData, isEdit = false, lessonId }: LessonForm
               initialData={editPracticeIndex != null ? practices[editPracticeIndex] : undefined}
               lessonId={initialData?.id || lessonId || ''}
               practiceId={editPracticeIndex != null ? (isEdit ? serverPractices[editPracticeIndex]?.id : practices[editPracticeIndex]?.id) : undefined}
+              practiceIndex={editPracticeIndex !== null ? editPracticeIndex : undefined}
             />
           </div>
         </div>
@@ -368,6 +487,13 @@ export function LessonForm({ initialData, isEdit = false, lessonId }: LessonForm
         onClose={() => setShowGoalModal(false)}
         goalRepositoryState={previewGoal}
         practiceTitle={initialData?.title || 'Preview Goal'}
+      />
+
+      <GenerateLessonModal
+        isOpen={showGenerateModal}
+        onClose={() => setShowGenerateModal(false)}
+        onGenerate={handleGenerateLesson}
+        isGenerating={generateLessonMutation.isPending}
       />
     </div>
   );

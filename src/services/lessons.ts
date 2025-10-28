@@ -139,6 +139,18 @@ export const LessonsService = {
     const res = await api.delete(`/api/v1/lesson/${id}`);
     return res.data;
   },
+  async generateLesson(params: {
+    sourceType: 'url' | 'file';
+    url?: string;
+    fileId?: string;
+    language?: 'vi' | 'en';
+    model?: 'gemini-2.5-flash' | 'gemini-2.5-pro';
+    outlineStyle?: 'concise' | 'detailed';
+    additionalInstructions?: string;
+  }) {
+    const res = await api.post('/api/v1/lesson/generate', params);
+    return res.data;
+  },
 };
 
 export default LessonsService;
