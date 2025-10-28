@@ -72,10 +72,6 @@ export function PracticeForm({ onSave, onCancel, initialData, lessonId, practice
     name: 'hints'
   });
 
-  const { fields: commandFields, append: appendCommand, remove: removeCommand } = useFieldArray({
-    control,
-    name: 'expectedCommands'
-  });
 
   const { fields: tagFields, append: appendTag, remove: removeTag } = useFieldArray({
     control,
@@ -313,7 +309,7 @@ export function PracticeForm({ onSave, onCancel, initialData, lessonId, practice
   ];
 
   return (
-    <div className="space-y-6 w-full max-w-full">
+    <div className="space-y-6 w-full p-6 rounded-full max-w-full">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold">{t('title')}</h2>
