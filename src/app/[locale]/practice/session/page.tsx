@@ -88,13 +88,6 @@ export default function PracticeSessionPage() {
         />
         
         {}
-        <div className="flex justify-center mb-6">
-          <GoalButton
-            onClick={() => setShowGoalModal(true)}
-            hasGoal={!!selectedPractice?.goalRepositoryState}
-          />
-        </div>
-        
         <PracticeSession
           practice={selectedPractice}
           onComplete={handleCompletePractice}

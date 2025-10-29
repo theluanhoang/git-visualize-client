@@ -29,7 +29,7 @@ function Terminal({ practiceId }: { practiceId?: string }) {
     }, [responses]);
 
     return (
-        <div className="h-full w-full bg-gray-900 text-green-400 font-mono rounded-lg flex flex-col border-l border-r" style={{ height: '300px' }}>
+        <div className="h-full w-full bg-gray-900 text-green-400 font-mono rounded-lg flex overflow-hidden flex-col max-h-[300px]">
             {}
             <div className="flex items-center justify-between px-4 py-2 bg-gray-800 border-b border-gray-700">
                 <div className="text-sm text-gray-300">
@@ -47,7 +47,7 @@ function Terminal({ practiceId }: { practiceId?: string }) {
                 ref={outputRef}
                 className="flex-1 overflow-y-auto px-4 py-2 space-y-1 terminal-scrollbar"
                 style={{
-                    maxHeight: 'calc(100% - 80px)',
+                    maxHeight: 'calc(100%)',
                     scrollbarWidth: 'thin',
                     scrollbarColor: '#4a5568 #2d3748'
                 }}

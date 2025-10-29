@@ -222,7 +222,7 @@ function CommitGraph({
     };
 
     return (
-        <div className={`rounded-lg shadow-sm border border-[var(--border)] bg-[var(--surface)] ${className}`}>
+        <div className={`rounded-lg shadow-sm border border-[var(--border)] overflow-hidden bg-[var(--surface)] ${className}`}>
             <div className="px-4 py-3 border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--surface),#000_4%)] ">
                 <span className="flex items-center gap-2 text-foreground">
                     <GitCommitHorizontal />
