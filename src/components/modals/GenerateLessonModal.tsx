@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FileUp, Loader2, Sparkles, Trash2, UploadCloud } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface GenerateLessonModalProps {
   isOpen: boolean;
@@ -20,11 +21,13 @@ interface GenerateLessonModalProps {
     model?: 'gemini-2.5-flash' | 'gemini-2.5-pro';
     outlineStyle?: 'concise' | 'detailed';
     additionalInstructions?: string;
+    replaceExistingPractices?: boolean;
   }) => Promise<void>;
   isGenerating: boolean;
+  hasExistingPractices?: boolean;
 }
 
-export function GenerateLessonModal({ isOpen, onClose, onGenerate, isGenerating }: GenerateLessonModalProps) {
+export function GenerateLessonModal({ isOpen, onClose, onGenerate, isGenerating, hasExistingPractices = false }: GenerateLessonModalProps) {
   const [url, setUrl] = useState('');
   const [additionalInstructions, setAdditionalInstructions] = useState('');
   const [model, setModel] = useState<'gemini-2.5-flash' | 'gemini-2.5-pro'>('gemini-2.5-flash');
@@ -34,15 +37,15 @@ export function GenerateLessonModal({ isOpen, onClose, onGenerate, isGenerating 
   const [file, setFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [replaceExistingPractices, setReplaceExistingPractices] = useState(true);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const handleFileSelect = (files?: FileList | null) => {
     if (!files || files.length === 0) return;
     const selected = files[0];
-    // Basic validation: up to ~20MB, common types
-    const maxBytes = 20 * 1024 * 1024;
+    const maxBytes = 10 * 1024 * 1024;
     if (selected.size > maxBytes) {
-      setError('Kích thước tệp vượt quá 20MB.');
+      setError('Kích thước tệp vượt quá 10MB.');
       return;
     }
     setError(null);
@@ -91,9 +94,8 @@ export function GenerateLessonModal({ isOpen, onClose, onGenerate, isGenerating 
       model: model || 'gemini-2.5-flash',
       outlineStyle: outlineStyle || 'detailed',
       additionalInstructions: additionalInstructions.trim() || undefined,
+      replaceExistingPractices,
     } as const;
-
-    console.log('🔍 Sending generate request with params:', params);
     
     await onGenerate(params);
 
@@ -192,7 +194,7 @@ export function GenerateLessonModal({ isOpen, onClose, onGenerate, isGenerating 
                           disabled={isGenerating}
                         />
                       </div>
-                      <p className="mt-2 text-xs text-muted-foreground">Hỗ trợ: PDF, DOCX, HTML, TXT, MD (tối đa 20MB)</p>
+                      <p className="mt-2 text-xs text-muted-foreground">Hỗ trợ: PDF, DOCX, HTML, TXT, MD (tối đa 10MB)</p>
                     </div>
                   )}
                 </div>
@@ -257,6 +259,20 @@ export function GenerateLessonModal({ isOpen, onClose, onGenerate, isGenerating 
               disabled={isGenerating}
             />
           </div>
+
+          {hasExistingPractices && (
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="replaceExistingPractices"
+                checked={replaceExistingPractices}
+                onCheckedChange={(checked) => setReplaceExistingPractices(checked as boolean)}
+                disabled={isGenerating}
+              />
+              <Label htmlFor="replaceExistingPractices" className="text-sm">
+                Thay thế practice sessions hiện có
+              </Label>
+            </div>
+          )}
 
           <div className="flex justify-end gap-2 pt-4">
             <Button

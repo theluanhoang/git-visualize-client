@@ -142,15 +142,67 @@ export const LessonsService = {
   async generateLesson(params: {
     sourceType: 'url' | 'file';
     url?: string;
-    fileId?: string;
+    file?: File;
     language?: 'vi' | 'en';
     model?: 'gemini-2.5-flash' | 'gemini-2.5-pro';
     outlineStyle?: 'concise' | 'detailed';
     additionalInstructions?: string;
   }) {
-    const res = await api.post('/api/v1/lesson/generate', params);
+    const { data, config } = buildGenerateLessonRequest(params);
+    const res = await api.post('/api/v1/lesson/generate', data, config);
     return res.data;
   },
 };
 
 export default LessonsService;
+
+function buildGenerateLessonRequest(params: {
+  sourceType: 'url' | 'file';
+  url?: string;
+  file?: File;
+  language?: 'vi' | 'en';
+  model?: 'gemini-2.5-flash' | 'gemini-2.5-pro';
+  outlineStyle?: 'concise' | 'detailed';
+  additionalInstructions?: string;
+}): { data: FormData | Record<string, unknown>; config?: { headers?: Record<string, string> } } {
+  const isFileUpload = params.sourceType === 'file' || Boolean(params.file);
+
+  if (isFileUpload) {
+    const formData = new FormData();
+    formData.append('sourceType', 'file');
+    appendIfDefined(formData, 'url', params.url);
+    if (params.file) formData.append('file', params.file);
+    appendIfDefined(formData, 'language', params.language);
+    appendIfDefined(formData, 'model', params.model);
+    appendIfDefined(formData, 'outlineStyle', params.outlineStyle);
+    appendIfDefined(formData, 'additionalInstructions', params.additionalInstructions);
+
+    return {
+      data: formData,
+      config: { headers: { 'Content-Type': 'multipart/form-data' } },
+    };
+  }
+
+  const jsonPayload: Record<string, unknown> = cleanUndefined({
+    sourceType: 'url',
+    url: params.url,
+    language: params.language,
+    model: params.model,
+    outlineStyle: params.outlineStyle,
+    additionalInstructions: params.additionalInstructions,
+  });
+
+  return { data: jsonPayload, config: { headers: { 'Content-Type': 'application/json' } } };
+}
+
+function appendIfDefined(fd: FormData, key: string, value: string | undefined | null) {
+  if (value != null && value !== '') {
+    fd.append(key, value as string);
+  }
+}
+
+function cleanUndefined<T extends Record<string, unknown>>(obj: T): T {
+  const out = { ...obj } as T;
+  Object.keys(out).forEach((k) => (out as any)[k] === undefined && delete (out as any)[k]);
+  return out;
+}

@@ -192,7 +192,8 @@ export function LessonForm({ initialData, isEdit = false, lessonId }: LessonForm
     }
   } catch (error) {
     console.error('Failed to generate lesson:', error);
-    toast.error('Không thể tạo bài học. Vui lòng thử lại.');
+    const message = (error as any)?.response?.data?.message || (error as Error)?.message || 'Không thể tạo bài học. Vui lòng thử lại.';
+    toast.error(message);
   }
 };
 
