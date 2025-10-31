@@ -15,7 +15,7 @@ import { useDeleteLesson } from '@/lib/react-query/hooks/use-lessons';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { useRouter } from 'next/navigation';
 import { useParams } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useIsAuthenticated } from '@/lib/react-query/hooks/use-auth';
 import AdminWelcomeBanner from '@/components/admin/AdminWelcomeBanner';
 import { useDashboardStats, useRecentUsers, useRecentLessons } from '@/lib/react-query/hooks/use-analytics';
@@ -59,6 +59,17 @@ export default function AdminDashboard() {
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
   const { data: recentUsers, isLoading: usersLoading } = useRecentUsers(3);
   const { data: recentLessonsData, isLoading: lessonsLoading } = useRecentLessons(10);
+  const [lessonsPage, setLessonsPage] = useState(1);
+  const [usersPage, setUsersPage] = useState(1);
+  const pageSize = 5;
+
+  useEffect(() => {
+    setLessonsPage(1);
+  }, [lessonsLoading]);
+
+  useEffect(() => {
+    setUsersPage(1);
+  }, [usersLoading]);
 
 
   const openConfirmDelete = (id: number) => {
@@ -191,8 +202,15 @@ export default function AdminDashboard() {
           </div>
           <AdminTable<LessonRow> 
             columns={lessonColumns}
-            data={lessonsLoading ? [] : recentLessonsData ?? []}
+            data={(lessonsLoading ? [] : (recentLessonsData ?? [])).slice((lessonsPage - 1) * pageSize, lessonsPage * pageSize)}
             emptyMessage={lessonsLoading ? t('loading') : t('noData')}
+            pagination={{
+              currentPage: lessonsPage,
+              pageSize,
+              totalItems: (lessonsLoading ? [] : (recentLessonsData ?? [])).length,
+              onPageChange: setLessonsPage,
+              showInfo: true,
+            }}
           />
         </Card>
 
@@ -208,8 +226,15 @@ export default function AdminDashboard() {
           </div>
           <AdminTable<UserRow>
             columns={userColumns}
-            data={usersLoading ? [] : (recentUsers?.users ?? [])}
+            data={(usersLoading ? [] : (recentUsers?.users ?? [])).slice((usersPage - 1) * pageSize, usersPage * pageSize)}
             emptyMessage={usersLoading ? t('loading') : t('noData')}
+            pagination={{
+              currentPage: usersPage,
+              pageSize,
+              totalItems: (usersLoading ? [] : (recentUsers?.users ?? [])).length,
+              onPageChange: setUsersPage,
+              showInfo: true,
+            }}
           />
         </Card>
       </div>

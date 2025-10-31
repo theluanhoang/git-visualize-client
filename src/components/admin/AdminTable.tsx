@@ -1,8 +1,9 @@
 import { Card } from '@/components/ui/card';
 import { TableProps } from './types';
+import Pagination from '@/components/common/Pagination';
 import { useTranslations } from 'next-intl';
 
-export function AdminTable<T = Record<string, unknown>>({ columns, data, loading = false, emptyMessage, onRowClick }: TableProps<T>) {
+export function AdminTable<T = Record<string, unknown>>({ columns, data, loading = false, emptyMessage, onRowClick, pagination }: TableProps<T>) {
   const t = useTranslations('admin');
   const defaultEmptyMessage = t('noData');
   if (loading) {
@@ -62,6 +63,18 @@ export function AdminTable<T = Record<string, unknown>>({ columns, data, loading
           </tbody>
         </table>
       </div>
+      {pagination && (
+        <div className="p-4 border-t">
+          <Pagination
+            currentPage={pagination.currentPage}
+            totalPages={Math.max(1, Math.ceil(pagination.totalItems / pagination.pageSize))}
+            onPageChange={pagination.onPageChange}
+            itemsPerPage={pagination.pageSize}
+            totalItems={pagination.totalItems}
+            showInfo={pagination.showInfo}
+          />
+        </div>
+      )}
     </Card>
   );
 }

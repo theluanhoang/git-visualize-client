@@ -1,20 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { 
   Plus, 
-  Search, 
-  Filter, 
-  Edit, 
-  Trash2, 
   Eye, 
-  MoreHorizontal,
   BookOpen,
   Calendar,
-  Users,
   TrendingUp
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -32,6 +26,8 @@ export default function LessonsPage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const router = useRouter();
+  const [page, setPage] = useState(1);
+  const pageSize = 5;
 
   const statusOptions = [
     { value: 'all', label: t('allStatuses') },
@@ -49,6 +45,13 @@ export default function LessonsPage() {
     const matchesStatus = statusFilter === 'all' || lesson.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, statusFilter]);
+
+  const totalItems = filteredLessons.length;
+  const pagedLessons = filteredLessons.slice((page - 1) * pageSize, page * pageSize);
 
   const openConfirmDelete = (id: string) => {
     setPendingDeleteId(id);
@@ -160,8 +163,15 @@ export default function LessonsPage() {
       {}
       <AdminTable 
         columns={lessonColumns}
-        data={filteredLessons}
+        data={pagedLessons}
         emptyMessage={t('noLessons')}
+        pagination={{
+          currentPage: page,
+          pageSize,
+          totalItems,
+          onPageChange: setPage,
+          showInfo: true,
+        }}
         onRowClick={async (lesson) => {
           try {
             if (lesson.slug) {

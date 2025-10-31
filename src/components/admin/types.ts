@@ -41,6 +41,13 @@ export interface TableProps<T = Record<string, unknown>> {
   loading?: boolean;
   emptyMessage?: string;
   onRowClick?: (row: T) => void;
+  pagination?: {
+    currentPage: number;
+    pageSize: number;
+    totalItems: number;
+    onPageChange: (page: number) => void;
+    showInfo?: boolean;
+  };
 }
 
 export interface PageHeaderProps {
