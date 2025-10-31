@@ -1,5 +1,5 @@
 import { ICommit } from '@/types/git'
-import React from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
 interface CommitSvgParams {
     x: number,
@@ -10,6 +10,23 @@ interface CommitSvgParams {
 }
 
 function CommitSvg({ x, y, commit, isHead, isCurrentBranch }: CommitSvgParams) {
+    const branchLabel = commit ? commit.branch : 'main'
+    const textRef = useRef<SVGTextElement>(null)
+    const [labelDims, setLabelDims] = useState<{ width: number; height: number }>({ width: 0, height: 0 })
+
+    useEffect(() => {
+        if (textRef.current) {
+            const bbox = textRef.current.getBBox()
+            setLabelDims({ width: bbox.width, height: bbox.height })
+        }
+    }, [branchLabel])
+
+    const paddingX = 12
+    const paddingY = 6
+    const rectWidth = labelDims.width ? labelDims.width + paddingX * 2 : 60
+    const rectHeight = labelDims.height ? labelDims.height + paddingY * 2 : 20
+    const rectX = x - rectWidth / 2
+    const rectY = y + 40
     return (
         <g>
             {}
@@ -56,21 +73,23 @@ function CommitSvg({ x, y, commit, isHead, isCurrentBranch }: CommitSvgParams) {
 
             {}
             <rect
-                x={x - 30}
-                y={y + 40}
-                width="60"
-                height="20"
-                rx="10"
+                x={rectX}
+                y={rectY}
+                width={rectWidth}
+                height={rectHeight}
+                rx={rectHeight / 2}
                 fill={isCurrentBranch ? '#dc2626' : '#6b7280'}
                 className="pointer-events-none"
             />
             <text
                 x={x}
-                y={y + 53}
+                y={rectY + rectHeight / 2}
                 textAnchor="middle"
                 className="text-xs fill-white font-bold pointer-events-none"
+                dominantBaseline="middle"
+                ref={textRef}
             >
-                {commit ? commit.branch : "main"}
+                {branchLabel}
             </text>
         </g>
     )
