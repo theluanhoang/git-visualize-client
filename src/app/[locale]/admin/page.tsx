@@ -91,7 +91,7 @@ export default function AdminDashboard() {
     { key: 'title', label: t('title'), render: (value: unknown) => (
       <span className="block max-w-[280px] truncate" title={value as string}>{value as string}</span>
     ) },
-    { key: 'status', label: t('status'), render: (value: unknown) => <StatusBadge status={value as 'draft' | 'published' | 'archived'} /> },
+    { key: 'status', label: t('status'), render: (value: unknown) => <StatusBadge status={value as 'draft' | 'published'} /> },
     { key: 'views', label: t('views') },
     { key: 'lastModified', label: t('lastModified'), render: (value: unknown) => <DateDisplay date={value as string} /> },
     { 

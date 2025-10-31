@@ -3,15 +3,14 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, Clock } from 'lucide-react';
 
 interface StatusBadgeProps {
-  status: 'published' | 'draft' | 'archived';
+  status: 'published' | 'draft';
 }
 
 export function StatusBadge({ status }: StatusBadgeProps) {
   const statusConfig = {
-    published: { label: 'Đã xuất bản', variant: 'default' as const },
+    published: { label: 'Xuất bản', variant: 'default' as const },
     draft: { label: 'Bản nháp', variant: 'secondary' as const },
-    archived: { label: 'Đã lưu trữ', variant: 'outline' as const },
-  };
+  } as const;
 
   const config = statusConfig[status];
 

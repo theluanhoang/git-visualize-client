@@ -5,15 +5,9 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
   Plus, 
-  Search, 
-  Filter, 
-  Edit, 
-  Trash2, 
   Eye, 
-  MoreHorizontal,
   BookOpen,
   Calendar,
-  Users,
   TrendingUp
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -23,9 +17,8 @@ import { useLessons, useDeleteLesson } from '@/lib/react-query/hooks/use-lessons
 
 const statusOptions = [
   { value: 'all', label: 'Tất cả trạng thái' },
-  { value: 'published', label: 'Đã xuất bản' },
-  { value: 'draft', label: 'Bản nháp' },
-  { value: 'archived', label: 'Đã lưu trữ' }
+  { value: 'published', label: 'Xuất bản' },
+  { value: 'draft', label: 'Bản nháp' }
 ];
 
 export default function LessonsPage() {
@@ -64,7 +57,7 @@ export default function LessonsPage() {
 
   const lessonColumns = [
     { key: 'title', label: 'Tiêu đề' },
-    { key: 'status', label: 'Trạng thái', render: (value: unknown) => <StatusBadge status={value as 'draft' | 'published' | 'archived'} /> },
+    { key: 'status', label: 'Trạng thái', render: (value: unknown) => <StatusBadge status={value as 'draft' | 'published'} /> },
     { key: 'views', label: 'Lượt xem' },
     { key: 'author', label: 'Tác giả' },
     { key: 'updatedAt', label: 'Cập nhật cuối', render: (value: unknown) => <DateDisplay date={value as string} /> },

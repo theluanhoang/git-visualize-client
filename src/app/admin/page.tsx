@@ -5,11 +5,7 @@ import {
   Users, 
   TrendingUp, 
   Plus,
-  Eye,
-  Edit,
-  Trash2,
-  Calendar,
-  Clock
+  Eye
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -83,7 +79,7 @@ export default function AdminDashboard() {
     { key: 'title', label: 'Tiêu đề', render: (value: unknown) => (
       <span className="block max-w-[280px] truncate" title={value as string}>{value as string}</span>
     ) },
-    { key: 'status', label: 'Trạng thái', render: (value: unknown) => <StatusBadge status={value as 'draft' | 'published' | 'archived'} /> },
+    { key: 'status', label: 'Trạng thái', render: (value: unknown) => <StatusBadge status={value as 'draft' | 'published'} /> },
     { key: 'views', label: 'Lượt xem' },
     { key: 'lastModified', label: 'Cập nhật cuối', render: (value: unknown) => <DateDisplay date={value as string} /> },
     { 

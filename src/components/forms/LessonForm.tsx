@@ -9,7 +9,7 @@ import { lessonKeys, practiceKeys } from '@/lib/react-query/query-keys';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { Save, Eye, ArrowLeft, Plus, Trash2, Sparkles } from 'lucide-react';
 import Link from 'next/link';
@@ -58,7 +58,7 @@ export function LessonForm({ initialData, isEdit = false, lessonId }: LessonForm
       slug: initialData?.slug || '',
       description: initialData?.description || '',
       content: initialData?.content || '',
-      status: initialData?.status || 'draft'
+      status: initialData?.status || 'published'
     }
   });
 
@@ -441,21 +441,17 @@ export function LessonForm({ initialData, isEdit = false, lessonId }: LessonForm
             <Card className="p-4">
               <h3 className="font-bold text-foreground">Xuất bản</h3>
               <div className="space-y-3">
-                <div className="flex items-center justify-between gap-2">
-                  <Label htmlFor="status">Trạng thái</Label>
-                  <Select 
-                    value={watch('status')} 
-                    onValueChange={(value: 'draft' | 'published' | 'archived') => setValue('status', value)}
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="status" className="text-sm">Trạng thái</Label>
+                  <Tabs
+                    value={watch('status') as 'draft' | 'published'}
+                    onValueChange={(value) => setValue('status', value as 'draft' | 'published')}
                   >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="draft">Bản nháp</SelectItem>
-                      <SelectItem value="published">Đã xuất bản</SelectItem>
-                      <SelectItem value="archived">Đã lưu trữ</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    <TabsList className="w-full">
+                      <TabsTrigger value="draft" className="flex-1">Bản nháp</TabsTrigger>
+                      <TabsTrigger value="published" className="flex-1">Xuất bản</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
                   {errors.status && (
                     <p className="text-sm text-red-500 mt-1">{errors.status.message}</p>
                   )}

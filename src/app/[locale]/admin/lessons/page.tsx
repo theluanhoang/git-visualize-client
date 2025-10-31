@@ -32,8 +32,7 @@ export default function LessonsPage() {
   const statusOptions = [
     { value: 'all', label: t('allStatuses') },
     { value: 'published', label: t('published') },
-    { value: 'draft', label: t('draft') },
-    { value: 'archived', label: t('archived') }
+    { value: 'draft', label: t('draft') }
   ];
 
   const { data: lessons = [], isLoading } = useLessons();
@@ -71,7 +70,7 @@ export default function LessonsPage() {
 
   const lessonColumns = [
     { key: 'title', label: t('title') },
-    { key: 'status', label: t('status'), render: (value: unknown) => <StatusBadge status={value as 'draft' | 'published' | 'archived'} /> },
+    { key: 'status', label: t('status'), render: (value: unknown) => <StatusBadge status={value as 'draft' | 'published'} /> },
     { key: 'views', label: t('views') },
     { key: 'author', label: t('author') },
     { key: 'updatedAt', label: t('lastModified'), render: (value: unknown) => <DateDisplay date={value as string} /> },

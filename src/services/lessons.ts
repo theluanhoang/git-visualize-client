@@ -21,8 +21,6 @@ const toBackendStatus = (status: string) => {
       return 'DRAFT';
     case 'published':
       return 'PUBLISHED';
-    case 'archived':
-      return 'REMOVED';
     default:
       return 'DRAFT';
   }
@@ -35,7 +33,7 @@ const fromBackendStatus = (status: string) => {
     case 'PUBLISHED':
       return 'published';
     case 'REMOVED':
-      return 'archived';
+      return 'draft';
     default:
       return 'draft';
   }
@@ -47,7 +45,7 @@ export const LessonsService = {
     offset?: number;
     id?: string;
     slug?: string;
-    status?: 'draft' | 'published' | 'archived';
+    status?: 'draft' | 'published';
     q?: string;
     includePractices?: boolean;
   }) {

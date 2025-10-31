@@ -57,7 +57,7 @@ export const useLessons = (params: {
   offset?: number;
   id?: string;
   slug?: string;
-  status?: 'draft' | 'published' | 'archived';
+  status?: 'draft' | 'published';
   q?: string;
   includePractices?: boolean;
 } = {}) => {
