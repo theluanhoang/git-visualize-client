@@ -5,6 +5,7 @@ import { useLessons, useTrackLessonView, useHasViewedLesson } from '@/lib/react-
 import LessonViewer from '@/components/common/git-theory/LessonViewer';
 import LessonNavigation from '@/components/common/git-theory/LessonNavigation';
 import PracticeCTA from '@/components/common/git-theory/PracticeCTA';
+import RatingDisplay from '@/components/common/git-theory/RatingDisplay';
 import { Badge } from '@/components/ui/badge';
 import { LOCALSTORAGE_KEYS, localStorageHelpers } from '@/constants/localStorage';
 import { CheckCircle2, Eye } from 'lucide-react';
@@ -96,6 +97,11 @@ export default function LessonPage() {
             <div className="mt-6">
                 <PracticeCTA slug={slug} />
             </div>
+            {lesson?.id && (
+                <div className="mt-6">
+                    <RatingDisplay lessonId={String(lesson.id)} />
+                </div>
+            )}
             {sortedLessons.length > 0 && (
                 <div className="mt-6">
                     <LessonNavigation

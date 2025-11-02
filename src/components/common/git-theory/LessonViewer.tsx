@@ -15,7 +15,6 @@ import { CustomLink } from '../rich-editor/extensions/custom-link';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import { CustomCodeBlock } from '../rich-editor/extensions/custom-codeblock';
-import Highlight from '@tiptap/extension-highlight';
 import { InlineCodeDecorations } from '../rich-editor/extensions/inline-code-decorations';
 
 interface LessonViewerProps {
@@ -58,7 +57,6 @@ export default function LessonViewer({ content }: LessonViewerProps) {
             alignments: ['left', 'center', 'right', 'justify'],
             defaultAlignment: 'left',
         }),
-        Highlight,
         CustomHighlight,
         CustomFontSize.configure({
             types: ['textStyle'],

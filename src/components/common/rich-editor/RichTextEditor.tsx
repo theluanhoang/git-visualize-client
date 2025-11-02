@@ -5,7 +5,6 @@ import StarterKit from '@tiptap/starter-kit';
 import TextAlign from '@tiptap/extension-text-align';
 import FontFamily from '@tiptap/extension-font-family';
 import { TextStyle } from '@tiptap/extension-text-style';
-import Highlight from '@tiptap/extension-highlight';
 import React, { useMemo, useEffect, useState } from 'react';
 import Menubar from './Menubar';
 import { CustomHighlight } from './extensions/custom-highlight';
@@ -62,7 +61,6 @@ function RichTextEditor({ value = '', onChange }: RichTextEditorProps = {}) {
             alignments: ['left', 'center', 'right', 'justify'],
             defaultAlignment: 'left',
         }),
-        Highlight,
         CustomHighlight,
         CustomFontSize.configure({
             types: ['textStyle'],
