@@ -44,10 +44,26 @@ export default function LessonsPage() {
     setConfirmOpen(true);
   };
 
+  const handleDeleteClick = (id: string | undefined) => {
+    if (!id) {
+      return;
+    }
+    const idString = id.trim();
+    if (!idString || idString === 'undefined' || idString === 'null' || idString === 'NaN' || idString.length < 8) {
+      return;
+    }
+    openConfirmDelete(idString);
+  };
+
   const performDelete = async () => {
-    if (pendingDeleteId == null) return;
+    if (!pendingDeleteId || pendingDeleteId === 'NaN' || pendingDeleteId === 'undefined' || pendingDeleteId === 'null') {
+      console.error('Cannot delete: Invalid ID', { pendingDeleteId });
+      setConfirmOpen(false);
+      setPendingDeleteId(null);
+      return;
+    }
     try {
-      await deleteLessonMutation.mutateAsync(pendingDeleteId.toString());
+      await deleteLessonMutation.mutateAsync(pendingDeleteId);
       setConfirmOpen(false);
       setPendingDeleteId(null);
     } catch (error) {
@@ -85,7 +101,7 @@ export default function LessonsPage() {
               console.warn('No slug available to edit', row);
             }
           }}
-          onDelete={() => openConfirmDelete(row.id as string)}
+          onDelete={() => handleDeleteClick(row.id as string | undefined)}
         />
       )
     },

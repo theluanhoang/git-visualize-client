@@ -28,7 +28,7 @@ type TableColumn<T = Record<string, unknown>> = {
 };
 
 type LessonRow = {
-  id: number;
+  id: string;
   title: string;
   slug: string;
   status: string;
@@ -42,6 +42,7 @@ type UserRow = {
   name: string;
   role: string;
   lastActive?: string;
+  lastLoginAt?: string | Date | null;
   joinedAt: string;
 };
 
@@ -52,7 +53,7 @@ export default function AdminDashboard() {
   const locale = (params.locale as string) || 'en';
   const deleteLessonMutation = useDeleteLesson();
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const { user } = useIsAuthenticated();
   const t = useTranslations('admin.dashboard');
 
@@ -72,15 +73,30 @@ export default function AdminDashboard() {
   }, [usersLoading]);
 
 
-  const openConfirmDelete = (id: number) => {
+  const handleDeleteClick = (id: string | undefined) => {
+    if (!id || typeof id !== 'string') {
+      return;
+    }
+    openConfirmDelete(id);
+  };
+
+  const openConfirmDelete = (id: string) => {
+    if (!id || id === 'NaN' || id === 'undefined' || id === 'null' || id.length < 8) {
+      return;
+    }
     setPendingDeleteId(id);
     setConfirmOpen(true);
   };
 
   const performDelete = async () => {
-    if (pendingDeleteId == null) return;
+    if (!pendingDeleteId || pendingDeleteId === 'NaN' || pendingDeleteId === 'undefined' || pendingDeleteId === 'null') {
+      console.error('Cannot delete: Invalid ID', { pendingDeleteId });
+      setConfirmOpen(false);
+      setPendingDeleteId(null);
+      return;
+    }
     try {
-      await deleteLessonMutation.mutateAsync(pendingDeleteId.toString());
+      await deleteLessonMutation.mutateAsync(pendingDeleteId);
       setConfirmOpen(false);
       setPendingDeleteId(null);
     } catch (e) {
@@ -105,7 +121,7 @@ export default function AdminDashboard() {
           onEdit={() => {
             if (row.slug) window.open(`/admin/lessons/${row.slug}/edit`, '_blank', 'noopener,noreferrer');
           }}
-          onDelete={() => openConfirmDelete(Number(row.id))}
+          onDelete={() => handleDeleteClick(row.id)}
         />
       )
     },
@@ -115,18 +131,24 @@ export default function AdminDashboard() {
     { key: 'name', label: t('name') },
     { key: 'email', label: t('email') },
     { key: 'role', label: t('role'), render: (value: unknown) => {
-      const role = value as string;
+      const role = String(value || '').toUpperCase();
       return (
         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-          role === 'admin' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' :
-          role === 'instructor' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+          role === 'ADMIN' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' :
+          role === 'INSTRUCTOR' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
           'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
         }`}>
-          {role === 'admin' ? t('admin') : role === 'instructor' ? t('instructor') : t('student')}
+          {role === 'ADMIN' ? t('admin') : role === 'INSTRUCTOR' ? t('instructor') : t('student')}
         </span>
       );
     }},
-    { key: 'lastActive', label: t('lastActive'), render: (value: unknown) => <DateDisplay date={value as string} /> },
+    { key: 'lastActive', label: t('lastActive'), render: (value: unknown, row: UserRow) => {
+      const lastActive = row.lastActive || row.lastLoginAt || null;
+      if (!lastActive) {
+        return <span className="text-sm text-muted-foreground">Chưa có</span>;
+      }
+      return <DateDisplay date={lastActive as string} />;
+    }},
     { 
       key: 'actions', 
       label: t('actions'), 

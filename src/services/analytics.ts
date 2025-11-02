@@ -22,7 +22,7 @@ export interface DashboardStats {
 export interface RecentUser extends User {}
 
 export interface RecentLesson {
-  id: number;
+  id: string;
   title: string;
   status: string;
   views: number;
@@ -70,7 +70,7 @@ export const AnalyticsService = {
       const lessons = response.data || [];
       
       return lessons.map((lesson: Lesson) => ({
-        id: Number(lesson.id),
+        id: String(lesson.id),
         title: lesson.title,
         status: lesson.status,
         views: lesson.views || 0,

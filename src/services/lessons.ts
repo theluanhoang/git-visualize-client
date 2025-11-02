@@ -61,7 +61,7 @@ export const LessonsService = {
     const res = await api.get('/api/v1/lesson', { params: query });
     const { data, total, limit, offset } = res.data as {
       data: Array<{
-        id: number;
+        id: string;
         title: string;
         slug: string;
         description: string;

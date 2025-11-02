@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { LessonFormData, LessonUpdateData } from '@/lib/schemas/lesson';
 import { LessonsService } from '@/services/lessons';
-import { lessonKeys } from '@/lib/react-query/query-keys';
+import { lessonKeys, analyticsKeys } from '@/lib/react-query/query-keys';
 
 const lessonsApi = {
   getAll: async () => {
@@ -101,6 +101,7 @@ export const useDeleteLesson = () => {
     mutationFn: lessonsApi.delete,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: lessonKeys.all });
+      queryClient.invalidateQueries({ queryKey: analyticsKeys.all });
     },
   });
 };
