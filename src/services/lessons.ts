@@ -71,6 +71,7 @@ export const LessonsService = {
         updatedAt: string;
         views: number;
         averageRating?: number;
+        completedUsersCount?: number;
         practices?: PracticeFormData[];
       }>;
       total: number;

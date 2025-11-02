@@ -30,16 +30,26 @@ export default function AnalyticsPage() {
   const { data: allLessons = [], isLoading: lessonsLoading } = useLessons({ limit: 100 });
   
   const analyticsData = useMemo(() => {
-    const topLessons = [...allLessons]
+    const totalUsers = stats?.totalUsers || 1;
+    
+    const lessonPerformance = [...allLessons]
       .sort((a, b) => (b.views || 0) - (a.views || 0))
-      .slice(0, 5)
-      .map((lesson, index) => ({
-        id: lesson.id || index,
-        title: lesson.title,
-        views: lesson.views || 0,
-        completionRate: 0, 
-        rating: lesson.averageRating || 0 
-      }));
+      .map((lesson) => {
+        const completedUsersCount = (lesson as any).completedUsersCount || 0;
+        const completionRate = totalUsers > 0 
+          ? Math.round((completedUsersCount / totalUsers) * 100 * 10) / 10 
+          : 0;
+        
+        return {
+          id: lesson.id || '',
+          title: lesson.title,
+          views: lesson.views || 0,
+          completionRate,
+          rating: lesson.averageRating || 0 
+        };
+      });
+    
+    const topLessons = lessonPerformance.slice(0, 5);
 
     const totalViews = allLessons.reduce((sum, lesson) => sum + (lesson.views || 0), 0);
     
@@ -58,6 +68,7 @@ export default function AnalyticsPage() {
         engagementRate: metrics?.engagementRate || 0
       },
       topLessons,
+      lessonPerformance,
       userActivity: [
         { date: '2024-01-15', users: 45, lessons: 12, views: 234 },
         { date: '2024-01-16', users: 52, lessons: 15, views: 287 },
@@ -260,14 +271,14 @@ export default function AnalyticsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {analyticsData.topLessons.length === 0 ? (
+                  {analyticsData.lessonPerformance.length === 0 ? (
                     <tr>
                       <td colSpan={5} className="px-6 py-4 text-center text-muted-foreground">
                         {t('noLessonData')}
                       </td>
                     </tr>
                   ) : (
-                    analyticsData.topLessons.map((lesson, index) => (
+                    analyticsData.lessonPerformance.map((lesson) => (
                       <tr 
                         key={lesson.id} 
                         className="hover:bg-muted/50 transition-colors"
@@ -283,10 +294,10 @@ export default function AnalyticsPage() {
                             <div className="w-16 bg-muted rounded-full h-2 overflow-hidden">
                               <div 
                                 className="bg-primary h-2 rounded-full transition-all duration-300"
-                                style={{ width: `${lesson.completionRate || 0}%` }}
+                                style={{ width: `${Math.min(lesson.completionRate, 100)}%` }}
                               />
                             </div>
-                            <span className="text-sm text-foreground font-medium min-w-[3rem]">{lesson.completionRate || 0}%</span>
+                            <span className="text-sm text-foreground font-medium min-w-[3rem]">{lesson.completionRate.toFixed(1)}%</span>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -295,7 +306,7 @@ export default function AnalyticsPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-foreground">{t('averageTimeValue')}</div>
+                          <div className="text-sm text-foreground">-</div>
                         </td>
                       </tr>
                     ))
