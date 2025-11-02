@@ -417,8 +417,14 @@
     "rating": "Rating",
     "averageTime": "Average Time",
     "averageTimeValue": "24 minutes",
-    "totalTimeSpentValue": "2,847 hours",
-    "averageSessionTimeValue": "24 minutes",
+      "totalTimeSpentValue": "2,847 hours",
+      "averageSessionTimeValue": "24 minutes",
+      "timeFormat": {
+        "hoursAndMinutes": "{hours} hours {minutes} minutes",
+        "hoursOnly": "{hours} hours",
+        "minutesOnly": "{minutes} minutes",
+        "zero": "0 minutes"
+      },
     "newStudents": "New Students",
     "activeStudents": "Active Students",
     "advancedStudents": "Advanced Students",

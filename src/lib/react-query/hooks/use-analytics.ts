@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { analyticsKeys } from '@/lib/react-query/query-keys';
-import { AnalyticsService, DashboardStats, RecentLesson, GetUsersQuery, UsersResponse } from '@/services/analytics';
+import { AnalyticsService, DashboardStats, RecentLesson, GetUsersQuery, UsersResponse, AnalyticsMetrics } from '@/services/analytics';
 
 export const useDashboardStats = () => {
   return useQuery<DashboardStats>({
@@ -60,5 +60,14 @@ export const useSendUserEmail = () => {
   return useMutation({
     mutationFn: ({ userId, subject, message, attachments, onProgress }: { userId: string; subject: string; message: string; attachments?: File[]; onProgress?: (percent: number, loaded: number, total?: number) => void }) =>
       AnalyticsService.sendUserEmail(userId, subject, message, attachments, onProgress),
+  });
+};
+
+export const useAnalyticsMetrics = () => {
+  return useQuery({
+    queryKey: [...analyticsKeys.all, 'metrics'],
+    queryFn: AnalyticsService.getAnalyticsMetrics,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 };

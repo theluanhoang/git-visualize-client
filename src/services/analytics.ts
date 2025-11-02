@@ -19,6 +19,18 @@ export interface DashboardStats {
   recentActivity: number;
 }
 
+export interface TimeData {
+  hours: number;
+  minutes: number;
+}
+
+export interface AnalyticsMetrics {
+  totalTimeSpent: TimeData;
+  completionRate: number;
+  averageSessionTime: TimeData;
+  engagementRate: number;
+}
+
 export interface RecentUser extends User {}
 
 export interface RecentLesson {
@@ -152,6 +164,21 @@ export const AnalyticsService = {
     } catch (error) {
       console.error('Error sending email:', error);
       throw error;
+    }
+  },
+
+  async getAnalyticsMetrics(): Promise<AnalyticsMetrics> {
+    try {
+      const response = await api.get('/api/v1/admin/analytics/metrics');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching analytics metrics:', error);
+      return {
+        totalTimeSpent: { hours: 0, minutes: 0 },
+        completionRate: 0,
+        averageSessionTime: { hours: 0, minutes: 0 },
+        engagementRate: 0
+      };
     }
   }
 };

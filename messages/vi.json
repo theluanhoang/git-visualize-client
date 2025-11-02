@@ -417,8 +417,14 @@
     "rating": "Đánh giá",
     "averageTime": "Thời gian TB",
     "averageTimeValue": "24 phút",
-    "totalTimeSpentValue": "2,847 giờ",
-    "averageSessionTimeValue": "24 phút",
+      "totalTimeSpentValue": "2,847 giờ",
+      "averageSessionTimeValue": "24 phút",
+      "timeFormat": {
+        "hoursAndMinutes": "{hours} giờ {minutes} phút",
+        "hoursOnly": "{hours} giờ",
+        "minutesOnly": "{minutes} phút",
+        "zero": "0 phút"
+      },
     "newStudents": "Học viên mới",
     "activeStudents": "Học viên tích cực",
     "advancedStudents": "Học viên nâng cao",

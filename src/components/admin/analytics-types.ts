@@ -45,7 +45,7 @@ export interface SegmentItemProps {
 }
 
 export interface TopLessonItemProps {
-  id: number;
+  id: string | number;
   title: string;
   views: number;
   completionRate: number;
