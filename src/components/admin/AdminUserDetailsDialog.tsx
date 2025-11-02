@@ -38,23 +38,25 @@ export default function AdminUserDetailsDialog({ open, onClose, user }: AdminUse
     return `${hh}:${mm}:${ss} ${dd}/${mo}/${yyyy}`;
   };
 
+  const role = String(user.role || '').toUpperCase();
   const roleBadge = (
     <Badge className={
-      user.role === 'admin'
+      role === 'ADMIN'
         ? 'bg-purple-600 text-white'
         : 'bg-gray-600 text-white'
     }>
-      {user.role === 'admin' ? 'Admin' : 'User'}
+      {role === 'ADMIN' ? 'Admin' : 'Học viên'}
     </Badge>
   );
 
+  const status = String(user.status || '').toLowerCase();
   const statusBadge = (
     <Badge className={
-      user.status === 'active'
+      status === 'active'
         ? 'bg-green-600 text-white'
         : 'bg-yellow-600 text-white'
     }>
-      {user.status === 'active' ? 'Active' : 'Inactive'}
+      {status === 'active' ? 'Active' : 'Inactive'}
     </Badge>
   );
 
