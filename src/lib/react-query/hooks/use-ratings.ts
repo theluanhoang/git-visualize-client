@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { RatingsService, CreateRatingDto, RatingResponse, LessonRatingStats } from '@/services/ratings';
+import { lessonKeys } from '@/lib/react-query/query-keys';
 
 export const ratingKeys = {
   all: ['ratings'] as const,
@@ -42,6 +43,7 @@ export const useCreateRating = () => {
       queryClient.invalidateQueries({ queryKey: ratingKeys.userRating(variables.lessonId) });
       queryClient.invalidateQueries({ queryKey: ratingKeys.stats(variables.lessonId) });
       queryClient.invalidateQueries({ queryKey: ratingKeys.list(variables.lessonId) });
+      queryClient.invalidateQueries({ queryKey: lessonKeys.all });
     },
   });
 };
@@ -56,6 +58,7 @@ export const useUpdateRating = () => {
       queryClient.invalidateQueries({ queryKey: ratingKeys.userRating(variables.lessonId) });
       queryClient.invalidateQueries({ queryKey: ratingKeys.stats(variables.lessonId) });
       queryClient.invalidateQueries({ queryKey: ratingKeys.list(variables.lessonId) });
+      queryClient.invalidateQueries({ queryKey: lessonKeys.all });
     },
   });
 };
@@ -69,6 +72,7 @@ export const useDeleteRating = () => {
       queryClient.invalidateQueries({ queryKey: ratingKeys.userRating(lessonId) });
       queryClient.invalidateQueries({ queryKey: ratingKeys.stats(lessonId) });
       queryClient.invalidateQueries({ queryKey: ratingKeys.list(lessonId) });
+      queryClient.invalidateQueries({ queryKey: lessonKeys.all });
     },
   });
 };

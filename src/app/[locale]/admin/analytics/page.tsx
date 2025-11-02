@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { 
   Users, 
   BookOpen, 
@@ -38,7 +38,7 @@ export default function AnalyticsPage() {
         title: lesson.title,
         views: lesson.views || 0,
         completionRate: 0, 
-        rating: 0 
+        rating: lesson.averageRating || 0 
       }));
 
     const totalViews = allLessons.reduce((sum, lesson) => sum + (lesson.views || 0), 0);
@@ -291,7 +291,7 @@ export default function AnalyticsPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
-                            <span className="text-sm text-foreground">{lesson.rating > 0 ? `⭐ ${lesson.rating}` : 'N/A'}</span>
+                            <span className="text-sm text-foreground">{lesson.rating > 0 ? `⭐ ${lesson.rating.toFixed(1)}` : 'N/A'}</span>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { websocketService } from '@/services/websocket';
 import { useQueryClient } from '@tanstack/react-query';
 import { ratingKeys } from '@/lib/react-query/hooks/use-ratings';
+import { lessonKeys } from '@/lib/react-query/query-keys';
 import { LOCALSTORAGE_KEYS, localStorageHelpers } from '@/constants/localStorage';
 import { SocketEvents } from '@/constants/socket-events';
 
@@ -44,6 +45,7 @@ export const useRatingWebSocket = ({ lessonId, enabled = true }: UseRatingWebSoc
         
         queryClient.invalidateQueries({ queryKey: ratingKeys.userRating(lessonId) });
         queryClient.invalidateQueries({ queryKey: ratingKeys.stats(lessonId) });
+        queryClient.invalidateQueries({ queryKey: lessonKeys.all });
       };
 
       const handleRatingUpdated = (data: { lessonId: string; rating: any }) => {
@@ -68,6 +70,7 @@ export const useRatingWebSocket = ({ lessonId, enabled = true }: UseRatingWebSoc
         });
         
         queryClient.invalidateQueries({ queryKey: ratingKeys.stats(lessonId) });
+        queryClient.invalidateQueries({ queryKey: lessonKeys.all });
       };
 
       const handleRatingDeleted = (data: { lessonId: string; userId: string }) => {
@@ -80,11 +83,13 @@ export const useRatingWebSocket = ({ lessonId, enabled = true }: UseRatingWebSoc
         
         queryClient.invalidateQueries({ queryKey: ratingKeys.userRating(lessonId) });
         queryClient.invalidateQueries({ queryKey: ratingKeys.stats(lessonId) });
+        queryClient.invalidateQueries({ queryKey: lessonKeys.all });
       };
 
       const handleStatsUpdated = (data: { lessonId: string; stats: any }) => {
         if (data.lessonId !== lessonId) return;
         queryClient.setQueryData(ratingKeys.stats(lessonId), data.stats);
+        queryClient.invalidateQueries({ queryKey: lessonKeys.all });
       };
 
       return {

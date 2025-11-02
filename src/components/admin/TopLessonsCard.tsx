@@ -21,7 +21,7 @@ export function TopLessonItem({ id, title, views, completionRate, rating, index 
               <span>{completionRate}% hoàn thành</span>
             )}
             {rating > 0 && (
-              <span>⭐ {rating}</span>
+              <span>⭐ {rating.toFixed(1)}</span>
             )}
           </div>
         </div>
