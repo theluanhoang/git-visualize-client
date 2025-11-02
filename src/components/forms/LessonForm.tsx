@@ -198,7 +198,7 @@ export function LessonForm({ initialData, isEdit = false, lessonId }: LessonForm
 };
 
   const handleSavePractice = (practice: PracticeFormData) => {
-    if (isEdit && editPracticeIndex != null) {
+    if (editPracticeIndex != null) {
       setPractices(prev => {
         const next = prev.slice();
         next[editPracticeIndex] = practice;
@@ -237,10 +237,15 @@ export function LessonForm({ initialData, isEdit = false, lessonId }: LessonForm
           
           const savedPractices = [];
           for (const practice of practices) {
-            const savedPractice = await PracticesService.create({
-              ...practice,
-              lessonId: lessonIdToUse
-            });
+            let savedPractice;
+            if (practice.id && isEdit) {
+              savedPractice = await PracticesService.update(practice.id, practice);
+            } else {
+              savedPractice = await PracticesService.create({
+                ...practice,
+                lessonId: lessonIdToUse
+              });
+            }
             savedPractices.push(savedPractice);
           }
           

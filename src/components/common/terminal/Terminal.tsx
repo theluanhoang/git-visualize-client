@@ -29,7 +29,7 @@ function Terminal({ practiceId }: { practiceId?: string }) {
     }, [responses]);
 
     return (
-        <div className="h-full w-full bg-gray-900 text-green-400 font-mono rounded-lg flex overflow-hidden flex-col max-h-[300px]">
+        <div className="h-full w-full bg-gray-900 text-green-400 font-mono rounded-lg flex overflow-hidden flex-col h-[300px]">
             {}
             <div className="flex items-center justify-between px-4 py-2 bg-gray-800 border-b border-gray-700">
                 <div className="text-sm text-gray-300">
