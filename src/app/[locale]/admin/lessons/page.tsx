@@ -9,7 +9,7 @@ import {
   Eye, 
   BookOpen,
   Calendar,
-  TrendingUp
+  TrendingUp,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageHeader, AdminTable, ActionButtons, StatusBadge, DateDisplay, StatCard, FilterBar, EmptyState } from '@/components/admin';
@@ -68,10 +68,27 @@ export default function LessonsPage() {
     }
   };
 
+  const formatNumber = (num: number) => {
+    return new Intl.NumberFormat('vi-VN').format(num);
+  };
+
   const lessonColumns = [
     { key: 'title', label: t('title') },
     { key: 'status', label: t('status'), render: (value: unknown) => <StatusBadge status={value as 'draft' | 'published'} /> },
-    { key: 'views', label: t('views') },
+    { 
+      key: 'views', 
+      label: t('views'), 
+      render: (value: unknown, row: Record<string, unknown>) => {
+        const viewsValue = row.views ?? value ?? 0;
+        const views = typeof viewsValue === 'number' ? viewsValue : parseInt(String(viewsValue || 0), 10);
+        return (
+          <div className="flex items-center gap-2">
+            <Eye className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <span className="font-medium text-foreground">{formatNumber(views)}</span>
+          </div>
+        );
+      }
+    },
     { key: 'author', label: t('author') },
     { key: 'updatedAt', label: t('lastModified'), render: (value: unknown) => <DateDisplay date={value as string} /> },
     { 
@@ -135,7 +152,7 @@ export default function LessonsPage() {
         />
         <StatCard
           title={t('totalViews')}
-          value={lessons.reduce((sum, lesson) => sum + lesson.views, 0)}
+          value={formatNumber(lessons.reduce((sum, lesson) => sum + (lesson.views || 0), 0))}
           icon={TrendingUp}
           color="text-purple-500"
         />

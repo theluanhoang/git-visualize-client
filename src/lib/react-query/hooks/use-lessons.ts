@@ -121,3 +121,59 @@ export const useGenerateLesson = () => {
     },
   });
 };
+
+export const useTrackLessonView = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (lessonId: string) => {
+      const { LessonsService } = await import('@/services/lessons');
+      return LessonsService.trackView(lessonId);
+    },
+    onSuccess: (_, lessonId) => {
+      queryClient.invalidateQueries({ queryKey: lessonKeys.views.myViews() });
+      queryClient.invalidateQueries({ queryKey: lessonKeys.views.stats(lessonId) });
+      queryClient.invalidateQueries({ queryKey: lessonKeys.views.hasViewed(lessonId) });
+      queryClient.invalidateQueries({ queryKey: lessonKeys.all });
+    },
+  });
+};
+
+export const useMyLessonViews = (params?: {
+  limit?: number;
+  offset?: number;
+  orderBy?: 'viewedAt' | 'lastViewedAt' | 'viewCount';
+  order?: 'ASC' | 'DESC';
+}) => {
+  return useQuery({
+    queryKey: lessonKeys.views.myViews(params),
+    queryFn: async () => {
+      const { LessonsService } = await import('@/services/lessons');
+      return LessonsService.getMyViews(params);
+    },
+    enabled: true,
+  });
+};
+
+export const useLessonViewStats = (lessonId: string, enabled = true) => {
+  return useQuery({
+    queryKey: lessonKeys.views.stats(lessonId),
+    queryFn: async () => {
+      const { LessonsService } = await import('@/services/lessons');
+      return LessonsService.getViewStats(lessonId);
+    },
+    enabled: enabled && !!lessonId,
+  });
+};
+
+export const useHasViewedLesson = (lessonId: string, enabled = true) => {
+  return useQuery({
+    queryKey: lessonKeys.views.hasViewed(lessonId),
+    queryFn: async () => {
+      const { LessonsService } = await import('@/services/lessons');
+      return LessonsService.hasViewed(lessonId);
+    },
+    enabled: enabled && !!lessonId,
+    staleTime: 1000 * 60 * 5,
+  });
+};

@@ -20,6 +20,12 @@ export const lessonKeys = {
   list: (params?: any) => [...lessonKeys.lists(), params] as const,
   details: () => [...lessonKeys.all, 'detail'] as const,
   detail: (id: string) => [...lessonKeys.details(), id] as const,
+  views: {
+    all: () => [...lessonKeys.all, 'views'] as const,
+    myViews: (params?: any) => [...lessonKeys.all, 'views', 'my', params] as const,
+    stats: (lessonId: string) => [...lessonKeys.all, 'views', 'stats', lessonId] as const,
+    hasViewed: (lessonId: string) => [...lessonKeys.all, 'views', 'has-viewed', lessonId] as const,
+  },
   admin: {
     edit: (slug: string) => ['admin-lesson-edit', slug] as const,
   },

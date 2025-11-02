@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import Image from 'next/image'
 import ProfileOverviewTab from '@/components/profile/ProfileOverviewTab'
 import ProfileSessionsTab from '@/components/profile/ProfileSessionsTab'
+import MyLessonViews from '@/components/profile/MyLessonViews'
 import { PrivateRoute } from '@/components/auth/PrivateRoute'
 import { useTranslations } from 'next-intl'
 
@@ -21,7 +22,7 @@ export default function ProfilePage() {
   const [firstName, setFirstName] = useState(user?.firstName ?? '')
   const [lastName, setLastName] = useState(user?.lastName ?? '')
   const [avatar, setAvatar] = useState(user?.avatar ?? '')
-  const [tab, setTab] = useState<'overview' | 'sessions'>('overview')
+  const [tab, setTab] = useState<'overview' | 'sessions' | 'views'>('overview')
 
 
   useEffect(() => {
@@ -54,6 +55,7 @@ export default function ProfilePage() {
         <div className="flex items-center gap-2 border-b border-[var(--border)] overflow-x-auto no-scrollbar">
           <Button variant={tab === 'overview' ? 'default' : 'ghost'} size="sm" className={`rounded-none border-b-2 ${tab === 'overview' ? 'border-foreground' : 'border-transparent'} shrink-0`} onClick={() => setTab('overview')}>{t('overview')}</Button>
           <Button variant={tab === 'sessions' ? 'default' : 'ghost'} size="sm" className={`rounded-none border-b-2 ${tab === 'sessions' ? 'border-foreground' : 'border-transparent'} shrink-0`} onClick={() => setTab('sessions')}>{t('sessions')}</Button>
+          <Button variant={tab === 'views' ? 'default' : 'ghost'} size="sm" className={`rounded-none border-b-2 ${tab === 'views' ? 'border-foreground' : 'border-transparent'} shrink-0`} onClick={() => setTab('views')}>Bài học đã xem</Button>
         </div>
 
         {tab === 'overview' && (
@@ -79,6 +81,10 @@ export default function ProfilePage() {
             oauthSessions={oauthSessions?.sessions}
             onUnlink={(provider) => unlink.mutate(provider)}
           />
+        )}
+
+        {tab === 'views' && (
+          <MyLessonViews />
         )}
       </div>
     </PrivateRoute>

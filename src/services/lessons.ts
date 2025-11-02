@@ -150,6 +150,48 @@ export const LessonsService = {
     const res = await api.post('/api/v1/lesson/generate', data, config);
     return res.data;
   },
+  async trackView(lessonId: string) {
+    const res = await api.post('/api/v1/lesson/track-view', { lessonId });
+    return res.data;
+  },
+  async getMyViews(params?: {
+    limit?: number;
+    offset?: number;
+    orderBy?: 'viewedAt' | 'lastViewedAt' | 'viewCount';
+    order?: 'ASC' | 'DESC';
+  }) {
+    const query: Record<string, unknown> = {};
+    if (params?.limit != null) query.limit = params.limit;
+    if (params?.offset != null) query.offset = params.offset;
+    if (params?.orderBy) query.orderBy = params.orderBy;
+    if (params?.order) query.order = params.order;
+
+    const res = await api.get('/api/v1/lesson/my-views', { params: query });
+    return res.data as { data: Array<{
+      id: string;
+      userId: string;
+      lessonId: string;
+      viewedAt: string;
+      viewCount: number;
+      lastViewedAt: string;
+      lesson?: LessonResponse;
+    }>; total: number };
+  },
+  async getViewStats(lessonId: string) {
+    const res = await api.get(`/api/v1/lesson/${lessonId}/view-stats`);
+    return res.data as {
+      totalViews: number;
+      uniqueViewers: number;
+      averageViewsPerUser: number;
+    };
+  },
+  async hasViewed(lessonId: string) {
+    const res = await api.get(`/api/v1/lesson/${lessonId}/has-viewed`);
+    return res.data as {
+      hasViewed: boolean;
+      viewCount: number;
+    };
+  },
 };
 
 export default LessonsService;
