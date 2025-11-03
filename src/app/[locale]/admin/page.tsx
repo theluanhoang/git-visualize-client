@@ -16,7 +16,7 @@ import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { useRouter } from 'next/navigation';
 import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { useIsAuthenticated } from '@/lib/react-query/hooks/use-auth';
+import { useAuth } from '@/contexts';
 import AdminWelcomeBanner from '@/components/admin/AdminWelcomeBanner';
 import { useDashboardStats, useRecentUsers, useRecentLessons } from '@/lib/react-query/hooks/use-analytics';
 import { useTranslations } from 'next-intl';
@@ -54,7 +54,7 @@ export default function AdminDashboard() {
   const deleteLessonMutation = useDeleteLesson();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-  const { user } = useIsAuthenticated();
+  const { user } = useAuth();
   const t = useTranslations('admin.dashboard');
 
   const { data: stats, isLoading: statsLoading } = useDashboardStats();

@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useIsAuthenticated } from '@/lib/react-query/hooks/use-auth';
+import { useAuth } from '@/contexts';
 
 export const useRoleRedirect = () => {
   const router = useRouter();
-  const { isAuthenticated, user, isLoading } = useIsAuthenticated();
+  const { isAuthenticated, user, isLoading } = useAuth();
 
   useEffect(() => {
     if (isAuthenticated && user && !isLoading) {

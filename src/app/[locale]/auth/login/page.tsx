@@ -1,6 +1,6 @@
 'use client'
 import React, { useState } from 'react'
-import { useLogin } from '@/lib/react-query/hooks/use-auth'
+import { useAuth } from '@/contexts'
 import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -15,8 +15,9 @@ import { OAuthButtons } from '@/components/auth/OAuthButtons'
 import { useTranslations } from 'next-intl'
 
 export default function LoginPage() {
-  const { mutateAsync: login, isPending } = useLogin()
+  const { login, isLoading } = useAuth()
   const t = useTranslations('auth')
+  const isPending = isLoading
   const schema = z.object({
     email: z.string().email(),
     password: z.string().min(6)
@@ -27,10 +28,10 @@ export default function LoginPage() {
 
   const onSubmit = async (values: FormValues) => {
     try {
-      await login(values)
-        } catch (err: unknown) {
+      await login(values.email, values.password)
+    } catch (err: unknown) {
       const message = (err as any)?.response?.data?.message || t('loginFailed')
-      toast(t('loginFailed'), { description: message })
+      toast.error(t('loginFailed'), { description: message })
     }
   }
 

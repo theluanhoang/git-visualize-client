@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useIsAuthenticated } from '@/lib/react-query/hooks/use-auth'
+import { useAuth } from '@/contexts'
 import { Loader2 } from 'lucide-react'
 
 interface AuthGuardProps {
@@ -18,7 +18,7 @@ export function AuthGuard({
   redirectTo = '/auth/login',
   requireAuth = true 
 }: AuthGuardProps) {
-  const { isAuthenticated, isLoading } = useIsAuthenticated()
+  const { isAuthenticated, isLoading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
@@ -67,7 +67,7 @@ export function withAuthGuard<P extends object>(
 }
 
 export function useAuthGuard(requireAuth = true) {
-  const { isAuthenticated, isLoading } = useIsAuthenticated()
+  const { isAuthenticated, isLoading } = useAuth()
   
   return {
     canAccess: requireAuth ? isAuthenticated : !isAuthenticated,

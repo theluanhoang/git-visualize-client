@@ -9,7 +9,7 @@ import { useTranslations } from 'next-intl'
 import ThemeToggle from '@/components/common/ThemeToggle'
 import LanguageSwitcher from '@/components/common/LanguageSwitcher'
 import { Button } from '@/components/ui/button'
-import { useLogout, useIsAuthenticated } from '@/lib/react-query/hooks/use-auth'
+import { useAuth } from '@/contexts'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import Image from 'next/image';
@@ -26,12 +26,10 @@ function Header() {
         return () => window.removeEventListener('resize', handler)
     }, [])
 
-    const { isAuthenticated, user } = useIsAuthenticated()
-    const logoutMutation = useLogout()
-    const isAdmin = user?.role === 'ADMIN'
+    const { isAuthenticated, user, logout, isLoading: authLoading, isAdmin } = useAuth()
 
-    const handleLogout = () => {
-        logoutMutation.mutate()
+    const handleLogout = async () => {
+        await logout()
     }
 
     const displayName: string | undefined = React.useMemo(() => {
@@ -114,8 +112,8 @@ function Header() {
                                             )}
                                         </div>
                                     </Link>
-                                    <Button variant="outline" size="sm" onClick={handleLogout} disabled={logoutMutation.isPending}>
-                                        {logoutMutation.isPending ? t('loggingOut') : t('logout')}
+                                    <Button variant="outline" size="sm" onClick={handleLogout} disabled={authLoading}>
+                                        {authLoading ? t('loggingOut') : t('logout')}
                                     </Button>
                                 </>
                             )}
@@ -171,8 +169,8 @@ function Header() {
                                             )}
                                         </div>
                                     </div>
-                                    <Button variant="outline" size="sm" className="w-full justify-center" onClick={() => { handleLogout(); setOpen(false); }} disabled={logoutMutation.isPending}>
-                                        {logoutMutation.isPending ? t('loggingOut') : t('logout')}
+                                    <Button variant="outline" size="sm" className="w-full justify-center" onClick={() => { handleLogout(); setOpen(false); }} disabled={authLoading}>
+                                        {authLoading ? t('loggingOut') : t('logout')}
                                     </Button>
                                 </>
                             )}

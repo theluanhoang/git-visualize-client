@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react'
-import { useCurrentUser, useUpdateProfile } from '@/lib/react-query/hooks/use-auth'
+import { useAuth } from '@/contexts'
 import { useActiveSessions, useOAuthSessions, useUnlinkProvider } from '@/lib/react-query/hooks/use-oauth'
 import { Button } from '@/components/ui/button'
 import Image from 'next/image'
@@ -12,8 +12,7 @@ import { PrivateRoute } from '@/components/auth/PrivateRoute'
 import { useTranslations } from 'next-intl'
 
 export default function ProfilePage() {
-  const { data: user } = useCurrentUser()
-  const updateProfile = useUpdateProfile()
+  const { user, updateProfile, isLoading: isUpdating } = useAuth()
   const { data: activeSessions } = useActiveSessions()
   const { data: oauthSessions } = useOAuthSessions()
   const unlink = useUnlinkProvider()
@@ -64,14 +63,16 @@ export default function ProfilePage() {
             firstName={firstName}
             lastName={lastName}
             avatar={avatar}
-            saving={updateProfile.isPending}
+            saving={isUpdating}
             onChangeAvatar={setAvatar}
             onCancel={() => {
               setFirstName(user?.firstName ?? '')
               setLastName(user?.lastName ?? '')
               setAvatar(user?.avatar ?? '')
             }}
-            onSave={(vals) => updateProfile.mutate({ firstName: vals.firstName, lastName: vals.lastName, avatar: vals.avatar })}
+            onSave={async (vals) => {
+              await updateProfile({ firstName: vals.firstName, lastName: vals.lastName, avatar: vals.avatar })
+            }}
           />
         )}
 

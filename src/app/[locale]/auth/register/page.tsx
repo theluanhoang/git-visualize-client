@@ -1,6 +1,6 @@
 'use client'
 import React, { useState } from 'react'
-import { useRegister } from '@/lib/react-query/hooks/use-auth'
+import { useAuth } from '@/contexts'
 import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -16,8 +16,9 @@ import { useTranslations } from 'next-intl'
 
 export default function RegisterPage() {
   const [ok, setOk] = useState<string | null>(null)
-  const { mutateAsync: register, isPending } = useRegister()
+  const { register, isLoading } = useAuth()
   const t = useTranslations('auth')
+  const isPending = isLoading
   const schema = z.object({
     email: z.string().email(),
     password: z.string().min(6)
@@ -29,11 +30,11 @@ export default function RegisterPage() {
   const onSubmit = async (values: FormValues) => {
     setOk(null)
     try {
-      await register(values)
+      await register(values.email, values.password)
       setOk('Registered. You can login now.')
-        } catch (err: unknown) {
+    } catch (err: unknown) {
       const message = (err as any)?.response?.data?.message || t('registerFailed')
-      toast(t('registerFailed'), { description: message })
+      toast.error(t('registerFailed'), { description: message })
     }
   }
 

@@ -11,14 +11,11 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PageHeader, StatCard, AdminTable, ActionButtons, StatusBadge, DateDisplay } from '@/components/admin';
 import Link from 'next/link';
-import { useQuery } from '@tanstack/react-query';
-import { LessonsService } from '@/services/lessons';
 import { useDeleteLesson } from '@/lib/react-query/hooks/use-lessons';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { useIsAuthenticated } from '@/lib/react-query/hooks/use-auth';
-import { LessonFormData } from '@/lib/schemas/lesson';
+import { useAuth } from '@/contexts';
 import AdminWelcomeBanner from '@/components/admin/AdminWelcomeBanner';
 import { useDashboardStats, useRecentUsers, useRecentLessons } from '@/lib/react-query/hooks/use-analytics';
 
@@ -53,7 +50,7 @@ export default function AdminDashboard() {
   const deleteLessonMutation = useDeleteLesson();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-  const { user } = useIsAuthenticated();
+  const { user } = useAuth();
 
   // Fetch real data
   const { data: stats, isLoading: statsLoading } = useDashboardStats();

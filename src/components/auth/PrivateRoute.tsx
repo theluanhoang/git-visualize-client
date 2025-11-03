@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { useIsAuthenticated } from '@/lib/react-query/hooks/use-auth';
+import { useAuth } from '@/contexts';
 import { Loader2, Shield, Lock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,7 +24,7 @@ export function PrivateRoute({
   requireRole,
   showAccessDenied = true
 }: PrivateRouteProps) {
-  const { isAuthenticated, user, isLoading } = useIsAuthenticated();
+  const { isAuthenticated, user, isLoading } = useAuth();
   const router = useRouter();
 
   const redirectPath = React.useMemo(() => {
@@ -78,7 +78,7 @@ export function withPrivateRoute<P extends object>(
 }
 
 export function usePrivateRoute(requireAuth = true, requireRole?: 'ADMIN' | 'USER') {
-  const { isAuthenticated, user, isLoading } = useIsAuthenticated();
+  const { isAuthenticated, user, isLoading } = useAuth();
   
   const canAccess = React.useMemo(() => {
     if (isLoading) return { canAccess: false, isLoading: true };

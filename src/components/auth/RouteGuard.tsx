@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { usePathname } from 'next/navigation';
-import { useIsAuthenticated } from '@/lib/react-query/hooks/use-auth';
+import { useAuth } from '@/contexts';
 import { PrivateRoute } from './PrivateRoute';
 
 interface RouteGuardProps {
@@ -32,7 +32,7 @@ const ROUTE_CONFIG = {
 
 export function RouteGuard({ children }: RouteGuardProps) {
   const pathname = usePathname();
-  const { isAuthenticated, user, isLoading } = useIsAuthenticated();
+  const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return <>{children}</>;
@@ -79,7 +79,7 @@ export function RouteGuard({ children }: RouteGuardProps) {
 
 export function useRouteProtection() {
   const pathname = usePathname();
-  const { isAuthenticated, user, isLoading } = useIsAuthenticated();
+  const { isAuthenticated, user, isLoading } = useAuth();
 
   const routeInfo = React.useMemo(() => {
     const isPublic = ROUTE_CONFIG.public.some(route => 
