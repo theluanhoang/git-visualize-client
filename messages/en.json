@@ -53,7 +53,9 @@
     "commitGraphPositions": "Commit graph positions",
     "repositoryState": "Repository state",
     "resetting": "Resetting...",
-    "resetAndContinue": "Reset & Continue"
+    "resetAndContinue": "Reset & Continue",
+    "page": "Page",
+    "go": "Go"
   },
   "auth": {
     "loggingOut": "Logging out..."

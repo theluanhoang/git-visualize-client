@@ -9,6 +9,7 @@ import {
   Shield
 } from 'lucide-react';
 import { PageHeader, StatCard, FilterBar, EmptyState, UserList } from '@/components/admin';
+import Pagination from '@/components/common/Pagination';
 import AdminUserDetailsDialog from '@/components/admin/AdminUserDetailsDialog';
 import AdminUserEditDialog from '@/components/admin/AdminUserEditDialog';
 import AdminUserEmailDialog from '@/components/admin/AdminUserEmailDialog';
@@ -25,6 +26,10 @@ export default function UsersPage() {
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState('createdAt');
+  const [page, setPage] = useState<number>(() => {
+    const p = Number(searchParams.get('page') || '1');
+    return Number.isNaN(p) || p < 1 ? 1 : p;
+  });
   const [viewUser, setViewUser] = useState<User | null>(null);
   const [editUser, setEditUser] = useState<User | null>(null);
   const [emailUser, setEmailUser] = useState<User | null>(null);
@@ -43,8 +48,8 @@ export default function UsersPage() {
   ];
 
   const { data, isLoading } = useUsersQuery({
-    page: 1,
-    limit: 50,
+    page,
+    limit: 5,
     search: searchTerm || undefined,
     role: roleFilter !== 'all' ? roleFilter : undefined,
     status: statusFilter !== 'all' ? statusFilter : undefined,
@@ -72,6 +77,21 @@ export default function UsersPage() {
   }));
 
   const filteredUsers = users; 
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    params.set('page', String(page));
+    if (searchTerm) params.set('search', searchTerm);
+    if (roleFilter !== 'all') params.set('role', roleFilter);
+    if (statusFilter !== 'all') params.set('status', statusFilter);
+    params.set('sortBy', sortBy);
+    params.set('sortOrder', 'DESC');
+    router.replace(`/admin/users?${params.toString()}`);
+  }, [page, searchTerm, roleFilter, statusFilter, sortBy]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, roleFilter, statusFilter, sortBy]);
 
   const deepLinkHandledRef = useRef(false);
   useEffect(() => {
@@ -123,7 +143,7 @@ export default function UsersPage() {
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
       <StatCard
         title="Tổng người dùng"
-        value={users.length}
+        value={data?.total ?? users.length}
           icon={UserCheck}
           color="text-blue-500"
         />
@@ -180,6 +200,14 @@ export default function UsersPage() {
         onDelete={(user) => handleDeleteUser(user.id)}
         onToggleStatus={handleToggleUserStatus}
         onSendEmail={(user) => setEmailUser(user)}
+      />
+
+      <Pagination
+        currentPage={data?.page ?? page}
+        totalPages={data?.totalPages ?? 1}
+        itemsPerPage={5}
+        totalItems={data?.total}
+        onPageChange={(p) => setPage(p)}
       />
 
       {}

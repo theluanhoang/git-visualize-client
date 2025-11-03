@@ -53,7 +53,9 @@
     "commitGraphPositions": "Vị trí đồ thị commit",
     "repositoryState": "Trạng thái repository",
     "resetting": "Đang đặt lại...",
-    "resetAndContinue": "Đặt Lại & Tiếp Tục"
+    "resetAndContinue": "Đặt Lại & Tiếp Tục",
+    "page": "Trang",
+    "go": "Đi"
   },
   "auth": {
     "loggingOut": "Đang đăng xuất..."

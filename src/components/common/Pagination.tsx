@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 
@@ -12,6 +13,7 @@ interface PaginationProps {
   itemsPerPage?: number
   totalItems?: number
   showInfo?: boolean
+  allowJump?: boolean
 }
 
 export default function Pagination({
@@ -20,9 +22,25 @@ export default function Pagination({
   onPageChange,
   itemsPerPage = 10,
   totalItems,
-  showInfo = true
+  showInfo = true,
+  allowJump = true
 }: PaginationProps) {
   const t = useTranslations('common');
+  const nf = React.useMemo(() => new Intl.NumberFormat(undefined), []);
+  const isCompact = totalPages > 1000; // Avoid rendering many buttons when very large
+  const [target, setTarget] = React.useState<string>(String(currentPage));
+
+  React.useEffect(() => {
+    setTarget(String(currentPage));
+  }, [currentPage]);
+
+  const jump = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const n = Number(target);
+    if (!Number.isFinite(n)) return;
+    const clamped = Math.max(1, Math.min(totalPages || 1, Math.floor(n)));
+    if (clamped !== currentPage) onPageChange(clamped);
+  };
   const getVisiblePages = () => {
     const delta = 2
     const range = []
@@ -59,12 +77,12 @@ export default function Pagination({
 
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-      {showInfo && totalItems && (
+      {showInfo && typeof totalItems === 'number' && (
         <div className="text-sm text-muted-foreground">
-          {t('showingResults', { start: startItem, end: endItem, total: totalItems })}
+          {t('showingResults', { start: nf.format(startItem), end: nf.format(endItem), total: nf.format(totalItems) })}
         </div>
       )}
-      
+
       <div className="flex items-center gap-1">
         <Button
           variant="outline"
@@ -76,24 +94,30 @@ export default function Pagination({
           <ChevronLeft className="h-4 w-4" />
         </Button>
 
-        {visiblePages.map((page, index) => (
-          <React.Fragment key={index}>
-            {page === '...' ? (
-              <div className="flex h-8 w-8 items-center justify-center">
-                <MoreHorizontal className="h-4 w-4" />
-              </div>
-            ) : (
-              <Button
-                variant={currentPage === page ? "default" : "outline"}
-                size="sm"
-                onClick={() => onPageChange(page as number)}
-                className="h-8 w-8 p-0"
-              >
-                {page}
-              </Button>
-            )}
-          </React.Fragment>
-        ))}
+        {isCompact ? (
+          <div className="mx-2 text-sm text-muted-foreground whitespace-nowrap">
+            {nf.format(currentPage)} / {nf.format(totalPages)}
+          </div>
+        ) : (
+          visiblePages.map((page, index) => (
+            <React.Fragment key={index}>
+              {page === '...' ? (
+                <div className="flex h-8 w-8 items-center justify-center">
+                  <MoreHorizontal className="h-4 w-4" />
+                </div>
+              ) : (
+                <Button
+                  variant={currentPage === page ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => onPageChange(page as number)}
+                  className="h-8 w-8 p-0"
+                >
+                  {page}
+                </Button>
+              )}
+            </React.Fragment>
+          ))
+        )}
 
         <Button
           variant="outline"
@@ -104,6 +128,22 @@ export default function Pagination({
         >
           <ChevronRight className="h-4 w-4" />
         </Button>
+
+        {allowJump && (
+          <form onSubmit={jump} className="ml-2 flex items-center gap-1">
+            <Input
+              value={target}
+              onChange={(e) => setTarget(e.target.value.replace(/[^0-9]/g, ''))}
+              inputMode="numeric"
+              pattern="[0-9]*"
+              className="h-8 w-16 px-2 text-sm"
+              aria-label={t('page', { default: 'Page' })}
+            />
+            <Button type="submit" variant="outline" size="sm" className="h-8 px-2">
+              {t('go', { default: 'Go' })}
+            </Button>
+          </form>
+        )}
       </div>
     </div>
   )
