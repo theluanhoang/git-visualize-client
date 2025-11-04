@@ -71,3 +71,21 @@ export const useAnalyticsMetrics = () => {
     refetchOnWindowFocus: false,
   });
 };
+
+export const useDeviceUsage = () => {
+  return useQuery({
+    queryKey: [...analyticsKeys.all, 'device-usage'],
+    queryFn: AnalyticsService.getDeviceUsage,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+};
+
+export const useHourlyActivity = (date?: string) => {
+  return useQuery({
+    queryKey: [...analyticsKeys.all, 'hourly-activity', date || 'all'],
+    queryFn: () => AnalyticsService.getHourlyActivity(date),
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+};

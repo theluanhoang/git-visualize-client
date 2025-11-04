@@ -434,6 +434,8 @@
     "desktop": "Desktop",
     "mobile": "Mobile",
     "tablet": "Tablet"
+  ,
+  "noLessonData": "Chưa có dữ liệu bài học"
   },
   "systemSettings": "Cài đặt hệ thống"
   },

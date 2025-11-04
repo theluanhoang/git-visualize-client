@@ -434,6 +434,8 @@
     "desktop": "Desktop",
     "mobile": "Mobile",
     "tablet": "Tablet"
+  ,
+  "noLessonData": "No lesson data"
   },
   "systemSettings": "System settings"
   },

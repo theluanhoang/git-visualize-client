@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { 
   Users, 
   BookOpen, 
@@ -14,9 +15,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PageHeader, StatCard, AdminTabs, MetricCard, TopLessonsCard, SegmentChart, ActivityTimeline, AchievementsCard, ActivityHeatmap } from '@/components/admin';
+import { PageHeader, StatCard, AdminTabs, MetricCard, TopLessonsCard, SegmentChart, ActivityTimeline, AchievementsCard, ActivityHeatmap, DevicePieChart } from '@/components/admin';
+import { DatePicker } from '@/components/common/DatePicker';
 import { useTranslations } from 'next-intl';
-import { useDashboardStats, useAnalyticsMetrics } from '@/lib/react-query/hooks/use-analytics';
+import { useDashboardStats, useAnalyticsMetrics, useUsers, useDeviceUsage, useHourlyActivity } from '@/lib/react-query/hooks/use-analytics';
 import { useLessons } from '@/lib/react-query/hooks/use-lessons';
 import { formatTimeWithI18n } from '@/utils/format-time';
 
@@ -24,13 +26,21 @@ export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState('30d');
   const [activeTab, setActiveTab] = useState('overview');
   const t = useTranslations('admin.analytics');
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
   const { data: metrics, isLoading: metricsLoading } = useAnalyticsMetrics();
+  const { data: usersData } = useUsers({ page: 1, limit: 1000, sortBy: 'createdAt', sortOrder: 'DESC' });
+  const [activityDate, setActivityDate] = useState<string>('');
+  const { data: deviceUsage = [] } = useDeviceUsage();
+  const { data: hourlyActivity = [] } = useHourlyActivity(activityDate || undefined);
   const { data: allLessons = [], isLoading: lessonsLoading } = useLessons({ limit: 100 });
   
   const analyticsData = useMemo(() => {
-    const totalUsers = stats?.totalUsers || 1;
+    const totalUsers = stats?.totalUsers || usersData?.total || 1;
+    const users = usersData?.users || [];
     
     const lessonPerformance = [...allLessons]
       .sort((a, b) => (b.views || 0) - (a.views || 0))
@@ -54,6 +64,28 @@ export default function AnalyticsPage() {
     const totalViews = allLessons.reduce((sum, lesson) => sum + (lesson.views || 0), 0);
     
     const completionRate = allLessons.length > 0 ? 68.5 : 0;
+
+    const statusCounts = users.reduce((acc: Record<string, number>, u: any) => {
+      const s = (u.status || '').toString().toLowerCase();
+      acc[s] = (acc[s] || 0) + 1;
+      return acc;
+    }, {});
+    const roleCounts = users.reduce((acc: Record<string, number>, u: any) => {
+      const r = (u.role || '').toString().toUpperCase();
+      acc[r] = (acc[r] || 0) + 1;
+      return acc;
+    }, {});
+    const activeCount = statusCounts['active'] || 0;
+    const advancedCount = roleCounts['INSTRUCTOR'] || 0; // example mapping
+    const completedCount = Math.max(0, Math.round((metrics?.completionRate || 0) * totalUsers / 100));
+    const newStudentsCount = Math.max(0, (users.length >= totalUsers ? 0 : totalUsers - users.length));
+
+    const userSegmentsReal = [
+      { segment: t('newStudents'), count: newStudentsCount, percentage: totalUsers ? Math.round((newStudentsCount / totalUsers) * 1000) / 10 : 0 },
+      { segment: t('activeStudents'), count: activeCount, percentage: totalUsers ? Math.round((activeCount / totalUsers) * 1000) / 10 : 0 },
+      { segment: t('advancedStudents'), count: advancedCount, percentage: totalUsers ? Math.round((advancedCount / totalUsers) * 1000) / 10 : 0 },
+      { segment: t('completedStudents'), count: completedCount, percentage: totalUsers ? Math.round((completedCount / totalUsers) * 1000) / 10 : 0 }
+    ];
     
     return {
       overview: {
@@ -78,33 +110,16 @@ export default function AnalyticsPage() {
         { date: '2024-01-20', users: 67, lessons: 25, views: 389 },
         { date: '2024-01-21', users: 73, lessons: 28, views: 412 }
       ],
-      userSegments: [
-        { segment: t('newStudents'), count: 234, percentage: 18.8 },
-        { segment: t('activeStudents'), count: 456, percentage: 36.6 },
-        { segment: t('advancedStudents'), count: 298, percentage: 23.9 },
-        { segment: t('completedStudents'), count: 259, percentage: 20.7 }
-      ],
-      deviceStats: [
-        { device: t('desktop'), count: 892, percentage: 71.5 },
-        { device: t('mobile'), count: 267, percentage: 21.4 },
-        { device: t('tablet'), count: 88, percentage: 7.1 }
-      ],
-      timeStats: [
-        { hour: '00:00', users: 12 },
-        { hour: '02:00', users: 8 },
-        { hour: '04:00', users: 5 },
-        { hour: '06:00', users: 15 },
-        { hour: '08:00', users: 45 },
-        { hour: '10:00', users: 78 },
-        { hour: '12:00', users: 92 },
-        { hour: '14:00', users: 85 },
-        { hour: '16:00', users: 67 },
-        { hour: '18:00', users: 89 },
-        { hour: '20:00', users: 95 },
-        { hour: '22:00', users: 34 }
-      ]
+      userSegments: userSegmentsReal,
+      deviceStats: (() => {
+        const cleaned = deviceUsage.filter(d => d.device !== 'Unknown' && d.device !== 'Bot');
+        const total = cleaned.reduce((s, d) => s + (d.count || 0), 0) || 1;
+        const mapLabel = (d: string) => d.toLowerCase() === 'desktop' ? t('desktop') : d.toLowerCase() === 'mobile' ? t('mobile') : d.toLowerCase() === 'tablet' ? t('tablet') : d;
+        return cleaned.map(d => ({ device: mapLabel(d.device), count: d.count, percentage: Math.round((d.count / total) * 1000) / 10 }));
+      })(),
+      timeStats: (hourlyActivity.length ? hourlyActivity : Array.from({ length: 24 }, (_, i) => ({ hour: `${String(i).padStart(2,'0')}:00`, users: 0 })))
     };
-  }, [stats, metrics, allLessons, t]);
+  }, [stats, metrics, allLessons, deviceUsage, hourlyActivity, t]);
 
   const timeRangeOptions = [
     { value: '7d', label: t('last7Days') },
@@ -119,6 +134,19 @@ export default function AnalyticsPage() {
     { id: 'users', label: t('users'), icon: Users },
     { id: 'engagement', label: t('engagement'), icon: Activity }
   ];
+
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab && tabs.some(t => t.id === tab)) {
+      setActiveTab(tab);
+    }
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams);
+    params.set('tab', activeTab);
+    router.replace(`${pathname}?${params.toString()}`);
+  }, [activeTab, pathname, router, searchParams]);
   return (
     <div className="space-y-6">
       <PageHeader 
@@ -232,15 +260,38 @@ export default function AnalyticsPage() {
               title={t('userSegments')} 
               color="bg-blue-600"
             />
-            <SegmentChart 
-              segments={analyticsData.deviceStats} 
-              title={t('deviceUsage')} 
-              color="bg-green-600"
-            />
+            <DevicePieChart data={analyticsData.deviceStats as any} title={t('deviceUsage')} />
           </div>
 
           {}
-          <ActivityHeatmap timeStats={analyticsData.timeStats} />
+          <Card className="p-4">
+            <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
+              <div className="text-sm text-muted-foreground">Chọn ngày để xem hoạt động theo giờ</div>
+              <div className="flex items-center gap-2">
+                {(() => {
+                  const today = new Date().toISOString().slice(0, 10);
+                  const clearDate = () => setActivityDate('');
+                  return (
+                    <>
+                      <DatePicker value={activityDate} onChange={setActivityDate} maxDate={today} />
+                      <button
+                        type="button"
+                        className="px-2 py-1 text-sm border rounded hover:bg-muted"
+                        onClick={() => setActivityDate(today)}
+                      >Hôm nay</button>
+                      <button
+                        type="button"
+                        className="px-2 py-1 text-sm border rounded hover:bg-muted"
+                        onClick={clearDate}
+                        title="Hiển thị tất cả (không lọc theo ngày)"
+                      >Bỏ chọn</button>
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+            <ActivityHeatmap timeStats={analyticsData.timeStats} />
+          </Card>
         </div>
       )}
 

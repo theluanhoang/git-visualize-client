@@ -181,4 +181,25 @@ export const AnalyticsService = {
       };
     }
   }
+  ,
+  async getDeviceUsage(): Promise<Array<{ device: string; count: number }>> {
+    try {
+      const response = await api.get('/api/v1/admin/analytics/device-usage');
+      return response.data || [];
+    } catch (error) {
+      console.error('Error fetching device usage:', error);
+      return [];
+    }
+  },
+
+  async getHourlyActivity(date?: string): Promise<Array<{ hour: string; users: number }>> {
+    try {
+      const url = date ? `/api/v1/admin/analytics/hourly-activity?date=${encodeURIComponent(date)}` : '/api/v1/admin/analytics/hourly-activity';
+      const response = await api.get(url);
+      return response.data || [];
+    } catch (error) {
+      console.error('Error fetching hourly activity:', error);
+      return Array.from({ length: 24 }, (_, i) => ({ hour: `${String(i).padStart(2,'0')}:00`, users: 0 }));
+    }
+  }
 };
