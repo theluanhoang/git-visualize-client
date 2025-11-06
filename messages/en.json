@@ -70,6 +70,13 @@
       "title": "Learn Git fast, visual, free",
       "subtitle": "Step-by-step Git learning path, clear examples, hands-on practice. From basics to advanced.",
       "searchPlaceholder": "Search: git init, commit, branch...",
+      "searchPlaceholders": [
+        "Search: git init, commit, branch...",
+        "Search: git merge, pull, push...",
+        "Search: git status, log, diff...",
+        "Search: git remote, clone, fetch...",
+        "Search: git rebase, cherry-pick..."
+      ],
       "searchLabel": "Search Git lessons",
       "searchButton": "Search",
       "startLearning": "Start learning now",
@@ -463,7 +470,11 @@
       "lessonsList": "Lessons List",
       "learnGitTitle": "Learn Git: Concepts and Commands",
       "learnGitDescription": "Structured lessons, examples, and visuals to master Git fundamentals.",
-      "breadcrumb": "Breadcrumb"
+      "breadcrumb": "Breadcrumb",
+      "result": "result",
+      "results": "results",
+      "noResultsFound": "No lessons found for \"{query}\"",
+      "tryDifferentKeywords": "Try searching with different keywords"
     },
     "rating": {
       "title": "Lesson Rating",

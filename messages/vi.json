@@ -70,6 +70,13 @@
       "title": "Học Git nhanh, trực quan, miễn phí",
       "subtitle": "Lộ trình học Git từng bước, ví dụ rõ ràng, thực hành trực tiếp. Bắt đầu từ cơ bản đến nâng cao.",
       "searchPlaceholder": "Tìm kiếm: git init, commit, branch...",
+      "searchPlaceholders": [
+        "Tìm kiếm: git init, commit, branch...",
+        "Tìm kiếm: git merge, pull, push...",
+        "Tìm kiếm: git status, log, diff...",
+        "Tìm kiếm: git remote, clone, fetch...",
+        "Tìm kiếm: git rebase, cherry-pick..."
+      ],
       "searchLabel": "Tìm kiếm bài học Git",
       "searchButton": "Tìm kiếm",
       "startLearning": "Bắt đầu học ngay",
@@ -463,7 +470,11 @@
       "lessonsList": "Danh sách bài học",
       "learnGitTitle": "Học Git: Khái niệm và Lệnh",
       "learnGitDescription": "Bài học có cấu trúc, ví dụ và hình ảnh để thành thạo Git cơ bản.",
-      "breadcrumb": "Đường dẫn"
+      "breadcrumb": "Đường dẫn",
+      "result": "kết quả",
+      "results": "kết quả",
+      "noResultsFound": "Không tìm thấy bài học cho \"{query}\"",
+      "tryDifferentKeywords": "Thử tìm kiếm với từ khóa khác"
     },
     "rating": {
       "title": "Đánh giá bài học",

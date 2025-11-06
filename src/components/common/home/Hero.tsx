@@ -5,12 +5,58 @@ import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { slides } from "@/services/mock-data";
 import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import React, { useEffect } from 'react';
+import { Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from "@/components/ui/label";
 
 const Carousel = dynamic(() => import("@/components/common/Carousel"), { ssr: false });
 
 export default function Hero() {
   const t = useTranslations('home.hero');
-  
+  const router = useRouter();
+  const params = useParams();
+  const locale = (params.locale as string) || 'en';
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [placeholderIndex, setPlaceholderIndex] = React.useState(0);
+  const [isFocused, setIsFocused] = React.useState(false);
+
+  const placeholders = React.useMemo(() => {
+    try {
+      const raw = t.raw('searchPlaceholders');
+      if (Array.isArray(raw)) {
+        return raw as string[];
+      }
+    } catch (e) { console.error(e); }
+
+    return locale === 'vi' 
+      ? ['Tìm kiếm: git init, commit, branch...']
+      : ['Search: git init, commit, branch...'];
+  }, [t, locale]);
+
+  useEffect(() => {
+    if (isFocused || searchQuery.length > 0) return;
+
+    const interval = setInterval(() => {
+      setPlaceholderIndex((prev) => (prev + 1) % placeholders.length);
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [isFocused, searchQuery.length, placeholders.length]);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const query = searchQuery.trim();
+    if (query.length > 0) {
+      router.push(`/${locale}/git-theory?query=${encodeURIComponent(query)}`);
+    } else {
+      router.push(`/${locale}/git-theory`);
+    }
+  };
+
   return (
     <section className="relative">
       <Carousel
@@ -45,24 +91,34 @@ export default function Hero() {
               className="mt-4 sm:mt-6 max-w-xl"
               role="search" 
               aria-label={t('searchLabel')}
+              onSubmit={handleSearch}
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
             >
-              <label htmlFor="landing-search" className="sr-only">{t('searchLabel')}</label>
+              <Label htmlFor="landing-search" className="sr-only">{t('searchLabel')}</Label>
               <div className="flex items-center gap-2">
-                <input
-                  id="landing-search"
-                  type="search"
-                  placeholder={t('searchPlaceholder')}
-                  className="flex-1 px-3 sm:px-4 py-2 rounded-md bg-white/95 text-gray-900 placeholder:text-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] border border-white/60 text-sm"
-                />
-                <Link
-                  href="/git-theory"
-                  className="px-4 sm:px-5 py-2.5 rounded-md bg-[var(--primary)] text-[var(--primary-foreground)] text-sm font-medium hover:bg-[var(--primary-700)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4 pointer-events-none z-10" />
+                  <Input
+                    id="landing-search"
+                    type="search"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onFocus={() => setIsFocused(true)}
+                    onBlur={() => setIsFocused(false)}
+                    placeholder={placeholders[placeholderIndex]}
+                    className="w-full pl-10 pr-3 sm:px-4 sm:pl-10 py-2 !h-auto !bg-white/95 text-gray-900 placeholder:text-gray-600 !border-white/60 text-sm !shadow-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus:outline-none transition-all duration-300"
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  variant="default"
+                  size="default"
+                  className="px-4 sm:px-5 py-2.5 bg-white text-[var(--primary)] hover:bg-white/90 dark:bg-[var(--primary)] dark:text-[var(--primary-foreground)] dark:hover:bg-[var(--primary-700)] shadow-lg"
                 >
                   {t('searchButton')}
-                </Link>
+                </Button>
               </div>
             </motion.form>
             <motion.div 
@@ -71,12 +127,26 @@ export default function Hero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.6 }}
             >
-              <Link href="/git-theory" className="inline-flex items-center justify-center px-4 sm:px-5 py-2.5 rounded-md bg-[var(--primary)] text-[var(--primary-foreground)] text-sm font-medium hover:bg-[var(--primary-700)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]">
-                {t('startLearning')}
-              </Link>
-              <Link href="/git-theory" className="inline-flex items-center justify-center px-4 sm:px-5 py-2.5 rounded-md border border-white/70 bg-white/10 text-white text-sm font-medium hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]">
-                {t('explorePath')}
-              </Link>
+              <Button
+                asChild
+                variant="default"
+                size="default"
+                className="px-4 sm:px-5 py-2.5 bg-white text-[var(--primary)] hover:bg-white/90 dark:bg-[var(--primary)] dark:text-[var(--primary-foreground)] dark:hover:bg-[var(--primary-700)] shadow-lg"
+              >
+                <Link href={`/${locale}/git-theory`}>
+                  {t('startLearning')}
+                </Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                size="default"
+                className="px-4 sm:px-5 py-2.5 border-white/80 bg-white/10 backdrop-blur-sm text-white hover:bg-white/25 hover:border-white dark:border-white/30 dark:bg-white/5 dark:text-white dark:hover:bg-white/15 shadow-lg"
+              >
+                <Link href={`/${locale}/git-theory`}>
+                  {t('explorePath')}
+                </Link>
+              </Button>
             </motion.div>
           </div>
         </div>
