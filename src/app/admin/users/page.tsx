@@ -227,3 +227,5 @@ export default function UsersPage() {
     </div>
   );
 }
+
+export const dynamic = 'force-dynamic';

@@ -50,3 +50,5 @@ export default function PracticePage() {
     </div>
   );
 }
+
+export const dynamic = 'force-dynamic';

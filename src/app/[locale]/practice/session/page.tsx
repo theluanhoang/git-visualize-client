@@ -108,3 +108,5 @@ export default function PracticeSessionPage() {
     </PrivateRoute>
   );
 }
+
+export const dynamic = 'force-dynamic';
