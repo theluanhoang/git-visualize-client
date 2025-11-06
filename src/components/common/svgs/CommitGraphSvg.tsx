@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
+import { motion } from 'framer-motion'
 import CommitSvg from './CommitSvg';
 import { useTerminalResponses, useGoalTerminalResponses } from '@/lib/react-query/hooks/use-git-engine';
 import { ICommit, IHead, GitCommandResponse } from '@/types/git';
@@ -55,6 +56,7 @@ interface CommitGraphSvgProps extends React.SVGProps<SVGSVGElement> {
     practiceId?: string;
     practiceVersion?: number;
     isResetting?: boolean;
+    initialZoom?: number;
 }
 
 const R = 30;
@@ -72,6 +74,7 @@ function CommitGraphSvg({
     practiceId,
     practiceVersion,
     isResetting = false,
+    initialZoom = 1,
     ...svgProps
 }: CommitGraphSvgProps) {
     const [head, setHead] = useState<IHead>(null);
@@ -182,10 +185,13 @@ function CommitGraphSvg({
                 const maxY = Math.max(...mainBranchCommits.map(n => n.y));
 
                 const centerX = (minX + maxX) / 2;
-                const centerY = (minY + maxY) / 2;
+                const firstCommitY = minY; // Use the first commit's Y position (topmost)
 
-                const targetPanX = width / 2 - centerX;
-                const targetPanY = height / 2 - centerY;
+                // Calculate pan: center X, but position Y with offset from top
+                const targetZoom = initialZoom;
+                const topOffset = 100; // Offset from top in pixels
+                const targetPanX = (width / 2) - (centerX * targetZoom);
+                const targetPanY = topOffset - (firstCommitY * targetZoom);
 
                 onResetView(targetPanX, targetPanY);
             } else {
@@ -195,17 +201,20 @@ function CommitGraphSvg({
                 const maxY = Math.max(...commitNodes.map(n => n.y));
 
                 const centerX = (minX + maxX) / 2;
-                const centerY = (minY + maxY) / 2;
+                const firstCommitY = minY; // Use the first commit's Y position (topmost)
 
-                const targetPanX = width / 2 - centerX;
-                const targetPanY = height / 2 - centerY;
+                // Calculate pan: center X, but position Y with offset from top
+                const targetZoom = initialZoom;
+                const topOffset = 100; // Offset from top in pixels
+                const targetPanX = (width / 2) - (centerX * targetZoom);
+                const targetPanY = topOffset - (firstCommitY * targetZoom);
 
                 onResetView(targetPanX, targetPanY);
             }
 
             setHasAutoCentered(true);
         }
-    }, [commitNodes.length, onResetView, width, height, commitNodes, hasAutoCentered]);
+    }, [commitNodes.length, onResetView, width, height, commitNodes, hasAutoCentered, initialZoom]);
 
     useEffect(() => {
         onCommitsChange?.(commitNodes.length > 0);
@@ -579,10 +588,12 @@ function CommitGraphSvg({
             const maxY = Math.max(...mainBranchCommits.map(n => n.y));
             
             const centerX = (minX + maxX) / 2;
-            const centerY = (minY + maxY) / 2;
+            const firstCommitY = minY; // Use the first commit's Y position (topmost)
             
-            const targetPanX = width / 2 - centerX;
-            const targetPanY = height / 2 - centerY;
+            // Calculate pan: center X, but position Y with offset from top
+            const topOffset = 100; // Offset from top in pixels
+            const targetPanX = width / 2 - centerX * initialZoom;
+            const targetPanY = topOffset - (firstCommitY * initialZoom);
             
             onResetView?.(targetPanX, targetPanY);
         } else {
@@ -592,14 +603,16 @@ function CommitGraphSvg({
             const maxY = Math.max(...commitNodes.map(n => n.y));
             
             const centerX = (minX + maxX) / 2;
-            const centerY = (minY + maxY) / 2;
+            const firstCommitY = minY; // Use the first commit's Y position (topmost)
             
-            const targetPanX = width / 2 - centerX;
-            const targetPanY = height / 2 - centerY;
+            // Calculate pan: center X, but position Y with offset from top
+            const topOffset = 100; // Offset from top in pixels
+            const targetPanX = width / 2 - centerX * initialZoom;
+            const targetPanY = topOffset - (firstCommitY * initialZoom);
             
             onResetView?.(targetPanX, targetPanY);
         }
-    }, [commitNodes, width, height, onResetView]);
+    }, [commitNodes, width, height, onResetView, initialZoom]);
 
     useEffect(() => {
         if (onResetView) {
@@ -644,20 +657,27 @@ function CommitGraphSvg({
     const gridMaxY = Math.max(viewportMaxY, maxY);
     const gridWidth = gridMaxX - gridMinX;
     const gridHeight = gridMaxY - gridMinY;
+
+    const [reducedMotion, setReducedMotion] = useState(false);
+    useEffect(() => {
+        if (typeof window !== 'undefined' && 'matchMedia' in window) {
+            const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+            setReducedMotion(mq.matches);
+            const handler = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
+            mq.addEventListener?.('change', handler);
+            return () => mq.removeEventListener?.('change', handler);
+        }
+    }, []);
+    const enableAnimations = !reducedMotion && commitNodes.length <= 150;
     if (commitNodes.length === 0) {
         return (
             <div 
-                className="w-full h-full flex items-center justify-center absolute inset-0"
-                style={{ 
-                    width: width, 
-                    height: height,
-                    pointerEvents: 'none' // Disable all interactions
-                }}
+                className="absolute inset-0 flex items-center justify-center pointer-events-none"
             >
-                <div className="text-center text-gray-500">
-                    <div className="text-lg mb-2">📊</div>
-                    <div>No commits yet</div>
-                    <div className="text-sm mt-1">Create a commit to see the graph</div>
+                <div className="text-center text-muted-foreground">
+                    <div className="text-xl mb-1">📊</div>
+                    <div className="text-sm md:text-base">No commits yet</div>
+                    <div className="text-xs md:text-sm mt-1">Create a commit to see the graph</div>
                 </div>
             </div>
         );
@@ -714,19 +734,43 @@ function CommitGraphSvg({
                         commitNodes.find(commitNode => commitNode.commit.id === parentId)
                     ).filter(Boolean) as CommitNode[];
 
-                    return parentNodes.map((parentNode, index) => (
-                        <line
-                            key={`${parentNode.commit.id}-${commitNode.commit.id}-${index}`}
-                            x1={parentNode.x}
-                            y1={parentNode.y}
-                            x2={commitNode.x}
-                            y2={commitNode.y}
-                            stroke="#6b7280"
-                            strokeWidth="3"
-                            markerEnd="url(#arrowhead)"
-                            className={dragState.isDragging ? "" : "transition-all duration-200"}
-                        />
-                    ));
+                    return parentNodes.map((parentNode, index) => {
+                        const dx = commitNode.x - parentNode.x;
+                        const dy = commitNode.y - parentNode.y;
+                        const length = Math.sqrt(dx*dx + dy*dy);
+                        const key = `${parentNode.commit.id}-${commitNode.commit.id}-${index}`;
+                        if (enableAnimations) {
+                            return (
+                                <motion.line
+                                    key={key}
+                                    x1={parentNode.x}
+                                    y1={parentNode.y}
+                                    x2={commitNode.x}
+                                    y2={commitNode.y}
+                                    stroke="#6b7280"
+                                    strokeWidth="3"
+                                    markerEnd="url(#arrowhead)"
+                                    strokeDasharray={length}
+                                    initial={{ opacity: 0, strokeDashoffset: length }}
+                                    animate={{ opacity: 1, strokeDashoffset: 0 }}
+                                    transition={{ type: 'spring', stiffness: 240, damping: 22 }}
+                                />
+                            );
+                        }
+                        return (
+                            <line
+                                key={key}
+                                x1={parentNode.x}
+                                y1={parentNode.y}
+                                x2={commitNode.x}
+                                y2={commitNode.y}
+                                stroke="#6b7280"
+                                strokeWidth="3"
+                                markerEnd="url(#arrowhead)"
+                                className={dragState.isDragging ? "" : "transition-all duration-200"}
+                            />
+                        );
+                    });
                 })}
 
                 {
@@ -737,6 +781,48 @@ function CommitGraphSvg({
                         const index = branchCommits.current[currentBranch!] && branchCommits.current[currentBranch!].find((commit) => commit.id === commitNode.commit.id);
                         const isCurrentBranch = index ? true : false;
                         const isDragging = dragState.draggedNodeId === commitNode.commit.id;
+                        const primaryParent = commitNode.commit.parents[0] ? commitNodes.find(n => n.commit.id === commitNode.commit.parents[0]) : null;
+
+                        if (enableAnimations && primaryParent) {
+                            const ax = primaryParent.x;
+                            const ay = primaryParent.y;
+                            const bx = commitNode.x;
+                            const by = commitNode.y;
+                            const angleDeg = (Math.atan2(by - ay, bx - ax) * 180) / Math.PI;
+                            return (
+                                <motion.g
+                                    key={commitNode.commit.id}
+                                    initial={{ x: ax, y: ay, rotate: angleDeg - 20, scale: 0.96, opacity: 0 }}
+                                    animate={{ x: bx, y: by, rotate: 0, scale: 1, opacity: 1 }}
+                                    transition={{ type: 'spring', stiffness: 360, damping: 16, mass: 0.7 }}
+                                    style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+                                    onMouseDown={(e) => handleNodeMouseDown(e, commitNode.commit.id)}
+                                    onDoubleClick={(e) => handleNodeDoubleClick(e, commitNode.commit.id)}
+                                >
+                                    <g>
+                                        {isHead && (
+                                            <motion.circle
+                                                cx={0}
+                                                cy={0}
+                                                r={R + 3}
+                                                fill="none"
+                                                stroke="#60a5fa"
+                                                strokeOpacity={0.55}
+                                                animate={{ scale: [1, 1.12, 1], opacity: [0.8, 0.5, 0.8] }}
+                                                transition={{ duration: 1.6, repeat: Infinity }}
+                                            />
+                                        )}
+                                        <CommitSvg 
+                                            x={0} 
+                                            y={0} 
+                                            isHead={isHead} 
+                                            isCurrentBranch={isCurrentBranch} 
+                                            commit={commitNode.commit} 
+                                        />
+                                    </g>
+                                </motion.g>
+                            );
+                        }
 
                         return (
                             <g
@@ -746,18 +832,17 @@ function CommitGraphSvg({
                                     filter: isDragging ? 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))' : undefined,
                                     transition: dragState.isDragging ? 'none' : 'all 0.2s ease'
                                 }}
+                                transform={`translate(${commitNode.x}, ${commitNode.y})`}
                                 onMouseDown={(e) => handleNodeMouseDown(e, commitNode.commit.id)}
                                 onDoubleClick={(e) => handleNodeDoubleClick(e, commitNode.commit.id)}
                             >
-                                <g transform={`translate(${commitNode.x}, ${commitNode.y})`}>
-                                    <CommitSvg 
-                                        x={0} 
-                                        y={0} 
-                                        isHead={isHead} 
-                                        isCurrentBranch={isCurrentBranch} 
-                                        commit={commitNode.commit} 
-                                    />
-                                </g>
+                                <CommitSvg 
+                                    x={0} 
+                                    y={0} 
+                                    isHead={isHead} 
+                                    isCurrentBranch={isCurrentBranch} 
+                                    commit={commitNode.commit} 
+                                />
                             </g>
                         )
                     })

@@ -67,8 +67,8 @@
     "getStarted": "Get Started",
     "learnMore": "Learn More",
     "hero": {
-      "title": "Learn Git fast, visual, free",
-      "subtitle": "Step-by-step Git learning path, clear examples, hands-on practice. From basics to advanced.",
+      "title": "Master Git Through Interactive Visualizations",
+      "subtitle": "Learn Git commands and workflows with real-time visual feedback. See your commits, branches, and merges come to life as you practice in a safe, interactive environment.",
       "searchPlaceholder": "Search: git init, commit, branch...",
       "searchPlaceholders": [
         "Search: git init, commit, branch...",
@@ -84,49 +84,69 @@
     },
     "features": {
       "title": "Why choose Git Visualized Engine?",
-      "subtitle": "Effective and fun Git learning method",
+      "subtitle": "The most intuitive way to learn Git through visual learning",
       "clearPath": {
-        "title": "Clear learning path",
-        "description": "From basic to advanced, each step is designed for your progress."
+        "title": "Visual Learning",
+        "description": "See Git concepts come alive with interactive commit graphs, branch visualizations, and real-time feedback that makes complex workflows easy to understand."
       },
       "fastLearning": {
-        "title": "Fast learning",
-        "description": "Combine theory, practice and visualization for better retention."
+        "title": "Hands-on Practice",
+        "description": "Practice Git commands in a real terminal environment with instant visual feedback. No installation required - start coding immediately."
       },
       "free": {
-        "title": "Completely free",
-        "description": "No registration required, no ads, learn Git completely free."
+        "title": "Structured Learning",
+        "description": "Follow a carefully designed curriculum from basics to advanced topics, with step-by-step lessons and practical exercises."
+      },
+      "ctaLabel": "Learn more",
+      "chips": {
+        "visualCommits": "Visual commits",
+        "branchFlows": "Branch flows",
+        "realTime": "Real-time",
+        "liveTerminal": "Live terminal",
+        "instantFeedback": "Instant feedback",
+        "noSetup": "No setup",
+        "curatedContent": "Curated content",
+        "stepByStep": "Step-by-step",
+        "handsOn": "Hands-on"
       }
     },
+    "stats": {
+      "activeLearners": "Active learners",
+      "practices": "Practices",
+      "lessons": "Lessons",
+      "totalViews": "Total views",
+      "recentActivity": "Recent activity"
+    },
     "cta": {
-      "title": "Ready to become a Git Master?",
-      "subtitle": "Start your Git learning journey today and enhance your programming skills.",
+      "title": "Ready to Master Git?",
+      "subtitle": "Join thousands of developers learning Git through visualization. Start your journey today - it's free, interactive, and designed for all skill levels.",
+      "badge": "Start Learning Today",
       "startLearning": "Start learning now",
-      "practiceNow": "Practice now"
+      "practiceNow": "Try practice lab"
     },
     "systemOverview": {
-      "title": "Comprehensive Git Learning System",
-      "description": "Combining theory, practice and visualization for the most effective Git learning",
+      "title": "Learn Git Through Three Powerful Tools",
+      "description": "Master Git with our integrated approach: structured lessons, interactive practice, and visual commit graphs",
       "gitTheory": {
         "title": "Git Theory",
-        "subtitle": "Structured theory",
-        "description": "Learn Git from basic to advanced with scientifically designed lessons, clear examples and copyable code examples.",
-        "bullets": "Step-by-step lessons\nInteractive code examples\nNavigation sidebar",
-        "ctaLabel": "Start learning"
+        "subtitle": "Structured Lessons",
+        "description": "Comprehensive Git lessons covering everything from basic commands to advanced workflows. Each lesson includes clear explanations, examples, and code snippets you can try immediately.",
+        "bullets": "Step-by-step tutorials\nReal-world examples\nCopy-paste code snippets\nProgress tracking",
+        "ctaLabel": "Browse lessons"
       },
       "practiceLab": {
         "title": "Practice Lab",
-        "subtitle": "Hands-on practice",
-        "description": "Real Git terminal to execute commands and see results instantly. No additional installation required.",
-        "bullets": "Real Git terminal\nInstant results\nSafe environment",
-        "ctaLabel": "Practice now"
+        "subtitle": "Interactive Terminal",
+        "description": "Execute Git commands in a real terminal environment. See immediate results and understand how each command affects your repository. Perfect for experimenting without risk.",
+        "bullets": "Live Git terminal\nReal-time command execution\nVisual command feedback\nSafe sandbox environment",
+        "ctaLabel": "Start practicing"
       },
       "commitGraph": {
         "title": "Commit Graph",
-        "subtitle": "Visualization",
-        "description": "Interactive commit graph helps you understand repository structure, branches and change history.",
-        "bullets": "Interactive graph\nShow branches & merges\nReal-time updates",
-        "ctaLabel": "View graph"
+        "subtitle": "Visual Repository",
+        "description": "Watch your Git repository come to life with our interactive commit graph. Visualize branches, merges, and commit history in real-time as you work.",
+        "bullets": "Interactive commit visualization\nBranch and merge tracking\nReal-time graph updates\nColor-coded commits",
+        "ctaLabel": "Explore graph"
       }
     }
   },
@@ -225,6 +245,19 @@
       "instructionsPlaceholder": "Enter instructions...",
       "scenarioPlaceholder": "Enter scenario description...",
       "titlePlaceholder": "Enter practice title..."
+    },
+    "selector": {
+      "title": "Choose Your Practice",
+      "titleWithLesson": "Practice: {lesson}",
+      "subtitle": "Select a practice session to improve your Git skills",
+      "subtitleWithLesson": "Select a practice session for this lesson to improve your Git skills",
+      "searchPlaceholder": "Search practices...",
+      "filterByDifficulty": "Filter by difficulty",
+      "allDifficulties": "All Difficulties",
+      "availablePractices": "Available Practices",
+      "totalPractices": "{count} practices",
+      "emptyMessage": "No practices found matching your criteria",
+      "selectPracticePrompt": "Select a practice to view details"
     }
   },
   "admin": {
@@ -539,5 +572,23 @@
     "copyright": "© 2024 Git Visualized Engine. All rights reserved.",
     "privacy": "Privacy Policy",
     "terms": "Terms of Service"
+  },
+  "terminal": {
+    "title": "Git Terminal",
+    "placeholder": "Enter git command..."
+  },
+  "commitGraph": {
+    "ui": {
+      "title": "Commit Graph",
+      "hintZoom": "Scroll to zoom",
+      "hintPan": "Drag to pan",
+      "hintDrag": "Drag commits to reposition",
+      "hintPersist": "State persists on reload",
+      "hintDisabled": "Create a commit to enable zoom & pan",
+      "reset": "Reset",
+      "resetView": "Reset view",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out"
+    }
   }
 }

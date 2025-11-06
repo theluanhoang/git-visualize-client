@@ -67,8 +67,8 @@
     "getStarted": "Bắt đầu",
     "learnMore": "Tìm hiểu thêm",
     "hero": {
-      "title": "Học Git nhanh, trực quan, miễn phí",
-      "subtitle": "Lộ trình học Git từng bước, ví dụ rõ ràng, thực hành trực tiếp. Bắt đầu từ cơ bản đến nâng cao.",
+      "title": "Thành thạo Git qua Trực quan hóa Tương tác",
+      "subtitle": "Học các lệnh và workflow Git với phản hồi trực quan theo thời gian thực. Xem commits, branches và merges hiển thị sống động khi bạn thực hành trong môi trường an toàn và tương tác.",
       "searchPlaceholder": "Tìm kiếm: git init, commit, branch...",
       "searchPlaceholders": [
         "Tìm kiếm: git init, commit, branch...",
@@ -84,49 +84,69 @@
     },
     "features": {
       "title": "Tại sao chọn Git Visualized Engine?",
-      "subtitle": "Phương pháp học Git hiệu quả và thú vị",
+      "subtitle": "Cách học Git trực quan và dễ hiểu nhất",
       "clearPath": {
-        "title": "Lộ trình rõ ràng",
-        "description": "Từ cơ bản đến nâng cao, mỗi bước đều được thiết kế để bạn tiến bộ."
+        "title": "Học Trực quan",
+        "description": "Xem các khái niệm Git hiện lên sống động với đồ thị commit tương tác, trực quan hóa branches và phản hồi thời gian thực giúp hiểu workflow phức tạp dễ dàng."
       },
       "fastLearning": {
-        "title": "Học nhanh",
-        "description": "Kết hợp lý thuyết, thực hành và trực quan hóa để ghi nhớ lâu hơn."
+        "title": "Thực hành Trực tiếp",
+        "description": "Thực hành các lệnh Git trong môi trường terminal thực tế với phản hồi trực quan ngay lập tức. Không cần cài đặt - bắt đầu coding ngay."
       },
       "free": {
-        "title": "Hoàn toàn miễn phí",
-        "description": "Không cần đăng ký, không quảng cáo, học Git hoàn toàn miễn phí."
+        "title": "Học có Cấu trúc",
+        "description": "Theo dõi chương trình học được thiết kế cẩn thận từ cơ bản đến nâng cao, với các bài học từng bước và bài tập thực hành."
+      },
+      "ctaLabel": "Tìm hiểu thêm",
+      "chips": {
+        "visualCommits": "Commit trực quan",
+        "branchFlows": "Luồng nhánh",
+        "realTime": "Thời gian thực",
+        "liveTerminal": "Terminal trực tiếp",
+        "instantFeedback": "Phản hồi tức thì",
+        "noSetup": "Không cần cấu hình",
+        "curatedContent": "Nội dung chọn lọc",
+        "stepByStep": "Từng bước",
+        "handsOn": "Thực hành"
       }
     },
+    "stats": {
+      "activeLearners": "Học viên đang hoạt động",
+      "practices": "Bài thực hành",
+      "lessons": "Bài học",
+      "totalViews": "Tổng lượt xem",
+      "recentActivity": "Hoạt động gần đây"
+    },
     "cta": {
-      "title": "Sẵn sàng trở thành Git Master?",
-      "subtitle": "Bắt đầu hành trình học Git ngay hôm nay và nâng cao kỹ năng lập trình của bạn.",
+      "title": "Sẵn sàng Thành thạo Git?",
+      "subtitle": "Tham gia cùng hàng ngàn developers đang học Git qua trực quan hóa. Bắt đầu hành trình của bạn ngay hôm nay - hoàn toàn miễn phí, tương tác và thiết kế cho mọi cấp độ.",
+      "badge": "Bắt đầu học ngay hôm nay",
       "startLearning": "Bắt đầu học ngay",
-      "practiceNow": "Thực hành ngay"
+      "practiceNow": "Thử practice lab"
     },
     "systemOverview": {
-      "title": "Hệ thống học Git toàn diện",
-      "description": "Kết hợp lý thuyết, thực hành và trực quan hóa để học Git hiệu quả nhất",
+      "title": "Học Git qua Ba Công cụ Mạnh mẽ",
+      "description": "Thành thạo Git với cách tiếp cận tích hợp: bài học có cấu trúc, thực hành tương tác và đồ thị commit trực quan",
       "gitTheory": {
         "title": "Git Theory",
-        "subtitle": "Lý thuyết có cấu trúc",
-        "description": "Học Git từ cơ bản đến nâng cao với các bài học được thiết kế khoa học, ví dụ rõ ràng và code examples có thể copy.",
-        "bullets": "Bài học từng bước\nCode examples tương tác\nSidebar điều hướng",
-        "ctaLabel": "Bắt đầu học"
+        "subtitle": "Bài học Có cấu trúc",
+        "description": "Các bài học Git toàn diện bao gồm từ lệnh cơ bản đến workflow nâng cao. Mỗi bài học có giải thích rõ ràng, ví dụ và code snippets có thể thử ngay.",
+        "bullets": "Hướng dẫn từng bước\nVí dụ thực tế\nCode snippets copy-paste\nTheo dõi tiến độ",
+        "ctaLabel": "Xem bài học"
       },
       "practiceLab": {
         "title": "Practice Lab",
-        "subtitle": "Thực hành trực tiếp",
-        "description": "Terminal Git thực tế để thực thi lệnh và xem kết quả ngay lập tức. Không cần cài đặt gì thêm.",
-        "bullets": "Terminal Git thực tế\nKết quả tức thì\nMôi trường an toàn",
-        "ctaLabel": "Thực hành ngay"
+        "subtitle": "Terminal Tương tác",
+        "description": "Thực thi các lệnh Git trong môi trường terminal thực tế. Xem kết quả ngay lập tức và hiểu cách mỗi lệnh ảnh hưởng đến repository. Hoàn hảo để thử nghiệm mà không có rủi ro.",
+        "bullets": "Terminal Git trực tiếp\nThực thi lệnh thời gian thực\nPhản hồi trực quan\nMôi trường sandbox an toàn",
+        "ctaLabel": "Bắt đầu thực hành"
       },
       "commitGraph": {
         "title": "Commit Graph",
-        "subtitle": "Trực quan hóa",
-        "description": "Đồ thị commit tương tác giúp bạn hiểu rõ cấu trúc repository, nhánh và lịch sử thay đổi.",
-        "bullets": "Đồ thị tương tác\nHiển thị nhánh & merge\nCập nhật real-time",
-        "ctaLabel": "Xem đồ thị"
+        "subtitle": "Repository Trực quan",
+        "description": "Xem repository Git của bạn hiện lên sống động với đồ thị commit tương tác. Trực quan hóa branches, merges và lịch sử commit theo thời gian thực khi bạn làm việc.",
+        "bullets": "Trực quan hóa commit tương tác\nTheo dõi branch và merge\nCập nhật đồ thị thời gian thực\nCommits được mã màu",
+        "ctaLabel": "Khám phá đồ thị"
       }
     }
   },
@@ -225,6 +245,19 @@
       "instructionsPlaceholder": "Nhập hướng dẫn...",
       "scenarioPlaceholder": "Nhập mô tả kịch bản...",
       "titlePlaceholder": "Nhập tiêu đề thực hành..."
+    },
+    "selector": {
+      "title": "Chọn bài thực hành",
+      "titleWithLesson": "Thực hành: {lesson}",
+      "subtitle": "Chọn một phiên thực hành để cải thiện kỹ năng Git của bạn",
+      "subtitleWithLesson": "Chọn một phiên thực hành cho bài học này để cải thiện kỹ năng Git",
+      "searchPlaceholder": "Tìm kiếm bài thực hành...",
+      "filterByDifficulty": "Lọc theo độ khó",
+      "allDifficulties": "Tất cả độ khó",
+      "availablePractices": "Bài thực hành có sẵn",
+      "totalPractices": "{count} bài thực hành",
+      "emptyMessage": "Không tìm thấy bài thực hành phù hợp với tiêu chí",
+      "selectPracticePrompt": "Chọn một bài thực hành để xem chi tiết"
     }
   },
   "admin": {
@@ -441,9 +474,8 @@
     "desktop": "Desktop",
     "mobile": "Mobile",
     "tablet": "Tablet"
-  ,
-  "noLessonData": "Chưa có dữ liệu bài học"
   },
+  "noLessonData": "Chưa có dữ liệu bài học",
   "systemSettings": "Cài đặt hệ thống"
   },
   "gitTheory": {
@@ -539,5 +571,23 @@
     "copyright": "© 2024 Công cụ Git Trực quan. Tất cả quyền được bảo lưu.",
     "privacy": "Chính sách bảo mật",
     "terms": "Điều khoản dịch vụ"
+  },
+  "terminal": {
+    "title": "Git Terminal",
+    "placeholder": "Nhập lệnh git..."
+  },
+  "commitGraph": {
+    "ui": {
+      "title": "Commit Graph",
+      "hintZoom": "Cuộn để phóng to/thu nhỏ",
+      "hintPan": "Kéo để di chuyển",
+      "hintDrag": "Kéo commit để thay đổi vị trí",
+      "hintPersist": "Trạng thái được lưu khi tải lại",
+      "hintDisabled": "Tạo một commit để bật zoom & pan",
+      "reset": "Đặt lại",
+      "resetView": "Đặt lại góc nhìn",
+      "zoomIn": "Phóng to",
+      "zoomOut": "Thu nhỏ"
+    }
   }
 }

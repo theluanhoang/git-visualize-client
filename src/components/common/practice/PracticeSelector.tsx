@@ -12,6 +12,8 @@ import { usePractices } from '@/lib/react-query/hooks/use-practices';
 import { Practice } from '@/services/practices';
 import PracticeList from './PracticeList';
 import PracticeDetails from './PracticeDetails';
+import Pagination from '@/components/common/Pagination';
+import { useTranslations } from 'next-intl';
 
 interface PracticeSelectorProps {
   onStartPractice?: (practice: Practice) => void;
@@ -20,20 +22,26 @@ interface PracticeSelectorProps {
 }
 
 export default function PracticeSelector({ onStartPractice, lessonSlug, lessonTitle }: PracticeSelectorProps) {
+  const t = useTranslations('practice');
   const [selectedPractice, setSelectedPractice] = useState<Practice | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState<number | 'all'>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
+  const [page, setPage] = useState(1);
+  const pageSize = 3;
 
   const { data: practicesData, isLoading } = usePractices({ 
     includeRelations: true,
     lessonSlug: lessonSlug || undefined,
-    difficulty: typeof difficultyFilter === 'number' ? difficultyFilter : undefined
+    difficulty: typeof difficultyFilter === 'number' ? difficultyFilter : undefined,
+    limit: pageSize,
+    offset: (page - 1) * pageSize,
   });
 
   const practices = Array.isArray(practicesData) ? practicesData : (practicesData as { data: Practice[] })?.data || [];
-
-  const filteredPractices = practices.filter((practice: Practice) =>
+  const totalItems = (practicesData as { total?: number })?.total ?? practices.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const displayedPractices = practices.filter((practice: Practice) =>
     practice.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     practice.scenario.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -67,12 +75,12 @@ export default function PracticeSelector({ onStartPractice, lessonSlug, lessonTi
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-foreground">
-              {lessonTitle ? `Practice: ${lessonTitle}` : 'Choose Your Practice'}
+              {lessonTitle ? t('selector.titleWithLesson', { lesson: lessonTitle }) : t('selector.title')}
             </CardTitle>
             <CardDescription>
               {lessonSlug 
-                ? `Select a practice session for this lesson to improve your Git skills`
-                : 'Select a practice session to improve your Git skills'
+                ? t('selector.subtitleWithLesson')
+                : t('selector.subtitle')
               }
             </CardDescription>
           </CardHeader>
@@ -82,7 +90,7 @@ export default function PracticeSelector({ onStartPractice, lessonSlug, lessonTi
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input
-                  placeholder="Search practices..."
+                  placeholder={t('selector.searchPlaceholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -94,13 +102,13 @@ export default function PracticeSelector({ onStartPractice, lessonSlug, lessonTi
                 setDifficultyFilter(value === 'all' ? 'all' : parseInt(value))
               }>
                 <SelectTrigger className="w-full sm:w-48">
-                  <SelectValue placeholder="Filter by difficulty" />
+                  <SelectValue placeholder={t('selector.filterByDifficulty')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Difficulties</SelectItem>
-                  <SelectItem value="1">Beginner</SelectItem>
-                  <SelectItem value="2">Intermediate</SelectItem>
-                  <SelectItem value="3">Advanced</SelectItem>
+                  <SelectItem value="all">{t('selector.allDifficulties')}</SelectItem>
+                  <SelectItem value="1">{t('beginner')}</SelectItem>
+                  <SelectItem value="2">{t('intermediate')}</SelectItem>
+                  <SelectItem value="3">{t('advanced')}</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -139,26 +147,36 @@ export default function PracticeSelector({ onStartPractice, lessonSlug, lessonTi
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                <span>Available Practices</span>
+                <span>{t('selector.availablePractices')}</span>
                 <Badge variant="secondary">
-                  {filteredPractices.length} practices
+                  {t('selector.totalPractices', { count: totalItems })}
                 </Badge>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {filteredPractices.length === 0 ? (
+              {displayedPractices.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <Filter className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>No practices found matching your criteria</p>
+                  <p>{t('selector.emptyMessage')}</p>
                 </div>
               ) : (
                 <PracticeList
-                  practices={filteredPractices}
+                  practices={displayedPractices}
                   onSelectPractice={handleSelectPractice}
                   onStartPractice={onStartPractice}
                   selectedPracticeId={selectedPractice?.id}
                 />
               )}
+
+              <div className="mt-6">
+                <Pagination
+                  currentPage={page}
+                  totalPages={totalPages}
+                  onPageChange={setPage}
+                  itemsPerPage={pageSize}
+                  totalItems={totalItems}
+                />
+              </div>
             </CardContent>
           </Card>
         </motion.div>
@@ -179,7 +197,7 @@ export default function PracticeSelector({ onStartPractice, lessonSlug, lessonTi
               <CardContent className="flex items-center justify-center h-64">
                 <div className="text-center text-muted-foreground">
                   <Grid className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>Select a practice to view details</p>
+                  <p>{t('selector.selectPracticePrompt')}</p>
                 </div>
               </CardContent>
             </Card>

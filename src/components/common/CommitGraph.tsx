@@ -1,5 +1,6 @@
 import { Dot, GitCommitHorizontal, Minus, Plus } from 'lucide-react'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import CommitGraphSvg from './svgs/CommitGraphSvg'
 import { useGitEngine } from '@/lib/react-query/hooks/use-git-engine';
 import { useQueryClient } from '@tanstack/react-query';
@@ -17,6 +18,7 @@ interface CommitGraphProps {
     practiceId?: string;
     practiceVersion?: number;
     isResetting?: boolean;
+    initialZoom?: number;
 }
 
 function CommitGraph({ 
@@ -28,10 +30,12 @@ function CommitGraph({
     className = '',
     practiceId,
     practiceVersion,
-    isResetting = false
+    isResetting = false,
+    initialZoom = 1
 }: CommitGraphProps) {
+    const t = useTranslations('commitGraph.ui')
     const [containerSize, setContainerSize] = useState({ width: 1504, height: 400 });
-    const [zoom, setZoom] = useState(1);
+    const [zoom, setZoom] = useState(initialZoom);
     const [pan, setPan] = useState({ x: 0, y: 0 });
     const [isDragging, setIsDragging] = useState(false);
     const [pointerOffset, setPointerOffset] = useState({ x: 0, y: 0 });
@@ -68,13 +72,13 @@ function CommitGraph({
     }, [goalRepositoryState, queryClient, dataSource]);
 
     const handleResetView = useCallback((targetPanX?: number, targetPanY?: number) => {
-        setZoom(1);
+        setZoom(initialZoom);
         if (targetPanX !== undefined && targetPanY !== undefined) {
             setPan({ x: targetPanX, y: targetPanY });
         } else {
             setPan({ x: 0, y: 0 });
         }
-    }, []);
+    }, [initialZoom]);
 
     const handleCommitsChange = useCallback((hasCommits: boolean) => {
         setHasCommits(hasCommits);
@@ -133,21 +137,17 @@ function CommitGraph({
 
     useEffect(() => {
         const container = containerRef.current;
-        if (!container) return;
+        if (!container || !hasCommits) return;
 
         container.addEventListener('wheel', handleWheel, { passive: false });
 
         return () => {
             container.removeEventListener('wheel', handleWheel);
         };
-    }, [handleWheel]);
+    }, [handleWheel, hasCommits]);
 
     const handleMouseDown = useCallback((e: React.MouseEvent) => {
-        if (!hasCommits) {
-            e.preventDefault();
-            e.stopPropagation();
-            return;
-        }
+        if (!hasCommits) return;
 
         if (e.button === 0) {
             e.preventDefault();
@@ -180,10 +180,10 @@ function CommitGraph({
         if (resetFunction) {
             resetFunction();
         } else {
-            setZoom(1);
+            setZoom(initialZoom);
             setPan({ x: 0, y: 0 });
         }
-    }, [dataSource]);
+    }, [dataSource, initialZoom]);
 
     const handlePlus = () => {
         if (!containerRef.current) return;
@@ -222,35 +222,43 @@ function CommitGraph({
     };
 
     return (
-        <div className={`rounded-lg shadow-sm border border-[var(--border)] overflow-hidden bg-[var(--surface)] ${className}`}>
-            <div className="px-4 py-3 border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--surface),#000_4%)] ">
-                <span className="flex items-center gap-2 text-foreground">
-                    <GitCommitHorizontal />
-                    <h1 className="font-bold text-xl">{title}</h1>
-                </span>
-                <ul className="flex items-center text-[14px] text-muted-foreground">
-                    <li>Scroll to zoom</li>
-                    <li><Dot /></li>
-                    <li>Drag to pan</li>
-                    <li><Dot /></li>
-                    <li>Drag commits to reposition</li>
-                    <li><Dot /></li>
-                    <li>State persists on reload</li>
+        <div className={`rounded-lg shadow-sm border border-[var(--border)] overflow-hidden bg-terminal-bg ${className}`}>
+            <div className="px-4 py-3 border-b border-[var(--border)] bg-terminal-header ">
+                <div className="flex items-start md:items-center justify-between gap-3">
+                    <span className="flex items-center gap-2 text-foreground min-w-0">
+                        <GitCommitHorizontal />
+                        <h1 className="font-bold text-lg sm:text-xl truncate">{t('title')}</h1>
+                    </span>
+                </div>
+                <ul className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs sm:text-[13px] text-muted-foreground">
+                    <li>{t('hintZoom')}</li>
+                    <li className="hidden sm:block"><Dot /></li>
+                    <li>{t('hintPan')}</li>
+                    <li className="hidden sm:block"><Dot /></li>
+                    <li>{t('hintDrag')}</li>
+                    <li className="hidden sm:block"><Dot /></li>
+                    <li>{t('hintPersist')}</li>
                 </ul>
             </div>
             <div className="p-4">
-                <div ref={containerRef} className="min-h-[400px] border border-[var(--border)] rounded-lg relative bg-[color-mix(in_srgb,var(--surface),#000_4%)] shadow-inner">
+                <div ref={containerRef} className={`min-h-[400px] border border-[var(--border)] rounded-lg relative bg-graph-canvas shadow-inner ${hasCommits ? 'cursor-grab' : 'cursor-default'}`} aria-disabled={!hasCommits}>
                     {}
                     <ul className="absolute z-10 flex items-center text-[12px] border px-2 rounded-sm border-[var(--border)] bg-background/85 backdrop-blur-sm top-2 left-2 text-muted-foreground ">
-                        <li>Scroll to zoom</li>
-                        <li><Dot /></li>
-                        <li>Drag to pan</li>
+                        {hasCommits ? (
+                          <>
+                            <li>{t('hintZoom')}</li>
+                            <li><Dot /></li>
+                            <li>{t('hintPan')}</li>
+                          </>
+                        ) : (
+                          <li>{t('hintDisabled')}</li>
+                        )}
                     </ul>
                     {}
                     <div className="absolute z-10 flex items-center top-2 right-2 gap-2">
-                        <button className="bg-background border border-[var(--border)] rounded-sm cursor-pointer p-1 text-muted-foreground text-sm hover:bg-muted" onClick={handleMinus}><Minus size={16} /></button>
-                        <button className="bg-background border border-[var(--border)] rounded-sm cursor-pointer p-1 text-muted-foreground text-sm hover:bg-muted" onClick={handlePlus}><Plus size={16} /></button>
-                        <button className="bg-background border border-[var(--border)] rounded-sm cursor-pointer p-1 text-muted-foreground text-sm hover:bg-muted" onClick={handleReset} title="Reset view">Reset</button>
+                        <button className="bg-background border border-[var(--border)] rounded-sm cursor-pointer p-1 text-muted-foreground text-sm hover:bg-muted" onClick={handleMinus} aria-label={t('zoomOut')} title={t('zoomOut')}><Minus size={16} /></button>
+                        <button className="bg-background border border-[var(--border)] rounded-sm cursor-pointer p-1 text-muted-foreground text-sm hover:bg-muted" onClick={handlePlus} aria-label={t('zoomIn')} title={t('zoomIn')}><Plus size={16} /></button>
+                        <button className="bg-background border border-[var(--border)] rounded-sm cursor-pointer p-1 text-muted-foreground text-sm hover:bg-muted" onClick={handleReset} title={t('resetView')}>{t('reset')}</button>
                         <input disabled className="bg-background border border-[var(--border)] rounded-sm p-1 text-muted-foreground text-sm outline-none max-w-12" value={`${Math.floor(zoom * 100)}%`} />
                     </div>
                     {}
@@ -271,6 +279,7 @@ function CommitGraph({
                         dataSource={dataSource}
                         customResponses={customResponses}
                         isResetting={isResetting}
+                        initialZoom={initialZoom}
                     />
                 </div>
             </div>

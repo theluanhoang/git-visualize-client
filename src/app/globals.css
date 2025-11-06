@@ -32,6 +32,14 @@
   --scrollbar-thumb-hover: #d1d5db;
   /* gray-300 */
 
+  /* Hero grid line color */
+  --hero-grid-line: rgba(0,0,0,0.5);
+
+  /* Terminal & Graph */
+  --terminal-bg: #ffffff;
+  --terminal-header: #f9fafb; /* gray-50 */
+  --graph-canvas: #f9fafb; /* gray-50 */
+
   /* OverviewCard */
 
   --radius: 0.625rem;
@@ -123,6 +131,10 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  /* Custom surfaces */
+  --color-terminal-bg: var(--terminal-bg);
+  --color-terminal-header: var(--terminal-header);
+  --color-graph-canvas: var(--graph-canvas);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -161,6 +173,14 @@ html[data-theme="dark"] {
   /* gray-800 */
   --scrollbar-thumb-hover: #374151;
   /* gray-700 */
+
+  /* Terminal & Graph (dark) */
+  --terminal-bg: #0d1117;
+  --terminal-header: #161b22;
+  --graph-canvas: #0f1320;
+
+  /* Hero grid line color (dark) */
+  --hero-grid-line: rgba(255,255,255,0.2);
 
 
   /* SHADCN UI */

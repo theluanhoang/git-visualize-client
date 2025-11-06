@@ -1,14 +1,44 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useForm } from 'react-hook-form';
 import { useGitEngine } from '@/lib/react-query/hooks/use-git-engine';
 
-function Terminal({ practiceId }: { practiceId?: string }) {
-    const outputRef = useRef<HTMLDivElement>(null);
-    const { responses, runCommand } = useGitEngine(practiceId);
+export interface TerminalLine {
+    type: 'command' | 'output' | 'success' | 'error';
+    text: string;
+    timestamp?: number;
+}
 
-    const { register, handleSubmit, reset } = useForm<{ command: string }>();
+interface TerminalProps {
+    practiceId?: string;
+    // Preview mode props
+    previewLines?: TerminalLine[];
+    isTyping?: boolean;
+    showInput?: boolean;
+    className?: string;
+}
+
+function Terminal({ practiceId, previewLines, isTyping = false, showInput = true, className = '' }: TerminalProps) {
+    const t = useTranslations('terminal');
+    const outputRef = useRef<HTMLDivElement>(null);
+    const isPreviewMode = previewLines !== undefined;
+    
+    const { responses, runCommand } = useGitEngine(practiceId);
+    const [isFocused, setIsFocused] = useState(false);
+    const { register, handleSubmit, reset, watch } = useForm<{ command: string }>();
+    const commandValue = watch('command') ?? '';
+    const measureRef = useRef<HTMLSpanElement>(null);
+    const [cursorLeft, setCursorLeft] = useState(0);
+
+    const displayResponses = isPreviewMode ? previewLines.map(line => ({
+        command: line.type === 'command' ? line.text : undefined,
+        output: line.type !== 'command' ? line.text : '',
+        success: line.type === 'success' ? true : line.type === 'error' ? false : undefined
+    })) : responses;
 
     const onSubmit = async ({ command }: { command: string }) => {
+        if (isPreviewMode) return;
         if (command.trim()) {
             await runCommand(command.trim());
             reset({ command: "" });
@@ -16,6 +46,7 @@ function Terminal({ practiceId }: { practiceId?: string }) {
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
+        if (isPreviewMode) return;
         if (e.key === 'Enter') {
             e.preventDefault();
             handleSubmit(onSubmit)();
@@ -26,15 +57,33 @@ function Terminal({ practiceId }: { practiceId?: string }) {
         if (outputRef.current) {
             outputRef.current.scrollTop = outputRef.current.scrollHeight;
         }
-    }, [responses]);
+    }, [displayResponses]);
+
+    useEffect(() => {
+        if (measureRef.current) {
+            const rect = measureRef.current.getBoundingClientRect();
+            setCursorLeft(rect.width);
+        }
+    }, [commandValue]);
+
+    const getLineColor = (type: 'command' | 'success' | 'error' | 'output') => {
+        switch (type) {
+            case 'command':
+                return 'text-blue-600 dark:text-blue-400';
+            case 'success':
+                return 'text-green-600 dark:text-green-400';
+            case 'error':
+                return 'text-red-600 dark:text-red-400';
+            default:
+                return 'text-gray-700 dark:text-gray-300';
+        }
+    };
 
     return (
-        <div className="h-full w-full bg-gray-900 text-green-400 font-mono rounded-lg flex overflow-hidden flex-col h-[300px]">
+        <div className={`w-full font-mono rounded-lg flex overflow-hidden flex-col h-[300px] bg-terminal-bg border border-[var(--border)] shadow-sm ${className}`}>
             {}
-            <div className="flex items-center justify-between px-4 py-2 bg-gray-800 border-b border-gray-700">
-                <div className="text-sm text-gray-300">
-                    Git Terminal
-                </div>
+            <div className="flex items-center justify-between px-4 py-2 bg-terminal-header border-b border-[var(--border)]">
+                <div className="text-sm text-gray-700 dark:text-gray-300">{t('title')}</div>
                 <div className="flex space-x-1">
                     <div className="w-3 h-3 bg-red-500 rounded-full"></div>
                     <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
@@ -45,66 +94,156 @@ function Terminal({ practiceId }: { practiceId?: string }) {
             {}
             <div
                 ref={outputRef}
-                className="flex-1 overflow-y-auto px-4 py-2 space-y-1 terminal-scrollbar"
+                className="flex-1 overflow-y-auto px-4 py-3 space-y-1 terminal-scrollbar"
                 style={{
-                    maxHeight: 'calc(100%)',
-                    scrollbarWidth: 'thin',
-                    scrollbarColor: '#4a5568 #2d3748'
+                    maxHeight: 'calc(100%)'
                 }}
             >
-                {responses.map((response, index) => (
-                    <div key={index} className="whitespace-pre-wrap text-sm">
-                        {response.command && <div className="text-green-400">$ {response.command}</div>}
-                        <div style={{ color: response.success ? 'inherit' : 'red' }}>
-                            {response.output}
+                <AnimatePresence>
+                    {displayResponses.map((response, index) => {
+                        return (
+                            <motion.div
+                                key={`${response.command ?? ''}-${index}`}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0 }}
+                                className="whitespace-pre-wrap text-sm"
+                            >
+                                {response.command && (
+                                    <div className={getLineColor('command')}>
+                                        <span className="text-gray-500 dark:text-gray-400">$ </span>
+                                        {response.command}
+                                    </div>
+                                )}
+                                {response.output && (
+                                    <div className={getLineColor(response.success === false ? 'error' : response.success === true ? 'success' : 'output')}>
+                                        {response.output}
+                                    </div>
+                                )}
+                            </motion.div>
+                        );
+                    })}
+                    {isPreviewMode && isTyping && (
+                        <motion.div
+                            className="text-blue-600 dark:text-blue-400 flex items-center"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                        >
+                            <span className="text-gray-500 dark:text-gray-400">$ </span>
+                            <motion.span
+                                animate={{ opacity: [1, 0] }}
+                                transition={{ duration: 0.8, repeat: Infinity }}
+                                className="inline-block w-2 h-4 bg-blue-600 dark:bg-blue-400 ml-1"
+                            />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
+
+            {showInput && !isPreviewMode && (
+                <>
+                <div className="px-4 py-2 bg-gray-50 dark:bg-[#161b22] border-t border-[var(--border)]">
+                    <form onKeyDown={handleKeyDown} className="flex items-center">
+                        <span className="text-gray-500 dark:text-gray-400 mr-4 text-sm">$</span>
+                        <div className="relative flex-1">
+                            <span
+                                ref={measureRef}
+                                className="absolute left-0 top-1/2 -translate-y-1/2 opacity-0 whitespace-pre font-mono text-sm"
+                            >
+                                {commandValue}
+                            </span>
+                            {isFocused && (
+                                <motion.span
+                                    className="absolute top-1/2 -translate-y-1/2 w-2 h-4 bg-blue-600 dark:bg-blue-400 pointer-events-none"
+                                    style={{ left: commandValue.length === 0 ? 0 : cursorLeft }}
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: [1, 0] }}
+                                    transition={{ duration: 0.8, repeat: Infinity }}
+                                />
+                            )}
+                            {(() => {
+                            const { ref, onChange, onBlur: rhfOnBlur, name } = register("command");
+                            return (
+                                <input
+                            type="text"
+                                    className="w-full bg-transparent text-blue-600 dark:text-blue-400 placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none text-sm"
+                                    style={{ caretColor: isFocused ? 'transparent' : undefined }}
+                            placeholder={t('placeholder')}
+                            aria-label={t('placeholder')}
+                            autoFocus
+                            autoComplete="off"
+                                    name={name}
+                                    ref={ref}
+                                    onChange={onChange}
+                                    onFocus={() => setIsFocused(true)}
+                                    onBlur={(e) => { rhfOnBlur(e); setIsFocused(false); }}
+                                />
+                            );
+                            })()}
                         </div>
-                    </div>
-                ))}
-            </div>
+                    </form>
+                </div>
+                </>
+            )}
 
             {}
-            <div className="px-4 py-2 bg-gray-800 border-t border-gray-700">
-                <form onKeyDown={handleKeyDown} className="flex items-center">
-                    <span className="text-green-400 mr-2 text-sm">$</span>
-                    <input
-                        type="text"
-                        className="flex-1 bg-transparent text-green-400 outline-none text-sm"
-                        placeholder="Enter git command..."
-                        autoFocus
-                        autoComplete="off"
-                        {...register("command")}
-                    />
-                </form>
-            </div>
-
-            {}
-            <style jsx>
+            <style jsx global>
                 {`
+                  .terminal-scrollbar {
+                    scrollbar-width: thin;
+                    scrollbar-color: rgb(209 213 219) rgb(255 255 255);
+                  }
+                  
+                  html.dark .terminal-scrollbar,
+                  .dark .terminal-scrollbar,
+                  [data-theme="dark"] .terminal-scrollbar {
+                    scrollbar-color: rgb(55 65 81) rgb(13 17 23);
+                  }
+                  
                   .terminal-scrollbar::-webkit-scrollbar {
-                    width: 8px;
+                    width: 6px;
                   }
                   
                   .terminal-scrollbar::-webkit-scrollbar-track {
-                    background: #2d3748;
-                    border-radius: 4px;
+                    background: transparent;
+                    border-radius: 3px;
                   }
                   
                   .terminal-scrollbar::-webkit-scrollbar-thumb {
-                    background: #4a5568;
-                    border-radius: 4px;
-                    border: 1px solid #2d3748;
+                    background: rgb(209 213 219);
+                    border-radius: 3px;
+                    border: none;
+                    transition: background-color 0.2s ease;
+                  }
+                  
+                  html.dark .terminal-scrollbar::-webkit-scrollbar-thumb,
+                  .dark .terminal-scrollbar::-webkit-scrollbar-thumb,
+                  [data-theme="dark"] .terminal-scrollbar::-webkit-scrollbar-thumb {
+                    background: rgb(55 65 81);
                   }
                   
                   .terminal-scrollbar::-webkit-scrollbar-thumb:hover {
-                    background: #718096;
+                    background: rgb(156 163 175);
+                  }
+                  
+                  html.dark .terminal-scrollbar::-webkit-scrollbar-thumb:hover,
+                  .dark .terminal-scrollbar::-webkit-scrollbar-thumb:hover,
+                  [data-theme="dark"] .terminal-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: rgb(75 85 99);
                   }
                   
                   .terminal-scrollbar::-webkit-scrollbar-thumb:active {
-                    background: #a0aec0;
+                    background: rgb(107 114 128);
+                  }
+                  
+                  html.dark .terminal-scrollbar::-webkit-scrollbar-thumb:active,
+                  .dark .terminal-scrollbar::-webkit-scrollbar-thumb:active,
+                  [data-theme="dark"] .terminal-scrollbar::-webkit-scrollbar-thumb:active {
+                    background: rgb(107 114 128);
                   }
                   
                   .terminal-scrollbar::-webkit-scrollbar-corner {
-                    background: #2d3748;
+                    background: transparent;
                   }
               `}
             </style>
