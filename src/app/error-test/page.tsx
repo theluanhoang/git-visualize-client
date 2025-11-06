@@ -1,6 +1,10 @@
+export const dynamic = 'force-dynamic';
+
 export default function Page() {
-  // Intentionally throw to trigger global error page
-  throw new Error('Test error: this route intentionally crashes to show error.tsx');
+  if (process.env.NODE_ENV !== 'production') {
+    throw new Error('Test error: this route intentionally crashes to show error.tsx');
+  }
+  return null;
 }
 
 
