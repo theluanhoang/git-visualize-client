@@ -259,6 +259,8 @@ function UsersPageContent() {
   );
 }
 
+export const dynamic = 'force-dynamic';
+
 export default function UsersPage() {
   return (
     <SearchParamsProvider>
