@@ -6,8 +6,9 @@ import PracticeHeader from "@/components/common/practice/PracticeHeader";
 import PracticeSelector from "@/components/common/practice/PracticeSelector";
 import { Practice } from '@/services/practices';
 import { useLessons } from '@/lib/react-query/hooks/use-lessons';
+import { SearchParamsProvider } from '@/components/common/SearchParamsProvider';
 
-export default function PracticePage() {
+function PracticePageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const lessonSlug = searchParams.get('lesson');
@@ -48,6 +49,14 @@ export default function PracticePage() {
         </motion.div>
       </main>
     </div>
+  );
+}
+
+export default function PracticePage() {
+  return (
+    <SearchParamsProvider>
+      <PracticePageContent />
+    </SearchParamsProvider>
   );
 }
 
