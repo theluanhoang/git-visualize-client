@@ -255,5 +255,3 @@ export default function CelebrationDemoPage() {
     </div>
   );
 }
-
-export const dynamic = 'force-dynamic';
