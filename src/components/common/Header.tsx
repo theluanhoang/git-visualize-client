@@ -82,13 +82,13 @@ function Header() {
                         {!isAuthenticated ? (
                             <>
                                 <Link 
-                                    href="/auth/login" 
+                                    href={`/${locale}/auth/login`} 
                                     className="px-4 py-2 rounded-md text-sm font-medium text-[var(--foreground)]/85 hover:text-[var(--primary-600)] hover:bg-[var(--primary-50)] transition-colors"
                                 >
                                     {t('login')}
                                 </Link>
                                 <Button asChild variant="default" size="sm">
-                                    <Link href="/auth/register">
+                                    <Link href={`/${locale}/auth/register`}>
                                         {t('register')}
                                     </Link>
                                 </Button>
@@ -102,7 +102,7 @@ function Header() {
                                 >
                                     <Bell size={18} />
                                 </Button>
-                                <Link href="/profile" className="px-2 py-1 rounded-md text-sm font-medium text-[var(--foreground)]/85 hover:text-[var(--primary-600)] hover:bg-[var(--primary-50)] transition-colors flex items-center gap-2">
+                                <Link href={`/${locale}/profile`} className="px-2 py-1 rounded-md text-sm font-medium text-[var(--foreground)]/85 hover:text-[var(--primary-600)] hover:bg-[var(--primary-50)] transition-colors flex items-center gap-2">
                                     <UserAvatar name={displayName ?? 'User'} url={user?.avatar} />
                                     <div className="hidden xl:flex items-center gap-2">
                                         <span className="truncate max-w-[10rem]">{displayName ?? 'User'}</span>
@@ -156,8 +156,8 @@ function Header() {
                         <div className="flex flex-col gap-2 pt-2">
                             {!isAuthenticated ? (
                                 <>
-                                    <Link onClick={() => setOpen(false)} href="/auth/login" className="px-3 py-2 rounded-md text-sm font-medium text-[var(--foreground)]/90 hover:bg-[var(--primary-50)]" role="menuitem">{t('login')}</Link>
-                                    <Link onClick={() => setOpen(false)} href="/auth/register" className="px-3 py-2 rounded-md text-sm font-medium text-[var(--foreground)]/90 hover:bg-[var(--primary-50)]" role="menuitem">{t('register')}</Link>
+                                    <Link onClick={() => setOpen(false)} href={`/${locale}/auth/login`} className="px-3 py-2 rounded-md text-sm font-medium text-[var(--foreground)]/90 hover:bg-[var(--primary-50)]" role="menuitem">{t('login')}</Link>
+                                    <Link onClick={() => setOpen(false)} href={`/${locale}/auth/register`} className="px-3 py-2 rounded-md text-sm font-medium text-[var(--foreground)]/90 hover:bg-[var(--primary-50)]" role="menuitem">{t('register')}</Link>
                                 </>
                             ) : (
                                 <>

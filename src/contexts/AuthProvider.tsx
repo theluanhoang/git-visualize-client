@@ -49,7 +49,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } catch (error) {
       authStorage.clear()
       queryClient.clear()
-      window.location.href = '/auth/login'
+      // Get locale from current pathname
+      const currentPath = window.location.pathname
+      const localeMatch = currentPath.match(/^\/(en|vi)/)
+      const locale = localeMatch ? localeMatch[1] : 'en'
+      window.location.href = `/${locale}/auth/login`
     }
   }, [logoutMutation, queryClient])
 

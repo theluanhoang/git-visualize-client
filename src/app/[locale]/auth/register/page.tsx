@@ -13,8 +13,11 @@ import { Eye, EyeOff, GitFork } from 'lucide-react'
 import CodeImageBackground from '@/components/common/CodeImageBackground'
 import { OAuthButtons } from '@/components/auth/OAuthButtons'
 import { useTranslations } from 'next-intl'
+import { useParams } from 'next/navigation'
 
 export default function RegisterPage() {
+  const params = useParams()
+  const locale = (params.locale as string) || 'en'
   const [ok, setOk] = useState<string | null>(null)
   const { register, isLoading } = useAuth()
   const t = useTranslations('auth')
@@ -88,7 +91,7 @@ export default function RegisterPage() {
           </CardContent>
         </Card>
         <p className="mt-4 text-center text-sm text-muted-foreground">
-          {t('alreadyHaveAccount')} <a href="/auth/login" className="underline">{t('signIn')}</a>
+          {t('alreadyHaveAccount')} <a href={`/${locale}/auth/login`} className="underline">{t('signIn')}</a>
         </p>
       </div>
     </div>
