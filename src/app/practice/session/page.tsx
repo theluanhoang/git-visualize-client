@@ -9,8 +9,9 @@ import PracticeHeader from "@/components/common/practice/PracticeHeader";
 import { GoalModal } from "@/components/common/practice/GoalModal";
 import { GoalButton } from "@/components/common/practice/GoalButton";
 import { PrivateRoute } from '@/components/auth/PrivateRoute';
+import { SearchParamsProvider } from '@/components/common';
 
-export default function PracticeSessionPage() {
+function PracticeSessionPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const lessonSlug = searchParams.get('lesson');
@@ -109,6 +110,14 @@ export default function PracticeSessionPage() {
         </main>
       </div>
     </PrivateRoute>
+  );
+}
+
+export default function PracticeSessionPage() {
+  return (
+    <SearchParamsProvider>
+      <PracticeSessionPageContent />
+    </SearchParamsProvider>
   );
 }
 

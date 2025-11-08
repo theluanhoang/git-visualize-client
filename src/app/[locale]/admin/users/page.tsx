@@ -16,9 +16,9 @@ import AdminUserEmailDialog from '@/components/admin/AdminUserEmailDialog';
 import { useUsers as useUsersQuery, useDeleteUser, useUpdateUserStatus, useSendUserEmail } from '@/lib/react-query/hooks/use-analytics';
 import type { User, UserStatus } from '@/types/user';
 import { useTranslations } from 'next-intl';
+import { SearchParamsProvider } from '@/components/common';
 
-
-export default function UsersPage() {
+function UsersPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const t = useTranslations('admin');
@@ -256,5 +256,13 @@ export default function UsersPage() {
         }}
       />
     </div>
+  );
+}
+
+export default function UsersPage() {
+  return (
+    <SearchParamsProvider>
+      <UsersPageContent />
+    </SearchParamsProvider>
   );
 }

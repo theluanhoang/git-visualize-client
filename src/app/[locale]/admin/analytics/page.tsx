@@ -21,8 +21,9 @@ import { useTranslations } from 'next-intl';
 import { useDashboardStats, useAnalyticsMetrics, useUsers, useDeviceUsage, useHourlyActivity } from '@/lib/react-query/hooks/use-analytics';
 import { useLessons } from '@/lib/react-query/hooks/use-lessons';
 import { formatTimeWithI18n } from '@/utils/format-time';
+import { SearchParamsProvider } from '@/components/common';
 
-export default function AnalyticsPage() {
+function AnalyticsPageContent() {
   const [timeRange, setTimeRange] = useState('30d');
   const [activeTab, setActiveTab] = useState('overview');
   const t = useTranslations('admin.analytics');
@@ -379,5 +380,13 @@ export default function AnalyticsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function AnalyticsPage() {
+  return (
+    <SearchParamsProvider>
+      <AnalyticsPageContent />
+    </SearchParamsProvider>
   );
 }

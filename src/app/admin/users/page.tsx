@@ -14,6 +14,7 @@ import AdminUserEditDialog from '@/components/admin/AdminUserEditDialog';
 import AdminUserEmailDialog from '@/components/admin/AdminUserEmailDialog';
 import { useUsers as useUsersQuery, useDeleteUser, useUpdateUserStatus, useSendUserEmail } from '@/lib/react-query/hooks/use-analytics';
 import type { User, UserStatus } from '@/types/user';
+import { SearchParamsProvider } from '@/components/common';
 
 const roleOptions = [
   { value: 'all', label: 'Tất cả vai trò' },
@@ -28,7 +29,7 @@ const statusOptions = [
   { value: 'banned', label: 'Bị cấm' }
 ];
 
-export default function UsersPage() {
+function UsersPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
@@ -225,6 +226,14 @@ export default function UsersPage() {
         }}
       />
     </div>
+  );
+}
+
+export default function UsersPage() {
+  return (
+    <SearchParamsProvider>
+      <UsersPageContent />
+    </SearchParamsProvider>
   );
 }
 

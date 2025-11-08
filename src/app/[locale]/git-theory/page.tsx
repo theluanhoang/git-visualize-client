@@ -6,8 +6,9 @@ import { useLessons } from '@/lib/react-query/hooks/use-lessons';
 import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Search, X } from 'lucide-react';
+import { SearchParamsProvider } from '@/components/common';
 
-export default function GitTheoryPage() {
+function GitTheoryPageContent() {
   const router = useRouter();
   const params = useParams();
   const locale = (params.locale as string) || 'en';
@@ -115,5 +116,13 @@ export default function GitTheoryPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function GitTheoryPage() {
+  return (
+    <SearchParamsProvider>
+      <GitTheoryPageContent />
+    </SearchParamsProvider>
   );
 }

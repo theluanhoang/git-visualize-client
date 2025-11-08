@@ -13,6 +13,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { SearchParamsProvider } from '@/components/common';
 
 function OAuthCallbackPage() {
   const router = useRouter();
@@ -144,8 +145,10 @@ function OAuthCallbackPage() {
 
 export default function Page() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center p-8">Loading...</div>}>
+    <SearchParamsProvider 
+      fallback={<div className="min-h-screen flex items-center justify-center p-8">Loading...</div>}
+    >
       <OAuthCallbackPage />
-    </Suspense>
+    </SearchParamsProvider>
   );
 }
