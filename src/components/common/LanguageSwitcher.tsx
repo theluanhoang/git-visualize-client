@@ -10,13 +10,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { SearchParamsProvider } from './SearchParamsProvider';
 
 const languages = [
   { code: 'en', name: 'English', flag: '🇺🇸' },
   { code: 'vi', name: 'Tiếng Việt', flag: '🇻🇳' },
 ];
 
-export default function LanguageSwitcher() {
+function LanguageSwitcherContent() {
   const params = useParams();
   const locale = (params.locale as string) || 'en';
   const router = useRouter();
@@ -64,5 +65,19 @@ export default function LanguageSwitcher() {
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
+  );
+}
+
+export default function LanguageSwitcher() {
+  return (
+    <SearchParamsProvider fallback={
+      <Button variant="ghost" size="sm" className="flex items-center gap-2">
+        <Globe className="h-4 w-4" />
+        <span className="hidden sm:inline">🌐</span>
+        <span className="sm:hidden">🌐</span>
+      </Button>
+    }>
+      <LanguageSwitcherContent />
+    </SearchParamsProvider>
   );
 }
