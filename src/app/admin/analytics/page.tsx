@@ -20,7 +20,6 @@ import { useLessons } from '@/lib/react-query/hooks/use-lessons';
 import { formatTimeVietnamese } from '@/utils/format-time';
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 const timeRangeOptions = [
   { value: '7d', label: '7 ngày qua' },
