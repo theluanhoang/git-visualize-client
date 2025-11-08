@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useLessons } from '@/lib/react-query/hooks/use-lessons';
 import { useRouter } from 'next/navigation';
 
+export const dynamic = 'force-dynamic';
+
 export default function GitTheoryPage() {
   const router = useRouter();
   const { data, isLoading, error } = useLessons({

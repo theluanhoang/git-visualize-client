@@ -9,6 +9,8 @@ import { useLessons } from '@/lib/react-query/hooks/use-lessons';
 import { useTranslations } from 'next-intl';
 import { SearchParamsProvider } from '@/components/common/SearchParamsProvider';
 
+export const dynamic = 'force-dynamic';
+
 function PracticePageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();

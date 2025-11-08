@@ -8,6 +8,8 @@ import { useTranslations } from 'next-intl';
 import { Search, X } from 'lucide-react';
 import { SearchParamsProvider } from '@/components/common';
 
+export const dynamic = 'force-dynamic';
+
 function GitTheoryPageContent() {
   const router = useRouter();
   const params = useParams();
