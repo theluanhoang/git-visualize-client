@@ -24,6 +24,7 @@ import { formatTimeWithI18n } from '@/utils/format-time';
 import { SearchParamsProvider } from '@/components/common';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 function AnalyticsPageContent() {
   const [timeRange, setTimeRange] = useState('30d');
