@@ -5,6 +5,8 @@ import { cn } from '@/lib/utils';
 import { AdminSidebar, AdminTopBar } from '@/components/admin';
 import { PrivateRoute } from '@/components/auth/PrivateRoute';
 
+export const dynamic = 'force-dynamic';
+
 export default function AdminLayout({
   children,
 }: {
