@@ -7,6 +7,8 @@ import React, { ReactNode } from 'react'
 import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
 
+export const dynamic = 'force-dynamic';
+
 type Props = {
     children: ReactNode;
 };

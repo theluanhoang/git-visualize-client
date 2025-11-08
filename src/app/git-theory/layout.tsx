@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useLessons } from '@/lib/react-query/hooks/use-lessons';
 import React, { ReactNode } from 'react'
 
+export const dynamic = 'force-dynamic';
+
 type Props = {
     children: ReactNode;
 };
