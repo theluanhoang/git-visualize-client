@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useParams } from 'next/navigation';
@@ -16,8 +18,6 @@ import { PageHeader, AdminTable, ActionButtons, StatusBadge, DateDisplay, StatCa
 import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { useLessons, useDeleteLesson } from '@/lib/react-query/hooks/use-lessons';
 import { useTranslations } from 'next-intl';
-
-export const dynamic = 'force-dynamic';
 
 export default function LessonsPage() {
   const t = useTranslations('admin');

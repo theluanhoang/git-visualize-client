@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -14,8 +16,6 @@ import { Button } from '@/components/ui/button';
 import { PageHeader, AdminTable, ActionButtons, StatusBadge, DateDisplay, StatCard, FilterBar, EmptyState } from '@/components/admin';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { useLessons, useDeleteLesson } from '@/lib/react-query/hooks/use-lessons';
-
-export const dynamic = 'force-dynamic';
 
 const statusOptions = [
   { value: 'all', label: 'Tất cả trạng thái' },
