@@ -6,6 +6,8 @@ import LessonViewer from '@/components/common/git-theory/LessonViewer';
 import LessonNavigation from '@/components/common/git-theory/LessonNavigation';
 import PracticeCTA from '@/components/common/git-theory/PracticeCTA';
 
+export const dynamic = 'force-dynamic';
+
 export default function LessonPage() {
     const router = useRouter();
     const { slug } = useParams<{ slug: string }>();

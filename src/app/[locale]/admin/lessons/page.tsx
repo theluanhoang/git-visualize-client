@@ -17,6 +17,8 @@ import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { useLessons, useDeleteLesson } from '@/lib/react-query/hooks/use-lessons';
 import { useTranslations } from 'next-intl';
 
+export const dynamic = 'force-dynamic';
+
 export default function LessonsPage() {
   const t = useTranslations('admin');
   const params = useParams();

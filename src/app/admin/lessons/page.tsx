@@ -15,6 +15,8 @@ import { PageHeader, AdminTable, ActionButtons, StatusBadge, DateDisplay, StatCa
 import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { useLessons, useDeleteLesson } from '@/lib/react-query/hooks/use-lessons';
 
+export const dynamic = 'force-dynamic';
+
 const statusOptions = [
   { value: 'all', label: 'Tất cả trạng thái' },
   { value: 'published', label: 'Xuất bản' },

@@ -7,6 +7,8 @@ import { lessonKeys } from '@/lib/react-query/query-keys';
 import { LessonsService } from '@/services/lessons';
 import { LessonForm } from '@/components/forms/LessonForm';
 
+export const dynamic = 'force-dynamic';
+
 export default function EditLessonPage() {
     const { slug } = useParams<{ slug: string }>();
 

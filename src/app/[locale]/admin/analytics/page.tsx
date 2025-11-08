@@ -23,6 +23,8 @@ import { useLessons } from '@/lib/react-query/hooks/use-lessons';
 import { formatTimeWithI18n } from '@/utils/format-time';
 import { SearchParamsProvider } from '@/components/common';
 
+export const dynamic = 'force-dynamic';
+
 function AnalyticsPageContent() {
   const [timeRange, setTimeRange] = useState('30d');
   const [activeTab, setActiveTab] = useState('overview');

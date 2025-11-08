@@ -10,6 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { LOCALSTORAGE_KEYS, localStorageHelpers } from '@/constants/localStorage';
 import { CheckCircle2, Eye } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 export default function LessonPage() {
     const router = useRouter();
     const params = useParams();
