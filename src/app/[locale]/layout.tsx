@@ -1,9 +1,7 @@
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
-import { QueryProvider } from '@/lib/react-query/query-provider';
 import { ThemeProvider } from 'next-themes';
-import { AuthProvider } from '@/contexts';
 import Header from '@/components/common/Header';
 import { Toaster } from 'sonner';
 import Footer from '@/components/common/Footer';
@@ -34,18 +32,14 @@ export default async function LocaleLayout({
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <QueryProvider>
-          <AuthProvider>
-            <CelebrationProvider>
-              <RouteGuard>
-                <Header />
-                <main className="flex-1">{children}</main>
-                <Footer />
-              </RouteGuard>
-              <SessionExpiredDialog />
-            </CelebrationProvider>
-          </AuthProvider>
-        </QueryProvider>
+        <CelebrationProvider>
+          <RouteGuard>
+            <Header />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </RouteGuard>
+          <SessionExpiredDialog />
+        </CelebrationProvider>
         <Toaster richColors position="bottom-right" />
       </ThemeProvider>
     </NextIntlClientProvider>
