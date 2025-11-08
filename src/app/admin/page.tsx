@@ -44,6 +44,7 @@ type UserRow = {
   joinedAt: string;
 };
 
+export const dynamic = 'force-dynamic';
 
 export default function AdminDashboard() {
   const router = useRouter();
