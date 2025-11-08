@@ -3,7 +3,7 @@
 import Sidebar from '@/components/common/git-theory/Sidebar'
 import Link from 'next/link';
 import { useLessons } from '@/lib/react-query/hooks/use-lessons';
-import React, { ReactNode } from 'react'
+import React, { ReactNode, useEffect, useState } from 'react'
 
 export const dynamic = 'force-dynamic';
 
@@ -12,10 +12,17 @@ type Props = {
 };
 
 function GitTheoryLayout({ children }: Props) {
+    const [mounted, setMounted] = useState(false);
+    
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
     const { data: lessonsData, isLoading } = useLessons({
         limit: 100,
         offset: 0,
-        status: 'published'
+        status: 'published',
+        enabled: mounted
     });
 
     const data = lessonsData ? lessonsData
@@ -54,7 +61,7 @@ function GitTheoryLayout({ children }: Props) {
                 </div>
             </div>
             <div className="mt-6 md:mt-8 flex flex-col md:flex-row gap-6 md:gap-8">
-                <Sidebar items={data ?? []} />
+                {mounted ? <Sidebar items={data ?? []} /> : <div className="w-64">Loading...</div>}
                 <div className="flex-1">
                     {children}
                 </div>

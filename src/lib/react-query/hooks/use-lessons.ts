@@ -60,13 +60,16 @@ export const useLessons = (params: {
   status?: 'draft' | 'published';
   q?: string;
   includePractices?: boolean;
+  enabled?: boolean;
 } = {}) => {
+  const { enabled = true, ...queryParams } = params;
   return useQuery({
-    queryKey: lessonKeys.list(params),
+    queryKey: lessonKeys.list(queryParams),
     queryFn: async () => {
-      const res = await LessonsService.getAll(params);
+      const res = await LessonsService.getAll(queryParams);
       return res.data;
     },
+    enabled,
   });
 };
 
