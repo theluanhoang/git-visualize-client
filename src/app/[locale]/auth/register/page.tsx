@@ -95,6 +95,5 @@ export default function RegisterPage() {
   )
 }
 
-export const dynamic = 'force-dynamic';
 
 

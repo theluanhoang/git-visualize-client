@@ -1,5 +1,6 @@
 import api from '@/lib/api/axios';
 import { LOCALSTORAGE_KEYS, localStorageHelpers } from '@/constants/localStorage';
+import { syncAuthToCookies, clearAuthCookies } from '@/lib/auth/cookie-sync';
 
 export interface AuthUser { 
   id: string; 
@@ -54,6 +55,10 @@ export const authStorage = {
     localStorageHelpers.setItem(LOCALSTORAGE_KEYS.AUTH.ACCESS_TOKEN, tokens.accessToken);
     localStorageHelpers.setItem(LOCALSTORAGE_KEYS.AUTH.REFRESH_TOKEN, tokens.refreshToken);
     localStorageHelpers.setJSON(LOCALSTORAGE_KEYS.AUTH.USER, user);
+    
+    if (typeof window !== 'undefined') {
+      syncAuthToCookies(tokens, user);
+    }
   },
   load(): { tokens: AuthTokens | null; user: AuthUser | null } {
     const accessToken = localStorageHelpers.getItem(LOCALSTORAGE_KEYS.AUTH.ACCESS_TOKEN);
@@ -68,6 +73,10 @@ export const authStorage = {
     localStorageHelpers.removeItem(LOCALSTORAGE_KEYS.AUTH.ACCESS_TOKEN);
     localStorageHelpers.removeItem(LOCALSTORAGE_KEYS.AUTH.REFRESH_TOKEN);
     localStorageHelpers.removeItem(LOCALSTORAGE_KEYS.AUTH.USER);
+    
+    if (typeof window !== 'undefined') {
+      clearAuthCookies();
+    }
   },
   
   saveOAuthSession(sessionInfo: OAuthSessionInfo) {

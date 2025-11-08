@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { LOCALSTORAGE_KEYS, localStorageHelpers } from '@/constants/localStorage';
+import { syncFromLocalStorage } from '@/lib/auth/cookie-sync';
 
 const baseURL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:8001';
@@ -172,6 +173,10 @@ async function refreshToken(): Promise<string> {
     }
 
     api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+    
+    if (typeof window !== 'undefined') {
+      syncFromLocalStorage();
+    }
     
     return accessToken;
   } catch (error) {

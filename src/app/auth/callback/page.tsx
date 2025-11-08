@@ -4,7 +4,6 @@ import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { authKeys } from '@/lib/react-query/query-keys';
-import { toast } from 'sonner';
 import { authStorage } from '@/services/auth';
 import CodeImageBackground from '@/components/common/CodeImageBackground';
 import { Card, CardContent } from '@/components/ui/card';
@@ -139,7 +138,6 @@ function OAuthCallbackPage() {
   );
 }
 
-export const dynamic = 'force-dynamic';
 
 export default function Page() {
   return (

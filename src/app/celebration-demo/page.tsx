@@ -256,4 +256,3 @@ export default function CelebrationDemoPage() {
   );
 }
 
-export const dynamic = 'force-dynamic';

@@ -112,4 +112,3 @@ export default function PracticeSessionPage() {
   );
 }
 
-export const dynamic = 'force-dynamic';

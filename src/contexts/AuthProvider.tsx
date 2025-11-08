@@ -7,6 +7,7 @@ import { useCurrentUser, useLogin, useRegister, useLogout, useUpdateProfile } fr
 import { useQueryClient } from '@tanstack/react-query'
 import { tokenUtils } from '@/lib/api/axios'
 import api from '@/lib/api/axios'
+import { syncFromLocalStorage, syncAuthToCookies } from '@/lib/auth/cookie-sync'
 
 interface AuthProviderProps {
   children: React.ReactNode
@@ -28,9 +29,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (stored.tokens?.accessToken) {
       api.defaults.headers.common['Authorization'] = `Bearer ${stored.tokens.accessToken}`
       
+      if (stored.tokens && stored.user) {
+        syncAuthToCookies(stored.tokens, stored.user)
+      }
+      
       if (tokenUtils.isTokenExpired(stored.tokens.accessToken) || tokenUtils.shouldRefreshToken(stored.tokens.accessToken)) {
         refetchUser()
       }
+    } else {
+      syncFromLocalStorage()
     }
     
     setIsInitialized(true)

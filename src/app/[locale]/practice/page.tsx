@@ -55,4 +55,3 @@ export default function PracticePage() {
   );
 }
 
-export const dynamic = 'force-dynamic';

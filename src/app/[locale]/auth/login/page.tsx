@@ -91,6 +91,3 @@ export default function LoginPage() {
   )
 }
 
-export const dynamic = 'force-dynamic';
-
-
