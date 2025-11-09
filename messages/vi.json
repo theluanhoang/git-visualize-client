@@ -179,6 +179,7 @@
     "processingOAuth": "Đang xử lý đăng nhập OAuth...",
     "missingTokens": "Thiếu token xác thực",
     "authFailed": "Xác thực thất bại",
+    "loginFailed": "Đăng nhập thất bại. Vui lòng kiểm tra thông tin đăng nhập và thử lại.",
     "processing": "Đang xử lý...",
     "success": "Thành công!",
     "error": "Lỗi",

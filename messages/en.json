@@ -179,6 +179,7 @@
     "processingOAuth": "Processing OAuth login...",
     "missingTokens": "Missing authentication tokens",
     "authFailed": "Authentication failed",
+    "loginFailed": "Login failed. Please check your credentials and try again.",
     "processing": "Processing...",
     "success": "Success!",
     "error": "Error",
